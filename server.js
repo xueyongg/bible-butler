@@ -1,5 +1,7 @@
 var TelegramBot = require('node-telegram-bot-api');
 var mongojs = require('mongojs')
+var MongoClient = require('mongodb').MongoClient
+    , assert = require('assert');
 
 var request = require('request');
 var moment = require('moment');
@@ -20,27 +22,38 @@ var bot = new TelegramBot(token, {polling: true});
 var bot_name = "Marvin";
 var numOfBebePhotos = 3;
 
-var ip_addr = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-var port = process.env.OPENSHIFT_NODEJS_PORT || '8080';
+var ip_addr = '76.8.60.212';
+//var ip_addr = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+/*var port = process.env.OPENSHIFT_NODEJS_PORT || '8080';
 if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
     var connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
         process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
         process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
         process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
         process.env.OPENSHIFT_APP_NAME;
-}
+}*/
+
+//mongodb://ian:secretPassword@123.45.67.89/cool_db
+var connection_string = "mongodb://" + ip_addr + "/biblebutler";
+//var connection_string = "http://" + ip_addr + ":27017";
 
 //Connecting to the db at the start of the code
 console.log("This is my connection_string: ");
 console.log(connection_string);
 
+MongoClient.connect(connection_string, function(err, db) {
+    assert.equal(null, err);
+    console.log("Connected correctly to server");
+    db.close();
+});
+
 var db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"]);
 console.log("Trying to connect to db..");
 //end of connecting to db
 
-bot.setWebHook('public-url.com', {
+/*bot.setWebHook('public-url.com', {
     certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
-});
+});*/
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -135,8 +148,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         userId: userId,
     };
 
-    console.log("Message for Marvin received: ");
-    console.log(msg);
+    //console.log("Message for Marvin received: ");
+    //console.log(msg);
     const command = /^get verse/.exec(match[1]);
     if (command) {
         var matches = /^marvin (.+verse)(.+[0-9]$)/ig.exec(msg.text.trim());
@@ -258,7 +271,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                     .then(function () {
                                                         bot.once('callback_query', function (thirdMsg) {
                                                             var thirdResponse = thirdMsg.data;
-                                                            console.log("this is the thirdMsg: " + thirdMsg);
+                                                            //console.log("this is the thirdMsg: " + thirdMsg);
                                                             if (thirdResponse.toUpperCase() === "BEBE") {
                                                                 var songOption = {
                                                                     duration: 615,
@@ -271,7 +284,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's name, sent the song 'Do It Again' over! " + emoji.sob);
                                                             } else {
                                                                 var theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
-                                                                console.log("theRandomizedPhotoNumber: " + theRandomizedPhotoNumber);
+                                                                //console.log("theRandomizedPhotoNumber: " + theRandomizedPhotoNumber);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
                                                                 bot.sendPhoto(fromId, "./server/data/bebe" + theRandomizedPhotoNumber + ".jpg");
@@ -602,7 +615,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             switch (response) {
                                 case 'xue':
                                     //correct answer
-                                    console.log("you got the answer correct!");
+                                    //console.log("you got the answer correct!");
 
                                     db.users.insert({
                                         _id: userId,
@@ -663,7 +676,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
          }
          if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is sad " + emoji.sob);
          })
-         })*/
+         })*!/
 
 
     }
@@ -724,7 +737,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         });
 
     } //TODO: TO BE COMPLETED
-    else if (/^marvin .+last(.+)comment.*/ig.exec(msg.text.trim())) {
+    else if (/^marvin .+last(.+)comment.*!/ig.exec(msg.text.trim())) {
         //console.log(db);
         //numeric value
         //then retrieve after confirming that the number is last then 10 and is numeric
@@ -755,7 +768,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
     } //TODO: TO BE COMPLETED
 //----------------------------------------------- Weather related use---------------------------------------------------------
-    else if (/^marvin (.+)weather.*/ig.exec(msg.text.trim())) {
+    else if (/^marvin (.+)weather.*!/ig.exec(msg.text.trim())) {
         //console.log(db);
         //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
         var weatherMatches = /^marvin (.+)weather.*/ig.exec(msg.text.trim());
