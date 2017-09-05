@@ -2440,3 +2440,5 @@ var bbStickerArchive = [
     "CAADBQADjwADgIb7Ae-7bZnnY0_qAg",
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
+
+var currencyArchive = {};
