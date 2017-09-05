@@ -25,13 +25,13 @@ var numOfBebePhotos = 3;
 var ip_addr = '76.8.60.212';
 //var ip_addr = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 /*var port = process.env.OPENSHIFT_NODEJS_PORT || '8080';
-if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
-    var connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
-        process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
-        process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
-        process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
-        process.env.OPENSHIFT_APP_NAME;
-}*/
+ if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
+ var connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
+ process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
+ process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
+ process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
+ process.env.OPENSHIFT_APP_NAME;
+ }*/
 
 //mongodb://ian:secretPassword@123.45.67.89/cool_db
 var connection_string = "mongodb://" + ip_addr + "/biblebutler";
@@ -41,7 +41,7 @@ var connection_string = "mongodb://" + ip_addr + "/biblebutler";
 console.log("This is my connection_string: ");
 console.log(connection_string);
 
-MongoClient.connect(connection_string, function(err, db) {
+MongoClient.connect(connection_string, function (err, db) {
     assert.equal(null, err);
     console.log("Connected correctly to server");
     db.close();
@@ -52,8 +52,8 @@ console.log("Trying to connect to db..");
 //end of connecting to db
 
 /*bot.setWebHook('public-url.com', {
-    certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
-});*/
+ certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
+ });*/
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -679,99 +679,100 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
          })*!/
 
 
-    }
-//-----------------------------------------------Comments related use---------------------------------------------------------
-    else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
-        bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
-        bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
-        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite song. " + emoji.kissing_smiling_eyes);
+         }
+         //-----------------------------------------------Comments related use---------------------------------------------------------
+         else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
+         bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
+         bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
+         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite song. " + emoji.kissing_smiling_eyes);
 
-    }
-    else if (/^marvin what.*(favourite|favorite).*gif/ig.exec(msg.text.trim())) {
-        bot.sendMessage(fromId, "Let me show you!" + emoji.relieved);
-        bot.sendDocument(fromId, "./server/data/Webarebear.gif");
-        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite gif. " + emoji.kissing_smiling_eyes);
+         }
+         else if (/^marvin what.*(favourite|favorite).*gif/ig.exec(msg.text.trim())) {
+         bot.sendMessage(fromId, "Let me show you!" + emoji.relieved);
+         bot.sendDocument(fromId, "./server/data/Webarebear.gif");
+         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite gif. " + emoji.kissing_smiling_eyes);
 
-    }
-    else if (/^marvin convey.*(msg|message)/ig.exec(msg.text.trim())) {
-        bot.sendMessage(fromId, "What do you want to convey?" + emoji.slightly_smiling_face)
-            .then(function (ans) {
-                bot.once('message', function (msg) {
-                    var response = msg.text;
-                    bot.sendMessage(fromId, "Oh okay! I will convey the message! " + emoji.kissing_closed_eyes);
-                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " said that: "
-                        + response + " "
-                        + emoji.astonished);
-                })
-            });
-    }
-    else if (/^marvin (.+new comment.*)(.+)/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //take out the comment, and save it
-        //alert user if got more than 50 comments, and the last comment is how long ago
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
+         }
+         else if (/^marvin convey.*(msg|message)/ig.exec(msg.text.trim())) {
+         bot.sendMessage(fromId, "What do you want to convey?" + emoji.slightly_smiling_face)
+         .then(function (ans) {
+         bot.once('message', function (msg) {
+         var response = msg.text;
+         bot.sendMessage(fromId, "Oh okay! I will convey the message! " + emoji.kissing_closed_eyes);
+         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " said that: "
+         + response + " "
+         + emoji.astonished);
+         })
+         });
+         }
+         else if (/^marvin (.+new comment.*)(.+)/ig.exec(msg.text.trim())) {
+         //console.log(db);
+         //take out the comment, and save it
+         //alert user if got more than 50 comments, and the last comment is how long ago
+         var verses = db.collection('verses');
+         // log each of the first ten docs in the collection
+         db.verses.find({}).limit(1).forEach(function (err, doc) {
+         if (err) throw err;
+         if (doc) {
+         bot.sendMessage(fromId, "I'm connected!");
+         bot.sendMessage(fromId, doc.text);
+         }
+         });
 
-    } //TODO: TO BE COMPLETED
-    else if (/^marvin (.+)(last comment.*)/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //ensure that the validation is done within 30mins
-        //first, second, third, fourth, fifth
-        //anything ask if want to get the last 10, if yes then take the last 10
+         } //TODO: TO BE COMPLETED
+         else if (/^marvin (.+)(last comment.*)/ig.exec(msg.text.trim())) {
+         //console.log(db);
+         //ensure that the validation is done within 30mins
+         //first, second, third, fourth, fifth
+         //anything ask if want to get the last 10, if yes then take the last 10
 
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
+         var verses = db.collection('verses');
+         // log each of the first ten docs in the collection
+         db.verses.find({}).limit(1).forEach(function (err, doc) {
+         if (err) throw err;
+         if (doc) {
+         bot.sendMessage(fromId, "I'm connected!");
+         bot.sendMessage(fromId, doc.text);
+         }
+         });
 
-    } //TODO: TO BE COMPLETED
-    else if (/^marvin .+last(.+)comment.*!/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //numeric value
-        //then retrieve after confirming that the number is last then 10 and is numeric
+         } //TODO: TO BE COMPLETED
+         else if (/^marvin .+last(.+)comment.*!/ig.exec(msg.text.trim())) {
+         //console.log(db);
+         //numeric value
+         //then retrieve after confirming that the number is last then 10 and is numeric
 
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
+         var verses = db.collection('verses');
+         // log each of the first ten docs in the collection
+         db.verses.find({}).limit(1).forEach(function (err, doc) {
+         if (err) throw err;
+         if (doc) {
+         bot.sendMessage(fromId, "I'm connected!");
+         bot.sendMessage(fromId, doc.text);
+         }
+         });
 
-    } //TODO: TO BE COMPLETED
-    else if (/^marvin (.+bb rights.*)/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
+         } //TODO: TO BE COMPLETED
+         else if (/^marvin (.+bb rights.*)/ig.exec(msg.text.trim())) {
+         //console.log(db);
+         //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
+         var verses = db.collection('verses');
+         // log each of the first ten docs in the collection
+         db.verses.find({}).limit(1).forEach(function (err, doc) {
+         if (err) throw err;
+         if (doc) {
+         bot.sendMessage(fromId, "I'm connected!");
+         bot.sendMessage(fromId, doc.text);
+         }
+         });
 
-    } //TODO: TO BE COMPLETED
-//----------------------------------------------- Weather related use---------------------------------------------------------
-    else if (/^marvin (.+)weather.*!/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
-        var weatherMatches = /^marvin (.+)weather.*/ig.exec(msg.text.trim());
+         } //TODO: TO BE COMPLETED
+         //----------------------------------------------- Weather related use---------------------------------------------------------
+         else if (/^marvin (.+)weather.*!/ig.exec(msg.text.trim())) {
+         //console.log(db);
+         //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
+         var weatherMatches = /^marvin (.+)weather.*/
+        ig.exec(msg.text.trim());
         console.log("This is weatherMatches:" + weatherMatches);
         var splitWord = weatherMatches[1].split(/\W+/);
         console.log("this is splitWord: " + splitWord);
@@ -2240,7 +2241,7 @@ bot.onText(/\/getxrate/i, function (msg, match) {
             "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("Exchange rate message is here!!");
+                //console.log("Exchange rate message is here!!");
                 //console.log(msg);
                 var text1 = msg.text.toUpperCase().trim();
                 //console.log(text1);
@@ -2283,10 +2284,55 @@ bot.onText(/\/getxrate/i, function (msg, match) {
                     date: currentDate,
                     amount: amount.length > 0 ? Number(amount) : 1
                 };
+
+                //1. check if its a key for "from"
+                var valueOfFromCurrency = currencyHash[from];
+                if (!valueOfFromCurrency) {
+                    //dont have the key thus you check the value
+                    var keys = Object.keys(currencyHash);
+                    var numOfKeys = keys.length;
+                    var currencyValue = [];
+
+                    keys.forEach(function (key) {
+                        var value = currencyHash[key];
+                        var replace = "(" + from + ")+";
+                        var re = new RegExp(replace, "im");
+                        var contentOfCurrency = re.exec(value.trim());
+                        //console.log(contentOfCurrency);
+                        if (contentOfCurrency) {
+                            //do something with value;
+                            from = key;
+                        }
+                    });
+
+                }
+                //2. check if its a key for "to"
+                var valueOfToCurrency = currencyHash[to];
+                if (!valueOfToCurrency) {
+                    //dont have the key thus you check the value
+                    var keys = Object.keys(currencyHash);
+                    var numOfKeys = keys.length;
+                    var currencyValue = [];
+
+                    keys.forEach(function (key) {
+                        var value = currencyHash[key];
+                        var replace = "(" + to + ")+";
+                        var re = new RegExp(replace, "im");
+                        var contentOfCurrency = re.exec(value.trim());
+                        //console.log(contentOfCurrency);
+                        if (contentOfCurrency) {
+                            //do something with value;
+                            to = key;
+                        }
+                    });
+                }
+                exchangeRateDetails.from = from;
+                exchangeRateDetails.to = to;
+
                 var id = currentDate + "_" + from + "_" + to;
                 db.xrates.count({_id: id, from: from, to: to}, function (err, doc) {
                     if (doc === 1) {
-                        console.log("doc is 1");
+                        console.log("currency is found in db!");
                         db.xrates.find({_id: id, from: from, to: to}, function (err, doc) {
                             if (err) throw err;
                             if (doc) {
@@ -2305,8 +2351,10 @@ bot.onText(/\/getxrate/i, function (msg, match) {
                             }
                         });
                     } else { //the name of the rate doesnt exist in the db yet
-                        console.log("doc is not 1");
+                        console.log("No currency found");
+                        //get the rate from the method below
                         getExchangeRateMethod(chatDetails, exchangeRateDetails);
+
                     }
                 });
                 bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
@@ -2441,4 +2489,671 @@ var bbStickerArchive = [
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
 
-var currencyArchive = {};
+var currencyArchive = {
+    "AED": {
+        "symbol": "AED", "symbol_native": "د.إ.\u200F", "decimal_digits": 2, "rounding": 0.0, "code": "AED"
+    }
+    ,
+    "AFN": {
+        "symbol": "AFN", "symbol_native": "؋", "decimal_digits": 0, "rounding": 0.0, "code": "AFN"
+    }
+    ,
+    "ALL": {
+        "symbol": "ALL", "symbol_native": "Lek", "decimal_digits": 0, "rounding": 0.0, "code": "ALL"
+    }
+    ,
+    "AMD": {
+        "symbol": "AMD", "symbol_native": "դր.", "decimal_digits": 0, "rounding": 0.0, "code": "AMD"
+    }
+    ,
+    "AOA": {
+        "symbol": "AOA", "symbol_native": "Kz", "decimal_digits": 2, "rounding": 0.0, "code": "AOA"
+    }
+    ,
+    "ARS": {
+        "symbol": "ARS", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "ARS"
+    }
+    ,
+    "AUD": {
+        "symbol": "AU$", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "AUD"
+    }
+    ,
+    "AWG": {
+        "symbol": "AWG", "symbol_native": "Afl.", "decimal_digits": 2, "rounding": 0.0, "code": "AWG"
+    }
+    ,
+    "AZN": {
+        "symbol": "AZN", "symbol_native": "ман.", "decimal_digits": 2, "rounding": 0.0, "code": "AZN"
+    }
+    ,
+    "BAM": {
+        "symbol": "BAM", "symbol_native": "KM", "decimal_digits": 2, "rounding": 0.0, "code": "BAM"
+    }
+    ,
+    "BBD": {
+        "symbol": "BBD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "BBD"
+    }
+    ,
+    "BDT": {
+        "symbol": "BDT", "symbol_native": "৳", "decimal_digits": 2, "rounding": 0.0, "code": "BDT"
+    }
+    ,
+    "BGN": {
+        "symbol": "BGN", "symbol_native": "лв.", "decimal_digits": 2, "rounding": 0.0, "code": "BGN"
+    }
+    ,
+    "BHD": {
+        "symbol": "BHD", "symbol_native": "د.ب.\u200F", "decimal_digits": 3, "rounding": 0.0, "code": "BHD"
+    }
+    ,
+    "BIF": {
+        "symbol": "BIF", "symbol_native": "FBu", "decimal_digits": 0, "rounding": 0.0, "code": "BIF"
+    }
+    ,
+    "BMD": {
+        "symbol": "BMD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "BMD"
+    }
+    ,
+    "BND": {
+        "symbol": "BND", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "BND"
+    }
+    ,
+    "BOB": {
+        "symbol": "BOB", "symbol_native": "Bs", "decimal_digits": 2, "rounding": 0.0, "code": "BOB"
+    }
+    ,
+    "BRL": {
+        "symbol": "R$", "symbol_native": "R$", "decimal_digits": 2, "rounding": 0.0, "code": "BRL"
+    }
+    ,
+    "BWP": {
+        "symbol": "BWP", "symbol_native": "P", "decimal_digits": 2, "rounding": 0.0, "code": "BWP"
+    }
+    ,
+    "BYR": {
+        "symbol": "BYR", "symbol_native": "BYR", "decimal_digits": 0, "rounding": 0.0, "code": "BYR"
+    }
+    ,
+    "BZD": {
+        "symbol": "BZD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "BZD"
+    }
+    ,
+    "CAD": {
+        "symbol": "CA$", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "CAD"
+    }
+    ,
+    "CDF": {
+        "symbol": "CDF", "symbol_native": "FrCD", "decimal_digits": 2, "rounding": 0.0, "code": "CDF"
+    }
+    ,
+    "CHF": {
+        "symbol": "CHF", "symbol_native": "CHF", "decimal_digits": 2, "rounding": 0.05, "code": "CHF"
+    }
+    ,
+    "CLP": {
+        "symbol": "CLP", "symbol_native": "$", "decimal_digits": 0, "rounding": 0.0, "code": "CLP"
+    }
+    ,
+    "CNY": {
+        "symbol": "CN¥", "symbol_native": "CN¥", "decimal_digits": 2, "rounding": 0.0, "code": "CNY"
+    }
+    ,
+    "COP": {
+        "symbol": "COP", "symbol_native": "$", "decimal_digits": 0, "rounding": 0.0, "code": "COP"
+    }
+    ,
+    "CRC": {
+        "symbol": "CRC", "symbol_native": "\u20A1", "decimal_digits": 0, "rounding": 0.0, "code": "CRC"
+    }
+    ,
+    "CVE": {
+        "symbol": "CVE", "symbol_native": "CVE", "decimal_digits": 2, "rounding": 0.0, "code": "CVE"
+    }
+    ,
+    "CZK": {
+        "symbol": "CZK", "symbol_native": "Kč", "decimal_digits": 2, "rounding": 0.0, "code": "CZK"
+    }
+    ,
+    "DJF": {
+        "symbol": "DJF", "symbol_native": "Fdj", "decimal_digits": 0, "rounding": 0.0, "code": "DJF"
+    }
+    ,
+    "DKK": {
+        "symbol": "DKK", "symbol_native": "kr", "decimal_digits": 2, "rounding": 0.0, "code": "DKK"
+    }
+    ,
+    "DOP": {
+        "symbol": "DOP", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "DOP"
+    }
+    ,
+    "DZD": {
+        "symbol": "DZD", "symbol_native": "د.ج.\u200F", "decimal_digits": 2, "rounding": 0.0, "code": "DZD"
+    }
+    ,
+    "EGP": {
+        "symbol": "EGP", "symbol_native": "ج.م.\u200F", "decimal_digits": 2, "rounding": 0.0, "code": "EGP"
+    }
+    ,
+    "ERN": {
+        "symbol": "ERN", "symbol_native": "Nfk", "decimal_digits": 2, "rounding": 0.0, "code": "ERN"
+    }
+    ,
+    "ETB": {
+        "symbol": "ETB", "symbol_native": "ብር", "decimal_digits": 2, "rounding": 0.0, "code": "ETB"
+    }
+    ,
+    "EUR": {
+        "symbol": "\u20AC", "symbol_native": "\u20AC", "decimal_digits": 2, "rounding": 0.0, "code": "EUR"
+    }
+    ,
+    "GBP": {
+        "symbol": "£", "symbol_native": "£", "decimal_digits": 2, "rounding": 0.0, "code": "GBP"
+    }
+    ,
+    "GEL": {
+        "symbol": "GEL", "symbol_native": "GEL", "decimal_digits": 2, "rounding": 0.0, "code": "GEL"
+    }
+    ,
+    "GHS": {
+        "symbol": "GHS", "symbol_native": "GHS", "decimal_digits": 2, "rounding": 0.0, "code": "GHS"
+    }
+    ,
+    "GNF": {
+        "symbol": "GNF", "symbol_native": "FG", "decimal_digits": 0, "rounding": 0.0, "code": "GNF"
+    }
+    ,
+    "GTQ": {
+        "symbol": "GTQ", "symbol_native": "Q", "decimal_digits": 2, "rounding": 0.0, "code": "GTQ"
+    }
+    ,
+    "GYD": {
+        "symbol": "GYD", "symbol_native": "GYD", "decimal_digits": 0, "rounding": 0.0, "code": "GYD"
+    }
+    ,
+    "HKD": {
+        "symbol": "HK$", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "HKD"
+    }
+    ,
+    "HNL": {
+        "symbol": "HNL", "symbol_native": "L", "decimal_digits": 2, "rounding": 0.0, "code": "HNL"
+    }
+    ,
+    "HRK": {
+        "symbol": "HRK", "symbol_native": "kn", "decimal_digits": 2, "rounding": 0.0, "code": "HRK"
+    }
+    ,
+    "HUF": {
+        "symbol": "HUF", "symbol_native": "Ft", "decimal_digits": 0, "rounding": 0.0, "code": "HUF"
+    }
+    ,
+    "IDR": {
+        "symbol": "IDR", "symbol_native": "Rp", "decimal_digits": 0, "rounding": 0.0, "code": "IDR"
+    }
+    ,
+    "ILS": {
+        "symbol": "\u20AA", "symbol_native": "\u20AA", "decimal_digits": 2, "rounding": 0.0, "code": "ILS"
+    }
+    ,
+    "INR": {
+        "symbol": "\u20B9", "symbol_native": "\u20B9", "decimal_digits": 2, "rounding": 0.0, "code": "INR"
+    }
+    ,
+    "IQD": {
+        "symbol": "IQD", "symbol_native": "د.ع.\u200F", "decimal_digits": 0, "rounding": 0.0, "code": "IQD"
+    }
+    ,
+    "IRR": {
+        "symbol": "IRR", "symbol_native": "﷼", "decimal_digits": 0, "rounding": 0.0, "code": "IRR"
+    }
+    ,
+    "ISK": {
+        "symbol": "ISK", "symbol_native": "kr", "decimal_digits": 0, "rounding": 0.0, "code": "ISK"
+    }
+    ,
+    "JMD": {
+        "symbol": "JMD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "JMD"
+    }
+    ,
+    "JOD": {
+        "symbol": "JOD", "symbol_native": "د.أ.\u200F", "decimal_digits": 3, "rounding": 0.0, "code": "JOD"
+    }
+    ,
+    "JPY": {
+        "symbol": "¥", "symbol_native": "￥", "decimal_digits": 0, "rounding": 0.0, "code": "JPY"
+    }
+    ,
+    "KES": {
+        "symbol": "KES", "symbol_native": "Ksh", "decimal_digits": 2, "rounding": 0.0, "code": "KES"
+    }
+    ,
+    "KHR": {
+        "symbol": "KHR", "symbol_native": "៛", "decimal_digits": 2, "rounding": 0.0, "code": "KHR"
+    }
+    ,
+    "KMF": {
+        "symbol": "KMF", "symbol_native": "CF", "decimal_digits": 0, "rounding": 0.0, "code": "KMF"
+    }
+    ,
+    "KRW": {
+        "symbol": "\u20A9", "symbol_native": "\u20A9", "decimal_digits": 0, "rounding": 0.0, "code": "KRW"
+    }
+    ,
+    "KWD": {
+        "symbol": "KWD", "symbol_native": "د.ك.\u200F", "decimal_digits": 3, "rounding": 0.0, "code": "KWD"
+    }
+    ,
+    "KZT": {
+        "symbol": "KZT", "symbol_native": "\u20B8", "decimal_digits": 2, "rounding": 0.0, "code": "KZT"
+    }
+    ,
+    "LBP": {
+        "symbol": "LBP", "symbol_native": "ل.ل.\u200F", "decimal_digits": 0, "rounding": 0.0, "code": "LBP"
+    }
+    ,
+    "LKR": {
+        "symbol": "LKR", "symbol_native": "රු.", "decimal_digits": 2, "rounding": 0.0, "code": "LKR"
+    }
+    ,
+    "LRD": {
+        "symbol": "LRD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "LRD"
+    }
+    ,
+    "LTL": {
+        "symbol": "LTL", "symbol_native": "Lt", "decimal_digits": 2, "rounding": 0.0, "code": "LTL"
+    }
+    ,
+    "LVL": {
+        "symbol": "LVL", "symbol_native": "Ls", "decimal_digits": 2, "rounding": 0.0, "code": "LVL"
+    }
+    ,
+    "LYD": {
+        "symbol": "LYD", "symbol_native": "د.ل.\u200F", "decimal_digits": 3, "rounding": 0.0, "code": "LYD"
+    }
+    ,
+    "MAD": {
+        "symbol": "MAD", "symbol_native": "د.م.\u200F", "decimal_digits": 2, "rounding": 0.0, "code": "MAD"
+    }
+    ,
+    "MDL": {
+        "symbol": "MDL", "symbol_native": "MDL", "decimal_digits": 2, "rounding": 0.0, "code": "MDL"
+    }
+    ,
+    "MGA": {
+        "symbol": "MGA", "symbol_native": "MGA", "decimal_digits": 0, "rounding": 0.0, "code": "MGA"
+    }
+    ,
+    "MKD": {
+        "symbol": "MKD", "symbol_native": "MKD", "decimal_digits": 2, "rounding": 0.0, "code": "MKD"
+    }
+    ,
+    "MMK": {
+        "symbol": "MMK", "symbol_native": "K", "decimal_digits": 0, "rounding": 0.0, "code": "MMK"
+    }
+    ,
+    "MOP": {
+        "symbol": "MOP", "symbol_native": "MOP", "decimal_digits": 2, "rounding": 0.0, "code": "MOP"
+    }
+    ,
+    "MUR": {
+        "symbol": "MUR", "symbol_native": "MUR", "decimal_digits": 0, "rounding": 0.0, "code": "MUR"
+    }
+    ,
+    "MXN": {
+        "symbol": "MX$", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "MXN"
+    }
+    ,
+    "MYR": {
+        "symbol": "MYR", "symbol_native": "RM", "decimal_digits": 2, "rounding": 0.0, "code": "MYR"
+    }
+    ,
+    "MZN": {
+        "symbol": "MZN", "symbol_native": "MTn", "decimal_digits": 2, "rounding": 0.0, "code": "MZN"
+    }
+    ,
+    "NAD": {
+        "symbol": "NAD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "NAD"
+    }
+    ,
+    "NGN": {
+        "symbol": "NGN", "symbol_native": "\u20A6", "decimal_digits": 2, "rounding": 0.0, "code": "NGN"
+    }
+    ,
+    "NIO": {
+        "symbol": "NIO", "symbol_native": "C$", "decimal_digits": 2, "rounding": 0.0, "code": "NIO"
+    }
+    ,
+    "NOK": {
+        "symbol": "NOK", "symbol_native": "kr", "decimal_digits": 2, "rounding": 0.0, "code": "NOK"
+    }
+    ,
+    "NPR": {
+        "symbol": "NPR", "symbol_native": "नेरू", "decimal_digits": 2, "rounding": 0.0, "code": "NPR"
+    }
+    ,
+    "NZD": {
+        "symbol": "NZ$", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "NZD"
+    }
+    ,
+    "OMR": {
+        "symbol": "OMR", "symbol_native": "ر.ع.\u200F", "decimal_digits": 3, "rounding": 0.0, "code": "OMR"
+    }
+    ,
+    "PAB": {
+        "symbol": "PAB", "symbol_native": "B\/.", "decimal_digits": 2, "rounding": 0.0, "code": "PAB"
+    }
+    ,
+    "PEN": {
+        "symbol": "PEN", "symbol_native": "S\/.", "decimal_digits": 2, "rounding": 0.0, "code": "PEN"
+    }
+    ,
+    "PHP": {
+        "symbol": "PHP", "symbol_native": "\u20B1", "decimal_digits": 2, "rounding": 0.0, "code": "PHP"
+    }
+    ,
+    "PKR": {
+        "symbol": "PKR", "symbol_native": "\u20A8", "decimal_digits": 0, "rounding": 0.0, "code": "PKR"
+    }
+    ,
+    "PLN": {
+        "symbol": "PLN", "symbol_native": "zł", "decimal_digits": 2, "rounding": 0.0, "code": "PLN"
+    }
+    ,
+    "PYG": {
+        "symbol": "PYG", "symbol_native": "\u20B2", "decimal_digits": 0, "rounding": 0.0, "code": "PYG"
+    }
+    ,
+    "QAR": {
+        "symbol": "QAR", "symbol_native": "ر.ق.\u200F", "decimal_digits": 2, "rounding": 0.0, "code": "QAR"
+    }
+    ,
+    "RON": {
+        "symbol": "RON", "symbol_native": "RON", "decimal_digits": 2, "rounding": 0.0, "code": "RON"
+    }
+    ,
+    "RSD": {
+        "symbol": "RSD", "symbol_native": "дин.", "decimal_digits": 0, "rounding": 0.0, "code": "RSD"
+    }
+    ,
+    "RUB": {
+        "symbol": "RUB", "symbol_native": "руб.", "decimal_digits": 2, "rounding": 0.0, "code": "RUB"
+    }
+    ,
+    "RWF": {
+        "symbol": "RWF", "symbol_native": "FR", "decimal_digits": 0, "rounding": 0.0, "code": "RWF"
+    }
+    ,
+    "SAR": {
+        "symbol": "SAR", "symbol_native": "ر.س.\u200F", "decimal_digits": 2, "rounding": 0.0, "code": "SAR"
+    }
+    ,
+    "SDG": {
+        "symbol": "SDG", "symbol_native": "SDG", "decimal_digits": 2, "rounding": 0.0, "code": "SDG"
+    }
+    ,
+    "SEK": {
+        "symbol": "SEK", "symbol_native": "kr", "decimal_digits": 2, "rounding": 0.0, "code": "SEK"
+    }
+    ,
+    "SGD": {
+        "symbol": "SGD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "SGD"
+    }
+    ,
+    "SOS": {
+        "symbol": "SOS", "symbol_native": "SOS", "decimal_digits": 0, "rounding": 0.0, "code": "SOS"
+    }
+    ,
+    "STD": {
+        "symbol": "STD", "symbol_native": "Db", "decimal_digits": 0, "rounding": 0.0, "code": "STD"
+    }
+    ,
+    "SYP": {
+        "symbol": "SYP", "symbol_native": "ل.س.\u200F", "decimal_digits": 0, "rounding": 0.0, "code": "SYP"
+    }
+    ,
+    "THB": {
+        "symbol": "฿", "symbol_native": "฿", "decimal_digits": 2, "rounding": 0.0, "code": "THB"
+    }
+    ,
+    "TND": {
+        "symbol": "TND", "symbol_native": "د.ت.\u200F", "decimal_digits": 3, "rounding": 0.0, "code": "TND"
+    }
+    ,
+    "TOP": {
+        "symbol": "TOP", "symbol_native": "T$", "decimal_digits": 2, "rounding": 0.0, "code": "TOP"
+    }
+    ,
+    "TRY": {
+        "symbol": "TRY", "symbol_native": "TL", "decimal_digits": 2, "rounding": 0.0, "code": "TRY"
+    }
+    ,
+    "TTD": {
+        "symbol": "TTD", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "TTD"
+    }
+    ,
+    "TWD": {
+        "symbol": "NT$", "symbol_native": "NT$", "decimal_digits": 2, "rounding": 0.0, "code": "TWD"
+    }
+    ,
+    "TZS": {
+        "symbol": "TZS", "symbol_native": "TSh", "decimal_digits": 0, "rounding": 0.0, "code": "TZS"
+    }
+    ,
+    "UAH": {
+        "symbol": "UAH", "symbol_native": "\u20B4", "decimal_digits": 2, "rounding": 0.0, "code": "UAH"
+    }
+    ,
+    "UGX": {
+        "symbol": "UGX", "symbol_native": "USh", "decimal_digits": 0, "rounding": 0.0, "code": "UGX"
+    }
+    ,
+    "USD": {
+        "symbol": "$", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "USD"
+    }
+    ,
+    "UYU": {
+        "symbol": "UYU", "symbol_native": "$", "decimal_digits": 2, "rounding": 0.0, "code": "UYU"
+    }
+    ,
+    "UZS": {
+        "symbol": "UZS", "symbol_native": "UZS", "decimal_digits": 0, "rounding": 0.0, "code": "UZS"
+    }
+    ,
+    "VEF": {
+        "symbol": "VEF", "symbol_native": "Bs.F.", "decimal_digits": 2, "rounding": 0.0, "code": "VEF"
+    }
+    ,
+    "VND": {
+        "symbol": "\u20AB", "symbol_native": "\u20AB", "decimal_digits": 0, "rounding": 0.0, "code": "VND"
+    }
+    ,
+    "XAF": {
+        "symbol": "FCFA", "symbol_native": "FCFA", "decimal_digits": 0, "rounding": 0.0, "code": "XAF"
+    }
+    ,
+    "XOF": {
+        "symbol": "CFA", "symbol_native": "CFA", "decimal_digits": 0, "rounding": 0.0, "code": "XOF"
+    }
+    ,
+    "YER": {
+        "symbol": "YER", "symbol_native": "ر.ي.\u200F", "decimal_digits": 0, "rounding": 0.0, "code": "YER"
+    }
+    ,
+    "ZAR": {
+        "symbol": "ZAR", "symbol_native": "R", "decimal_digits": 2, "rounding": 0.0, "code": "ZAR"
+    }
+    ,
+    "ZMK": {
+        "symbol": "ZMK", "symbol_native": "ZK", "decimal_digits": 0, "rounding": 0.0, "code": "ZMK"
+    }
+};
+
+var currencyHash = {
+    "AED": "United Arab Emirates Dirham",
+    "AFN": "Afghan Afghani",
+    "ALL": "Albanian Lek",
+    "AMD": "Armenian Dram",
+    "ANG": "Netherlands Antillean Guilder",
+    "AOA": "Angolan Kwanza",
+    "ARS": "Argentine Peso",
+    "AUD": "Australian Dollar",
+    "AWG": "Aruban Florin",
+    "AZN": "Azerbaijani Manat",
+    "BAM": "Bosnia-Herzegovina Convertible Mark",
+    "BBD": "Barbadian Dollar",
+    "BDT": "Bangladeshi Taka",
+    "BGN": "Bulgarian Lev",
+    "BHD": "Bahraini Dinar",
+    "BIF": "Burundian Franc",
+    "BMD": "Bermudan Dollar",
+    "BND": "Brunei Dollar",
+    "BOB": "Bolivian Boliviano",
+    "BRL": "Brazilian Real",
+    "BSD": "Bahamian Dollar",
+    "BTC": "Bitcoin",
+    "BTN": "Bhutanese Ngultrum",
+    "BWP": "Botswanan Pula",
+    "BYN": "Belarusian Ruble",
+    "BZD": "Belize Dollar",
+    "CAD": "Canadian Dollar",
+    "CDF": "Congolese Franc",
+    "CHF": "Swiss Franc",
+    "CLF": "Chilean Unit of Account (UF)",
+    "CLP": "Chilean Peso",
+    "CNH": "Chinese Yuan (Offshore)",
+    "CNY": "Chinese Yuan",
+    "COP": "Colombian Peso",
+    "CRC": "Costa Rican Colón",
+    "CUC": "Cuban Convertible Peso",
+    "CUP": "Cuban Peso",
+    "CVE": "Cape Verdean Escudo",
+    "CZK": "Czech Republic Koruna",
+    "DJF": "Djiboutian Franc",
+    "DKK": "Danish Krone",
+    "DOP": "Dominican Peso",
+    "DZD": "Algerian Dinar",
+    "EGP": "Egyptian Pound",
+    "ERN": "Eritrean Nakfa",
+    "ETB": "Ethiopian Birr",
+    "EUR": "Euro",
+    "FJD": "Fijian Dollar",
+    "FKP": "Falkland Islands Pound",
+    "GBP": "British Pound Sterling",
+    "GEL": "Georgian Lari",
+    "GGP": "Guernsey Pound",
+    "GHS": "Ghanaian Cedi",
+    "GIP": "Gibraltar Pound",
+    "GMD": "Gambian Dalasi",
+    "GNF": "Guinean Franc",
+    "GTQ": "Guatemalan Quetzal",
+    "GYD": "Guyanaese Dollar",
+    "HKD": "Hong Kong Dollar",
+    "HNL": "Honduran Lempira",
+    "HRK": "Croatian Kuna",
+    "HTG": "Haitian Gourde",
+    "HUF": "Hungarian Forint",
+    "IDR": "Indonesian Rupiah",
+    "ILS": "Israeli New Sheqel",
+    "IMP": "Manx pound",
+    "INR": "Indian Rupee",
+    "IQD": "Iraqi Dinar",
+    "IRR": "Iranian Rial",
+    "ISK": "Icelandic Króna",
+    "JEP": "Jersey Pound",
+    "JMD": "Jamaican Dollar",
+    "JOD": "Jordanian Dinar",
+    "JPY": "Japanese Yen",
+    "KES": "Kenyan Shilling",
+    "KGS": "Kyrgystani Som",
+    "KHR": "Cambodian Riel",
+    "KMF": "Comorian Franc",
+    "KPW": "North Korean Won",
+    "KRW": "South Korean Won",
+    "KWD": "Kuwaiti Dinar",
+    "KYD": "Cayman Islands Dollar",
+    "KZT": "Kazakhstani Tenge",
+    "LAK": "Laotian Kip",
+    "LBP": "Lebanese Pound",
+    "LKR": "Sri Lankan Rupee",
+    "LRD": "Liberian Dollar",
+    "LSL": "Lesotho Loti",
+    "LYD": "Libyan Dinar",
+    "MAD": "Moroccan Dirham",
+    "MDL": "Moldovan Leu",
+    "MGA": "Malagasy Ariary",
+    "MKD": "Macedonian Denar",
+    "MMK": "Myanma Kyat",
+    "MNT": "Mongolian Tugrik",
+    "MOP": "Macanese Pataca",
+    "MRO": "Mauritanian Ouguiya",
+    "MUR": "Mauritian Rupee",
+    "MVR": "Maldivian Rufiyaa",
+    "MWK": "Malawian Kwacha",
+    "MXN": "Mexican Peso",
+    "MYR": "Malaysian Ringgit",
+    "MZN": "Mozambican Metical",
+    "NAD": "Namibian Dollar",
+    "NGN": "Nigerian Naira",
+    "NIO": "Nicaraguan Córdoba",
+    "NOK": "Norwegian Krone",
+    "NPR": "Nepalese Rupee",
+    "NZD": "New Zealand Dollar",
+    "OMR": "Omani Rial",
+    "PAB": "Panamanian Balboa",
+    "PEN": "Peruvian Nuevo Sol",
+    "PGK": "Papua New Guinean Kina",
+    "PHP": "Philippine Peso",
+    "PKR": "Pakistani Rupee",
+    "PLN": "Polish Zloty",
+    "PYG": "Paraguayan Guarani",
+    "QAR": "Qatari Rial",
+    "RON": "Romanian Leu",
+    "RSD": "Serbian Dinar",
+    "RUB": "Russian Ruble",
+    "RWF": "Rwandan Franc",
+    "SAR": "Saudi Riyal",
+    "SBD": "Solomon Islands Dollar",
+    "SCR": "Seychellois Rupee",
+    "SDG": "Sudanese Pound",
+    "SEK": "Swedish Krona",
+    "SGD": "Singapore Dollar",
+    "SHP": "Saint Helena Pound",
+    "SLL": "Sierra Leonean Leone",
+    "SOS": "Somali Shilling",
+    "SRD": "Surinamese Dollar",
+    "SSP": "South Sudanese Pound",
+    "STD": "São Tomé and Príncipe Dobra",
+    "SVC": "Salvadoran Colón",
+    "SYP": "Syrian Pound",
+    "SZL": "Swazi Lilangeni",
+    "THB": "Thai Baht",
+    "TJS": "Tajikistani Somoni",
+    "TMT": "Turkmenistani Manat",
+    "TND": "Tunisian Dinar",
+    "TOP": "Tongan Pa'anga",
+    "TRY": "Turkish Lira",
+    "TTD": "Trinidad and Tobago Dollar",
+    "TWD": "New Taiwan Dollar",
+    "TZS": "Tanzanian Shilling",
+    "UAH": "Ukrainian Hryvnia",
+    "UGX": "Ugandan Shilling",
+    "USD": "United States Dollar",
+    "UYU": "Uruguayan Peso",
+    "UZS": "Uzbekistan Som",
+    "VEF": "Venezuelan Bolívar Fuerte",
+    "VND": "Vietnamese Dong",
+    "VUV": "Vanuatu Vatu",
+    "WST": "Samoan Tala",
+    "XAF": "CFA Franc BEAC",
+    "XAG": "Silver Ounce",
+    "XAU": "Gold Ounce",
+    "XCD": "East Caribbean Dollar",
+    "XDR": "Special Drawing Rights",
+    "XOF": "CFA Franc BCEAO",
+    "XPD": "Palladium Ounce",
+    "XPF": "CFP Franc",
+    "XPT": "Platinum Ounce",
+    "YER": "Yemeni Rial",
+    "ZAR": "South African Rand",
+    "ZMW": "Zambian Kwacha",
+    "ZWL": "Zimbabwean Dollar"
+}
