@@ -902,11 +902,54 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         //});
 
     }
+    else if (/^marvin (weather.*)/ig.exec(msg.text.trim())) {
+        opt = {
+            reply_markup: {
+                force_reply: true,
+                "one_time_keyboard": true,
+                "keyboard": [
+                    [{
+                        text: "My location",
+                        request_location: true
+                    }],
+                    ["Other Location"]]
+            }
+        };
+        var opt2 = {
+            reply_markup: {
+                force_reply: true,
+                "one_time_keyboard": true,
+            }
+        };
+        bot.sendMessage(fromId, first_name + ", please share your location with me!" + emoji.hushed, opt)
+            .then(function () {
+                bot.once('message', function (msg) {
+                    bot.sendMessage(fromId, first_name + ", please share the location with me!" + emoji.hushed, opt2)
+                        .then(function () {
+                            bot.once('message', function (msg2) {
+                                console.log("message2 is here!!");
+                                console.log(msg2);
+                            })
+                        })
+                    console.log("message is here!!");
+                    console.log(msg);
+                })
+            });
+
+//googleTranslate.translate('My name is Joshua', 'es', function (err, translation) {
+//    var translatedMessage = translation.translatedText;
+//    console.log(translatedMessage);
+//    // =>  Mi nombre es Brandon
+//    bot.sendMessage(fromId, translatedMessage);
+//});
+
+    }
     else {
         var resp = match[1];
         bot.sendMessage(fromId, resp);
     }
-});
+})
+;
 
 function marvinGetVerseMethod(chatDetails, fetchingVerse, type) {
     var fromId = chatDetails.fromId;
