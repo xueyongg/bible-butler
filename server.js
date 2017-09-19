@@ -155,7 +155,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var matches = /^marvin (.+verse)(.+[0-9]$)/ig.exec(msg.text.trim());
         var fetchingVerse = matches[2].trim();
 
-        if (fetchingVerse)  marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
+        if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
         else bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
 
     }
@@ -676,102 +676,102 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
          }
          if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is sad " + emoji.sob);
          })
-         })*!/
+         })*/
 
 
-         }
-         //-----------------------------------------------Comments related use---------------------------------------------------------
-         else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
-         bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
-         bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
-         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite song. " + emoji.kissing_smiling_eyes);
+    }
+    //-----------------------------------------------Comments related use---------------------------------------------------------
+    else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
+        bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
+        bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
+        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite song. " + emoji.kissing_smiling_eyes);
 
-         }
-         else if (/^marvin what.*(favourite|favorite).*gif/ig.exec(msg.text.trim())) {
-         bot.sendMessage(fromId, "Let me show you!" + emoji.relieved);
-         bot.sendDocument(fromId, "./server/data/Webarebear.gif");
-         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite gif. " + emoji.kissing_smiling_eyes);
+    }
+    else if (/^marvin what.*(favourite|favorite).*gif/ig.exec(msg.text.trim())) {
+        bot.sendMessage(fromId, "Let me show you!" + emoji.relieved);
+        bot.sendDocument(fromId, "./server/data/Webarebear.gif");
+        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite gif. " + emoji.kissing_smiling_eyes);
 
-         }
-         else if (/^marvin convey.*(msg|message)/ig.exec(msg.text.trim())) {
-         bot.sendMessage(fromId, "What do you want to convey?" + emoji.slightly_smiling_face)
-         .then(function (ans) {
-         bot.once('message', function (msg) {
-         var response = msg.text;
-         bot.sendMessage(fromId, "Oh okay! I will convey the message! " + emoji.kissing_closed_eyes);
-         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " said that: "
-         + response + " "
-         + emoji.astonished);
-         })
-         });
-         }
-         else if (/^marvin (.+new comment.*)(.+)/ig.exec(msg.text.trim())) {
-         //console.log(db);
-         //take out the comment, and save it
-         //alert user if got more than 50 comments, and the last comment is how long ago
-         var verses = db.collection('verses');
-         // log each of the first ten docs in the collection
-         db.verses.find({}).limit(1).forEach(function (err, doc) {
-         if (err) throw err;
-         if (doc) {
-         bot.sendMessage(fromId, "I'm connected!");
-         bot.sendMessage(fromId, doc.text);
-         }
-         });
+    }
+    else if (/^marvin convey.*(msg|message)/ig.exec(msg.text.trim())) {
+        bot.sendMessage(fromId, "What do you want to convey?" + emoji.slightly_smiling_face)
+            .then(function (ans) {
+                bot.once('message', function (msg) {
+                    var response = msg.text;
+                    bot.sendMessage(fromId, "Oh okay! I will convey the message! " + emoji.kissing_closed_eyes);
+                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " said that: "
+                        + response + " "
+                        + emoji.astonished);
+                })
+            });
+    }
+    else if (/^marvin (.+new comment.*)(.+)/ig.exec(msg.text.trim())) {
+        //console.log(db);
+        //take out the comment, and save it
+        //alert user if got more than 50 comments, and the last comment is how long ago
+        var verses = db.collection('verses');
+        // log each of the first ten docs in the collection
+        db.verses.find({}).limit(1).forEach(function (err, doc) {
+            if (err) throw err;
+            if (doc) {
+                bot.sendMessage(fromId, "I'm connected!");
+                bot.sendMessage(fromId, doc.text);
+            }
+        });
 
-         } //TODO: TO BE COMPLETED
-         else if (/^marvin (.+)(last comment.*)/ig.exec(msg.text.trim())) {
-         //console.log(db);
-         //ensure that the validation is done within 30mins
-         //first, second, third, fourth, fifth
-         //anything ask if want to get the last 10, if yes then take the last 10
+    } //TODO: TO BE COMPLETED
+    else if (/^marvin (.+)(last comment.*)/ig.exec(msg.text.trim())) {
+        //console.log(db);
+        //ensure that the validation is done within 30mins
+        //first, second, third, fourth, fifth
+        //anything ask if want to get the last 10, if yes then take the last 10
 
-         var verses = db.collection('verses');
-         // log each of the first ten docs in the collection
-         db.verses.find({}).limit(1).forEach(function (err, doc) {
-         if (err) throw err;
-         if (doc) {
-         bot.sendMessage(fromId, "I'm connected!");
-         bot.sendMessage(fromId, doc.text);
-         }
-         });
+        var verses = db.collection('verses');
+        // log each of the first ten docs in the collection
+        db.verses.find({}).limit(1).forEach(function (err, doc) {
+            if (err) throw err;
+            if (doc) {
+                bot.sendMessage(fromId, "I'm connected!");
+                bot.sendMessage(fromId, doc.text);
+            }
+        });
 
-         } //TODO: TO BE COMPLETED
-         else if (/^marvin .+last(.+)comment.*!/ig.exec(msg.text.trim())) {
-         //console.log(db);
-         //numeric value
-         //then retrieve after confirming that the number is last then 10 and is numeric
+    } //TODO: TO BE COMPLETED
+    else if (/^marvin .+last(.+)comment.*!/ig.exec(msg.text.trim())) {
+        //console.log(db);
+        //numeric value
+        //then retrieve after confirming that the number is last then 10 and is numeric
 
-         var verses = db.collection('verses');
-         // log each of the first ten docs in the collection
-         db.verses.find({}).limit(1).forEach(function (err, doc) {
-         if (err) throw err;
-         if (doc) {
-         bot.sendMessage(fromId, "I'm connected!");
-         bot.sendMessage(fromId, doc.text);
-         }
-         });
+        var verses = db.collection('verses');
+        // log each of the first ten docs in the collection
+        db.verses.find({}).limit(1).forEach(function (err, doc) {
+            if (err) throw err;
+            if (doc) {
+                bot.sendMessage(fromId, "I'm connected!");
+                bot.sendMessage(fromId, doc.text);
+            }
+        });
 
-         } //TODO: TO BE COMPLETED
-         else if (/^marvin (.+bb rights.*)/ig.exec(msg.text.trim())) {
-         //console.log(db);
-         //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
-         var verses = db.collection('verses');
-         // log each of the first ten docs in the collection
-         db.verses.find({}).limit(1).forEach(function (err, doc) {
-         if (err) throw err;
-         if (doc) {
-         bot.sendMessage(fromId, "I'm connected!");
-         bot.sendMessage(fromId, doc.text);
-         }
-         });
+    } //TODO: TO BE COMPLETED
+    else if (/^marvin (.+bb rights.*)/ig.exec(msg.text.trim())) {
+        //console.log(db);
+        //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
+        var verses = db.collection('verses');
+        // log each of the first ten docs in the collection
+        db.verses.find({}).limit(1).forEach(function (err, doc) {
+            if (err) throw err;
+            if (doc) {
+                bot.sendMessage(fromId, "I'm connected!");
+                bot.sendMessage(fromId, doc.text);
+            }
+        });
 
-         } //TODO: TO BE COMPLETED
-         //----------------------------------------------- Weather related use---------------------------------------------------------
-         else if (/^marvin (.+)weather.*!/ig.exec(msg.text.trim())) {
-         //console.log(db);
-         //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
-         var weatherMatches = /^marvin (.+)weather.*/
+    } //TODO: TO BE COMPLETED
+    //----------------------------------------------- Weather related use---------------------------------------------------------
+    else if (/^marvin (.+)weather.*!/ig.exec(msg.text.trim())) {
+        //console.log(db);
+        //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
+        var weatherMatches = /^marvin (.+)weather.*/
         ig.exec(msg.text.trim());
         console.log("This is weatherMatches:" + weatherMatches);
         var splitWord = weatherMatches[1].split(/\W+/);
@@ -983,6 +983,7 @@ function marvinGetVerseMethod(chatDetails, fetchingVerse, type) {
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
+
 function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version) {
     //chate related details
     var fromId = chatDetails.fromId;
@@ -1086,6 +1087,7 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version) {
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
+
 function getLatLongMethod(locationInput, chatDetails, type) {
     //type: weather or sunrise
     var fromId = chatDetails.fromId;
@@ -1198,6 +1200,7 @@ function getLatLongMethod(locationInput, chatDetails, type) {
     if (type === "sunrise") bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationInput) + "'s sunrise timing.. " + emoji.bow);
 
 }
+
 function weatherReportMethod(locationDetails, chatDetails) {
     var fromId = chatDetails.fromId;
     var chatName = chatDetails.chatName;
@@ -1233,6 +1236,7 @@ function weatherReportMethod(locationDetails, chatDetails) {
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
+
 function getSunriseMethod(locationDetails, chatDetails) {
     //chat details
     var fromId = chatDetails.fromId;
@@ -1282,6 +1286,7 @@ function getSunriseMethod(locationDetails, chatDetails) {
 
     bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 }
+
 function bbAutoChecker(chatDetails) {
     var fromId = chatDetails.fromId;
     var chatName = chatDetails.chatName;
@@ -1308,6 +1313,7 @@ function bbAutoChecker(chatDetails) {
         }
     });
 }
+
 function formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails) {
     //chat related
     var fromId = chatDetails.fromId;
@@ -1351,6 +1357,7 @@ function formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput
 
     bot.sendMessage(fromId, message);
 }
+
 function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
     //chat details
     var fromId = chatDetails.fromId;
@@ -1404,6 +1411,7 @@ function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
     }
     bot.sendMessage(fromId, "I'm connected! And am populating the db with holiday");
 }
+
 function getHolidayMethod(chatDetails, holidayDetails) {
     //chat related
     var fromId = chatDetails.fromId;
@@ -1999,7 +2007,7 @@ bot.onText(/\/getverse/i, function (msg, match) {
 
                 var verse = "john3:30-31";
                 var fetchingVerse = msg.text;
-                if (fetchingVerse)  marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
+                if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
             });
         });
 });
@@ -2098,7 +2106,7 @@ bot.onText(/\/feeling/, function (msg, match) {
                 }
                 var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                 bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
-                if (chosenVerse)  marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
+                if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
             });
         });
 
@@ -2281,7 +2289,7 @@ bot.onText(/\/getxrate/i, function (msg, match) {
         }
     };
     bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
-            "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
+        "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
         .then(function () {
             bot.once('message', function (msg) {
                 //console.log("Exchange rate message is here!!");
@@ -2455,7 +2463,6 @@ var verseArchive = {
         "Proverbs 18:10",
         "Proverbs 3:5-6",
         "Isaiah 41:10",
-        "John 14:33",
         "John 14:27",
         "1 Peter 5:7",
         "Isaiah 26:3"
@@ -2476,7 +2483,7 @@ var verseArchive = {
         "Colossians 3:8"
     ],
     needStrength: [
-        "PPhilippians 4:13",
+        "Philippians 4:13",
         "Isaiah 40:29",
         "Psalm 119:28",
         "Ephesians 6:10",
