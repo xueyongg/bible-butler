@@ -123,6 +123,9 @@ bot.on('message', function (msg) {
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Success calling of Marvin!");
 
         }
+    }else{
+        bot.sendMessage(fromId, "Yes, " + capitalizeFirstLetter(first_name) + " you called me?" +
+            emoji.upside_down_face + "\nYou can type /help to figure out how to control me!");
     }
 });
 
@@ -948,8 +951,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var resp = match[1];
         bot.sendMessage(fromId, resp);
     }
-})
-;
+});
 
 function marvinGetVerseMethod(chatDetails, fetchingVerse, type) {
     var fromId = chatDetails.fromId;
@@ -1509,7 +1511,6 @@ function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
 
     });
 }
-
 
 /**
  * Only if the currency is already acquired then enter this method
@@ -2413,7 +2414,156 @@ bot.onText(/\/getxrate/i, function (msg, match) {
             });
         });
 });
+/*bot.onText(/\/getxrateinterval/i, function (msg, match) {
+    //chat details
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    var chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+    bbAutoChecker(chatDetails);
 
+    //keyboard options
+    var opt = {
+        reply_markup: {
+            force_reply: true,
+        }
+    };
+    bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
+        "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
+        .then(function () {
+            bot.once('message', function (msg) {
+                var text1 = msg.text.toUpperCase().trim();
+                //error checks
+                var error = false;
+                if (text1.length < 7) {
+                    error = true;
+                } else if (text1.length == 7 && text1.split("")[text1.split("").length - 4] !== "2") {
+                    error = true;
+                } else if (text1.length == 7 && !/^[a-z]/ig.exec(text1[0])) {
+                    error = true;
+                } else if (text1.length > 7 && !/([\d|.]+)([A-Z]{3})2([A-Z]{3})/ig.exec(text1)) {
+                    error = true;
+                }
+                if (error) {
+                    bot.sendMessage(fromId, "Incorrect format used! Try again!");
+                    return;
+                }
+
+                //format the message to include 1
+                if (text1.length == 7) {
+                    text1 = 1 + text1;
+                }
+
+                var xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
+                var amount = xrateToken[1];
+                var from = xrateToken[2];
+                var to = xrateToken[3];
+
+                //TODO: check if the to currency is legit *impt!
+                var currentDate = moment().format("DD-MM-YYYY");
+                var exchangeRateDetails = {
+                    from: from,
+                    to: to,
+                    date: currentDate,
+                    amount: amount.length > 0 ? Number(amount) : 1
+                };
+
+                //1. check if its a key for "from"
+                var valueOfFromCurrency = currencyHash[from];
+                if (!valueOfFromCurrency) {
+                    //dont have the key thus you check the value
+                    var keys = Object.keys(currencyHash);
+                    var numOfKeys = keys.length;
+                    var currencyValue = [];
+
+                    keys.forEach(function (key) {
+                        var value = currencyHash[key];
+                        var replace = "(" + from + ")+";
+                        var re = new RegExp(replace, "im");
+                        var contentOfCurrency = re.exec(value.trim());
+                        //console.log(contentOfCurrency);
+                        if (contentOfCurrency) {
+                            //do something with value;
+                            from = key;
+                        }
+                    });
+
+                }
+                //2. check if its a key for "to"
+                var valueOfToCurrency = currencyHash[to];
+                if (!valueOfToCurrency) {
+                    //dont have the key thus you check the value
+                    var keys = Object.keys(currencyHash);
+                    var numOfKeys = keys.length;
+                    var currencyValue = [];
+
+                    keys.forEach(function (key) {
+                        var value = currencyHash[key];
+                        var replace = "(" + to + ")+";
+                        var re = new RegExp(replace, "im");
+                        var contentOfCurrency = re.exec(value.trim());
+                        //console.log(contentOfCurrency);
+                        if (contentOfCurrency) {
+                            //do something with value;
+                            to = key;
+                        }
+                    });
+                }
+                exchangeRateDetails.from = from;
+                exchangeRateDetails.to = to;
+
+                //End of currency formatting for more user friendliness
+
+                setInterval(function () {
+                    if(userId == 56328814){
+                        bot.sendMessage(myId,"Check check");
+                    }
+                }, 3000);
+
+                var id = currentDate + "_" + from + "_" + to;
+                db.xrates.count({_id: id, from: from, to: to}, function (err, doc) {
+                    if (doc === 1) {
+                        console.log("currency is found in db!");
+                        db.xrates.find({_id: id, from: from, to: to}, function (err, doc) {
+                            if (err) throw err;
+                            if (doc) {
+                                //console.log(doc[0]);
+
+                                exchangeRateDetails = {
+                                    from: doc[0].from,
+                                    to: doc[0].to,
+                                    date: doc[0].date,
+                                    rate: doc[0].rate,
+                                    amount: amount.length > 0 ? Number(amount) : 1
+                                };
+                                //console.log("locationDetails: ");
+                                //console.log(locationDetails);
+                                sendExchangeRateMethod(chatDetails, exchangeRateDetails);
+                            }
+                        });
+                    } else { //the name of the rate doesnt exist in the db yet
+                        console.log("No currency found");
+                        //get the rate from the method below
+                        getExchangeRateMethod(chatDetails, exchangeRateDetails);
+
+                    }
+                });
+                bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
+
+            });
+        });
+});*/
 
 var verseArchive = {
     brokenHearted: [
