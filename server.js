@@ -20,15 +20,19 @@ var bot = new TelegramBot(token, {polling: true});
 var bot_name = "Marvin";
 var numOfBebePhotos = 3;
 
-var ip_addr = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-var port = process.env.OPENSHIFT_NODEJS_PORT || '8080';
+var ip_addr = '76.8.60.212';
+//var ip_addr = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+/*var port = process.env.OPENSHIFT_NODEJS_PORT || '8080';
 if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
     var connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
         process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
         process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
         process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
         process.env.OPENSHIFT_APP_NAME;
-}
+}*/
+
+//connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
+var connection_string = "http://" + ip_addr + ":27017";
 
 //Connecting to the db at the start of the code
 console.log("This is my connection_string: ");
@@ -1850,6 +1854,86 @@ bot.onText(/\/yay/i, function (msg, match) {
     bot.sendSticker(fromId, "CAADBQAD8QADCmwYBFPlx-n0MfKuAg");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
+bot.onText(/\/cry/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    bot.sendSticker(fromId, "CAADBQADMwcAAgXm3gKC13HomeNgZQI");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful cry sticker!");
+});
+bot.onText(/\/xysmirk/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    bot.sendSticker(fromId, "CAADAQADFAEAAtYvmwaMu5doAAF_xU8C");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful xy's smirk sticker!");
+});
+bot.onText(/\/buthor/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    bot.sendSticker(fromId, "CAADBQADlAADlHOkCWQseZcY0ktXAg");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful butt sticker!");
+});
+bot.onText(/\/aiyo/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    bot.sendSticker(fromId, "CAADBQADpAADCmwYBKxm5xAl3mikAg");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful aiyo sticker!");
+});
+bot.onText(/\/hehe/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    bot.sendSticker(fromId, "CAADBQADZAADlHOkCRItMD6WpTB3Ag");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful hehe sticker!");
+});
+
+bot.onText(/\/aniyo/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    bot.sendSticker(fromId, "CAADBQADXgADlHOkCdKqgJ7HMfk2Ag");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful aiyo sticker!");
+});
+
 bot.onText(/\/givefeedback/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
@@ -2301,7 +2385,6 @@ bot.onText(/\/getxrate/i, function (msg, match) {
             });
         });
 });
-
 
 var verseArchive = {
     brokenHearted: [
