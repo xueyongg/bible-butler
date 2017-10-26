@@ -21,8 +21,7 @@ var bot_name = "Marvin";
 var numOfBebePhotos = 3;
 
 var ip_addr = '76.8.60.212';
-//connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
-var connection_string = "http://" + ip_addr + ":27017";
+connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
 
 //Connecting to the db at the start of the code
 console.log("This is my connection_string: ");
@@ -660,7 +659,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
          })*/
 
 
-    }
+    } //TODO: TO BE COMPLETED
 //-----------------------------------------------Comments related use---------------------------------------------------------
     else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
         bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
@@ -881,6 +880,78 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         //    bot.sendMessage(fromId, translatedMessage);
         //});
 
+    }
+//-----------------------------------------------Exchange rate related use---------------------------------------------------------
+    else if (/^marvin (.+)/ig.exec(msg.text.trim())) {
+
+        var matches = /^marvin (.+)/ig.exec(msg.text.trim());
+        var text1 = matches[1].trim().toUpperCase();
+
+        var error = false;
+        if (text1.length < 7) {
+            error = true;
+        } else if (text1.length == 7 && text1.split("")[text1.split("").length - 4] !== "2") {
+            error = true;
+        } else if (text1.length == 7 && !/^[a-z]/ig.exec(text1[0])) {
+            error = true;
+        } else if (text1.length > 7 && !/([\d|.]+)([A-Z]{3})2([A-Z]{3})/ig.exec(text1)) {
+            error = true;
+        }
+        if (error) {
+            bot.sendMessage(fromId, "Incorrect format used! Try again!");
+            return;
+        }
+
+        //format the message to include 1
+        if (text1.length == 7) {
+            text1 = 1 + text1;
+        }
+
+        var xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
+        var amount = xrateToken[1];
+        var from = xrateToken[2];
+        var to = xrateToken[3];
+
+        //console.log(xrateToken);
+        //console.log(amount);
+        //console.log(from);
+        //console.log(to);
+
+        //TODO: check if the to currency is legit *impt!
+        var currentDate = moment().format("DD-MM-YYYY");
+        var exchangeRateDetails = {
+            from: from,
+            to: to,
+            date: currentDate,
+            amount: amount.length > 0 ? Number(amount) : 1
+        };
+        var id = currentDate + "_" + from + "_" + to;
+        db.xrates.count({_id: id, from: from, to: to}, function (err, doc) {
+            if (doc === 1) {
+                console.log("doc is 1");
+                db.xrates.find({_id: id, from: from, to: to}, function (err, doc) {
+                    if (err) throw err;
+                    if (doc) {
+                        //console.log(doc[0]);
+
+                        exchangeRateDetails = {
+                            from: doc[0].from,
+                            to: doc[0].to,
+                            date: doc[0].date,
+                            rate: doc[0].rate,
+                            amount: amount.length > 0 ? Number(amount) : 1
+                        };
+                        //console.log("locationDetails: ");
+                        //console.log(locationDetails);
+                        sendExchangeRateMethod(chatDetails, exchangeRateDetails);
+                    }
+                });
+            } else { //the name of the rate doesnt exist in the db yet
+                console.log("doc is not 1");
+                getExchangeRateMethod(chatDetails, exchangeRateDetails);
+            }
+        });
+        bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
     }
     else {
         var resp = match[1];
@@ -1438,8 +1509,6 @@ function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
 
     });
 }
-
-
 /**
  * Only if the currency is already acquired then enter this method
  * @param chatDetails details about the chat, ID, person's name etc
@@ -1635,6 +1704,7 @@ bot.onText(/\/help/i, function (msg, match) {
         "\n/excuseme - eating sticker " +
         "\n/yay - eating sticker ");
 });
+
 bot.onText(/\/stun/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
@@ -1909,7 +1979,6 @@ bot.onText(/\/hehe/i, function (msg, match) {
     bot.sendSticker(fromId, "CAADBQADZAADlHOkCRItMD6WpTB3Ag");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful hehe sticker!");
 });
-
 bot.onText(/\/aniyo/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
