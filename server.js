@@ -21,15 +21,6 @@ var bot_name = "Marvin";
 var numOfBebePhotos = 3;
 
 var ip_addr = '76.8.60.212';
-//var ip_addr = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-/*var port = process.env.OPENSHIFT_NODEJS_PORT || '8080';
-if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
-    var connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
-        process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
-        process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
-        process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
-        process.env.OPENSHIFT_APP_NAME;
-}*/
 
 //connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
 var connection_string = "http://" + ip_addr + ":27017";
