@@ -21,7 +21,6 @@ var bot_name = "Marvin";
 var numOfBebePhotos = 3;
 
 var ip_addr = '76.8.60.212';
-
 //connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
 var connection_string = "http://" + ip_addr + ":27017";
 
