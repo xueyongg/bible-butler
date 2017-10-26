@@ -1,5 +1,7 @@
 var TelegramBot = require('node-telegram-bot-api');
-var mongojs = require('mongojs')
+var mongojs = require('mongojs');
+var MongoClient = require('mongodb').MongoClient
+    , format = require('util').format;
 
 var request = require('request');
 var moment = require('moment');
@@ -19,21 +21,29 @@ var myId = 56328814;
 var bot = new TelegramBot(token, {polling: true});
 var bot_name = "Marvin";
 var numOfBebePhotos = 3;
-
 var ip_addr = '76.8.60.212';
-connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
 
+connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
 //Connecting to the db at the start of the code
 console.log("This is my connection_string: ");
 console.log(connection_string);
+
+
+MongoClient.connect(connection_string, function (err, db) {
+    if (err) {
+        throw err;
+    } else {
+        console.log("successfully connected to the database");
+    }
+})
 
 var db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"]);
 console.log("Trying to connect to db..");
 //end of connecting to db
 
-bot.setWebHook('public-url.com', {
-    certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
-});
+//bot.setWebHook('public-url.com', {
+//    certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
+//});
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
