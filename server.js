@@ -7,6 +7,7 @@ var request = require('request');
 var moment = require('moment');
 var moment = require('moment-timezone');
 var emoji = require('node-emoji').emoji;
+const scrapeIt = require("scrape-it")
 //var googleTranslate = require('google-translate')(apiKey);
 
 var token = '311713449:AAE8kINWy4vv3TClcweV_2s9SR8G9suWheM';
@@ -18,16 +19,16 @@ var holidayAPIKey = '834092a6-24f3-4302-af9c-ddc702514c32';
 var exchangeRateAPIKey = 'c1b6d9a982abfc8fdb30f307fcc3aa92';
 var myId = 56328814;
 // Setup polling way
-var bot = new TelegramBot(token, {polling: true});
+var bot = new TelegramBot(token, { polling: true });
 var bot_name = "Marvin";
 var numOfBebePhotos = 3;
-var ip_addr = '76.8.60.212';
+// var ip_addr = '76.8.60.212';
+var ip_addr = '127.0.0.1';
 
 connection_string = "mongodb://" + ip_addr + ":27017" + "/biblebutler";
 //Connecting to the db at the start of the code
 console.log("This is my connection_string: ");
 console.log(connection_string);
-
 
 MongoClient.connect(connection_string, function (err, db) {
     if (err) {
@@ -37,8 +38,16 @@ MongoClient.connect(connection_string, function (err, db) {
     }
 })
 
-var db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"]);
-console.log("Trying to connect to db..");
+var db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"], (err, res) => {
+    if (err) {
+        bot.sendMessage(myId, "Error connecting to db, rescue me soon!");
+        throw err
+    } else {
+        log.info("successfully connected to the database");
+    }
+    log.info("Trying to connect to db..");
+});
+
 //end of connecting to db
 
 //bot.setWebHook('public-url.com', {
@@ -71,7 +80,7 @@ bot.onText(/\/set/, function (msg, match) {
         "\nApologies for the inconveniences caused.";
 
     var keyboard = [
-        [{text: 'KJV'}, {text: 'WEB'}]
+        [{ text: 'KJV' }, { text: 'WEB' }]
     ];
     var replyObject = {
         reply_markup: keyboard,
@@ -145,7 +154,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var matches = /^marvin (.+verse)(.+[0-9]$)/ig.exec(msg.text.trim());
         var fetchingVerse = matches[2].trim();
 
-        if (fetchingVerse)  marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
+        if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
         else bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
 
     }
@@ -161,8 +170,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Yes", callback_data: "yes",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Yes", callback_data: "yes", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -198,9 +207,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Music", callback_data: "music",},
-                        {text: "Verse", callback_data: "verse",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Music", callback_data: "music", },
+                    { text: "Verse", callback_data: "verse", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -211,8 +220,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var secondOpt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Yes", callback_data: "yes",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Yes", callback_data: "yes", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -223,12 +232,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var thirdOpt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Jackie", callback_data: "no",},
-                        {text: "Latte", callback_data: "no",},
-                        {text: "Baby", callback_data: "no",}],
-                    [{text: "Bebe", callback_data: "bebe",},
-                        {text: "Ginger", callback_data: "no",},
-                        {text: "Puffy", callback_data: "no",}]
+                    [{ text: "Jackie", callback_data: "no", },
+                    { text: "Latte", callback_data: "no", },
+                    { text: "Baby", callback_data: "no", }],
+                    [{ text: "Bebe", callback_data: "bebe", },
+                    { text: "Ginger", callback_data: "no", },
+                    { text: "Puffy", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -316,9 +325,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Music", callback_data: "music",},
-                        {text: "Verse", callback_data: "verse",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Music", callback_data: "music", },
+                    { text: "Verse", callback_data: "verse", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -329,8 +338,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var secondOpt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Yes", callback_data: "yes",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Yes", callback_data: "yes", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -341,12 +350,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var thirdOpt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "9 Weeks old", callback_data: "no",},
-                        {text: "6 Months old", callback_data: "no",},
-                        {text: "12 Weeks old", callback_data: "no",}],
-                    [{text: "1 Year old", callback_data: "bebe",},
-                        {text: "9 Months old", callback_data: "no",},
-                        {text: "2 Years old", callback_data: "no",}]
+                    [{ text: "9 Weeks old", callback_data: "no", },
+                    { text: "6 Months old", callback_data: "no", },
+                    { text: "12 Weeks old", callback_data: "no", }],
+                    [{ text: "1 Year old", callback_data: "bebe", },
+                    { text: "9 Months old", callback_data: "no", },
+                    { text: "2 Years old", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -435,9 +444,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Music", callback_data: "music",},
-                        {text: "Verse", callback_data: "verse",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Music", callback_data: "music", },
+                    { text: "Verse", callback_data: "verse", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -448,8 +457,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var secondOpt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Yes", callback_data: "yes",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Yes", callback_data: "yes", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -460,12 +469,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var thirdOpt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Puffy", callback_data: "no",},
-                        {text: "Coco", callback_data: "no",},
-                        {text: "Janelle", callback_data: "no",}],
-                    [{text: "Pepper", callback_data: "bebe",},
-                        {text: "Baby", callback_data: "no",},
-                        {text: "Bebe", callback_data: "no",}]
+                    [{ text: "Puffy", callback_data: "no", },
+                    { text: "Coco", callback_data: "no", },
+                    { text: "Janelle", callback_data: "no", }],
+                    [{ text: "Pepper", callback_data: "bebe", },
+                    { text: "Baby", callback_data: "no", },
+                    { text: "Bebe", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -579,9 +588,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Xueyong", callback_data: "no",},
-                        {text: "Joshua", callback_data: "no",},
-                        {text: "Xue", callback_data: "xue",}]
+                    [{ text: "Xueyong", callback_data: "no", },
+                    { text: "Joshua", callback_data: "no", },
+                    { text: "Xue", callback_data: "xue", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -589,7 +598,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        db.users.count({_id: userId}, function (err, doc) {
+        db.users.count({ _id: userId }, function (err, doc) {
             if (doc === 1) {
                 //exist and is already my bb
                 bot.sendMessage(fromId, "Aww you do? But you are already my bb! " + emoji.heart_eyes);
@@ -636,8 +645,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{text: "Yes", callback_data: "yes",},
-                        {text: "No", callback_data: "no",}]
+                    [{ text: "Yes", callback_data: "yes", },
+                    { text: "No", callback_data: "no", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -670,7 +679,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
 
     } //TODO: TO BE COMPLETED
-//-----------------------------------------------Comments related use---------------------------------------------------------
+    //-----------------------------------------------Comments related use---------------------------------------------------------
     else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
         bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
         bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
@@ -757,7 +766,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         });
 
     } //TODO: TO BE COMPLETED
-//----------------------------------------------- Weather related use---------------------------------------------------------
+    //----------------------------------------------- Weather related use---------------------------------------------------------
     else if (/^marvin (.+)weather.*/ig.exec(msg.text.trim())) {
         //console.log(db);
         //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
@@ -768,9 +777,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         console.log("this is splitWord: " + splitWord[splitWord.length - 2]);
         var name = splitWord[splitWord.length - 2].trim();
 
-        db.locations.count({name: name}, function (err, doc) {
+        db.locations.count({ name: name }, function (err, doc) {
             if (doc === 1) {
-                db.locations.find({name: name}, function (err, doc) {
+                db.locations.find({ name: name }, function (err, doc) {
                     if (err) throw err;
                     if (doc) {
                         //console.log(doc[0]);
@@ -791,7 +800,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         });
 
     }
-//-----------------------------------------------Only for admin to use---------------------------------------------------------
+    //-----------------------------------------------Only for admin to use---------------------------------------------------------
     else if (/^marvin (.+connect test.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
         var verses = db.collection('verses');
@@ -810,7 +819,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         var verses = db.collection('verses');
         // log each of the first ten docs in the collection
         bot.sendMessage(fromId, "I'm connected! And here are your first ten bbs");
-        db.users.find({"bb": true}).limit(10).forEach(function (err, doc) {
+        db.users.find({ "bb": true }).limit(10).forEach(function (err, doc) {
             if (err) throw err;
             if (doc) {
                 bot.sendMessage(fromId, doc.firstName);
@@ -891,7 +900,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         //});
 
     }
-//-----------------------------------------------Exchange rate related use---------------------------------------------------------
+    //-----------------------------------------------Exchange rate related use---------------------------------------------------------
     else if (/^marvin (.+)/ig.exec(msg.text.trim())) {
 
         var matches = /^marvin (.+)/ig.exec(msg.text.trim());
@@ -936,10 +945,10 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             amount: amount.length > 0 ? Number(amount) : 1
         };
         var id = currentDate + "_" + from + "_" + to;
-        db.xrates.count({_id: id, from: from, to: to}, function (err, doc) {
+        db.xrates.count({ _id: id, from: from, to: to }, function (err, doc) {
             if (doc === 1) {
                 console.log("doc is 1");
-                db.xrates.find({_id: id, from: from, to: to}, function (err, doc) {
+                db.xrates.find({ _id: id, from: from, to: to }, function (err, doc) {
                     if (err) throw err;
                     if (doc) {
                         //console.log(doc[0]);
@@ -1026,80 +1035,87 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version) {
         } else {
             var verseReference = info.reference;
             console.log(verseReference);
-            db.verses.count({_id: verseReference}, function (err, doc) { //check whether verse exist in db or not
-                if (doc === 1) {
-                    //console.log("im in doc == 1")
-                    db.verses.find({_id: verseReference}, function (err, doc2) {
-                        if (err) throw err;
-                        if (doc2) {
-                            //console.log("im  in doc2")
-                            //console.log(doc[0]);
-                            //bot.sendMessage(fromId, doc[0].name);
-                            var oldCounter = doc2[0].counter;
-                            var newCounter = oldCounter + 1;
-                            //console.log("updating the counter..");
+            if (db)
+                db.verses.count({ _id: verseReference }, function (err, doc) { //check whether verse exist in db or not
+                    if (doc === 1) {
+                        //console.log("im in doc == 1")
+                        db.verses.find({ _id: verseReference }, function (err, doc2) {
+                            if (err) throw err;
+                            if (doc2) {
+                                //console.log("im  in doc2")
+                                //console.log(doc[0]);
+                                //bot.sendMessage(fromId, doc[0].name);
+                                var oldCounter = doc2[0].counter;
+                                var newCounter = oldCounter + 1;
+                                //console.log("updating the counter..");
 
-                            doc2[0].counter = doc2[0].counter + 1;
-                            db.verses.update({
-                                _id: verseReference
-                            }, {
-                                $set: {
-                                    counter: newCounter
+                                doc2[0].counter = doc2[0].counter + 1;
+                                db.verses.update({
+                                    _id: verseReference
+                                }, {
+                                        $set: {
+                                            counter: newCounter
+                                        }
+                                    }, function (err, doc) {
+                                        if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is added into " + fetchingVerse + " database counter. " +
+                                            "Current counter is " + newCounter + emoji.smiley);
+                                    });
+                                //console.log(doc2);
+                                switch (type) {
+                                    case "normal":
+                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
+                                        break;
+                                    case "sad":
+                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + verseReference + " says:");
+                                        break;
                                 }
-                            }, function (err, doc) {
-                                if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is added into " + fetchingVerse + " database counter. " +
-                                    "Current counter is " + newCounter + emoji.smiley);
-                            });
-                            //console.log(doc2);
-                            switch (type) {
-                                case "normal":
-                                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
-                                    break;
-                                case "sad":
-                                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + verseReference + " says:");
-                                    break;
+
+                                var verseBody = doc2[0].text;
+                                bot.sendMessage(fromId, verseBody);
+                                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + fetchingVerse + "! Fetch from DB is a success! " + emoji.kissing_smiling_eyes);
                             }
-
-                            var verseBody = doc2[0].text;
-                            bot.sendMessage(fromId, verseBody);
-                            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + fetchingVerse + "! Fetch from DB is a success! " + emoji.kissing_smiling_eyes);
-                        }
-                    });
-                } else { //the verse doesn't exist in the db yet
-                    //console.log("im not in doc == 1")
-                    var r = request({url: url},
-                        function (error, response, body) {
-                            var str = body;
-                            var formattedBody = str.replace(/<b>/gi, function myFunction(x) {
-                                return "\n";
-                            });
-                            var formattedBody2 = formattedBody.replace(/<\/b>/gi, function myFunction(x) {
-                                return "";
-                            });
-
-                            switch (type) {
-                                case "normal":
-                                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
-                                    break;
-                                case "sad":
-                                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + verseReference + " says:");
-                                    break;
-                            }
-
-                            //add this verse into db
-                            db.verses.insert({
-                                _id: verseReference,
-                                verse: verseReference,
-                                text: formattedBody2,
-                                counter: 1
-                            });
-
-                            bot.sendMessage(fromId, formattedBody2);
-                            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + verseReference + "! New versed added into DB! " + emoji.kissing_smiling_eyes);
                         });
-                }
-            });
+                    } else { //the verse doesn't exist in the db yet
+                        //console.log("im not in doc == 1")
+                        var r = request({ url: url },
+                            function (error, response, body) {
+                                var str = body;
+                                var formattedBody = str.replace(/<b>/gi, function myFunction(x) {
+                                    return "\n";
+                                });
+                                var formattedBody2 = formattedBody.replace(/<\/b>/gi, function myFunction(x) {
+                                    return "";
+                                });
 
+                                switch (type) {
+                                    case "normal":
+                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
+                                        break;
+                                    case "sad":
+                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + verseReference + " says:");
+                                        break;
+                                }
+
+                                //add this verse into db
+                                db.verses.insert({
+                                    _id: verseReference,
+                                    verse: verseReference,
+                                    text: formattedBody2,
+                                    counter: 1
+                                });
+
+                                bot.sendMessage(fromId, formattedBody2);
+                                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + verseReference + "! New versed added into DB! " + emoji.kissing_smiling_eyes);
+                            });
+                    }
+                });
+            else {
+                bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
+                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
+                    ". Success retrieval of " + fetchingVerse +
+                    "! Fetch from DB is a success! " + emoji.kissing_smiling_eyes);
+
+            }
         }
     });
     bot.sendMessage(fromId, "Fetching verse now..");
@@ -1202,7 +1218,7 @@ function getLatLongMethod(locationInput, chatDetails, type) {
 
                             var sunrise = info.results.sunrise;
                             var sunset = info.results.sunset;
-                            var sunriseDetails = {sunrise: sunrise, sunset: sunset}
+                            var sunriseDetails = { sunrise: sunrise, sunset: sunset }
                             formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails);
                         });
                     });
@@ -1277,7 +1293,7 @@ function getSunriseMethod(locationDetails, chatDetails) {
         var dateOffset = info2.rawOffset;
         var timeZoneId = info2.timeZoneId;
         var timeZoneName = info2.timeZoneName;
-        var timeZoneDetails = {dateOffset: dateOffset, timeZoneId: timeZoneId, timeZoneName: timeZoneName}
+        var timeZoneDetails = { dateOffset: dateOffset, timeZoneId: timeZoneId, timeZoneName: timeZoneName }
         var today = moment().tz(timeZoneId).format("YYYY-MM-DD");
         var tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
         var sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
@@ -1292,7 +1308,7 @@ function getSunriseMethod(locationDetails, chatDetails) {
             }
             var sunrise = info.results.sunrise;
             var sunset = info.results.sunset;
-            var sunriseDetails = {sunrise: sunrise, sunset: sunset};
+            var sunriseDetails = { sunrise: sunrise, sunset: sunset };
             formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationName, chatDetails);
         });
 
@@ -1306,7 +1322,7 @@ function bbAutoChecker(chatDetails) {
     var first_name = chatDetails.first_name;
     var userId = chatDetails.userId;
 
-    db.users.count({_id: userId}, function (err, doc) {
+    db.users.count({ _id: userId }, function (err, doc) {
         if (doc === 1) {
             //exist and is already my bb
             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " already added " + first_name + "'s id hehe! Check from db is a success!");
@@ -1314,14 +1330,14 @@ function bbAutoChecker(chatDetails) {
             db.users.update({
                 _id: userId
             }, {
-                $set: {
-                    profile: {
-                        chatId: userId,
+                    $set: {
+                        profile: {
+                            chatId: userId,
+                        }
                     }
-                }
-            }, function (err, doc) {
-                if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + "'s ChatId is added into database" + emoji.smiley);
-            });
+                }, function (err, doc) {
+                    if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + "'s ChatId is added into database" + emoji.smiley);
+                });
 
         }
     });
@@ -1407,10 +1423,10 @@ function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
                 details: info.holidays
             };
             console.log(newHolidayObject);
-            db.holidays.find({_id: holidayId}, function (err, doc) {
+            db.holidays.find({ _id: holidayId }, function (err, doc) {
                 if (doc !== 1) { //dont exist in the system
                     //availableCountries: doc[0].availableCountries + holidayCountry,
-                    db.holidays.insert({_id: holidayId}, newHolidayObject);
+                    db.holidays.insert({ _id: holidayId }, newHolidayObject);
                     bot.sendMessage(fromId, "I'm connected! And populated the db with holiday " + holidayCountry + " " + holidayMonth + " month" + holidayYear);
                 } else {
 
@@ -1649,22 +1665,34 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
     //console.log("This is the userID: " + userId);
     //console.log("This is the first_name: " + first_name);
     //console.log("This is the retrieved user: ");
-    db.users.count({_id: userId}, function (err, doc) {
-        if (doc === 1) {
-            bot.sendMessage(fromId, "Yes " + first_name + "! You are my bb! " + emoji.heart_eyes);
-            bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is my bb! Check from db is a success!");
-        } else {
-            var bbRejectionArchive = [
-                "You are not my bb! Who are you?" + emoji.scream_cat,
-                first_name + "? Who is that?",
-                "It is an exclusive club, sadly you're not in it"
-            ];
-            bot.sendMessage(fromId, bbRejectionArchive[Math.floor(Math.random() * bbRejectionArchive.length)]);
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
+    if (db) {
+        db.users.count({ _id: userId }, function (err, doc) {
+            if (doc === 1) {
+                bot.sendMessage(fromId, "Yes " + first_name + "! You are my bb! " + emoji.heart_eyes);
+                bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
+                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is my bb! Check from db is a success!");
+            } else {
+                var bbRejectionArchive = [
+                    "You are not my bb! Who are you?" + emoji.scream_cat,
+                    first_name + "? Who is that?",
+                    "It is an exclusive club, sadly you're not in it"
+                ];
+                bot.sendMessage(fromId, bbRejectionArchive[Math.floor(Math.random() * bbRejectionArchive.length)]);
+                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
 
-        }
-    });
+            }
+        });
+    } else {
+        var fallbackArchive = [
+            "Bb is currently under maintenance right now. " + emoji.scream_cat,
+            first_name + ", that is a nice name! But bb is currently under maintenance",
+            "And she will be loved~ oh, sorry I was distracted. I'm currently under maintenance right"
+        ];
+        bot.sendMessage(fromId, bbRejectionArchive[Math.floor(Math.random() * bbRejectionArchive.length)]);
+        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
+
+    }
+
 });
 bot.onText(/\/insult/i, function (msg, match) {
     var chat = msg.chat;
@@ -2095,7 +2123,7 @@ bot.onText(/\/getverse/i, function (msg, match) {
 
                 var verse = "john3:30-31";
                 var fetchingVerse = msg.text;
-                if (fetchingVerse)  marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
+                if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
             });
         });
 });
@@ -2160,14 +2188,14 @@ bot.onText(/\/feeling/, function (msg, match) {
     var opt = {
         reply_markup: {
             inline_keyboard: [
-                [{text: "Angry", callback_data: "angry",},
-                    {text: "Broken Hearted", callback_data: "brokenHearted",}],
-                [{text: "Insecure", callback_data: "insecure",},
-                    {text: "Confused", callback_data: "confused",},
-                    {text: "Faithless", callback_data: "needFaith",}],
-                [{text: "upset", callback_data: "needEncouragement",},
-                    {text: "unforgiving", callback_data: "needForgiveness",},
-                    {text: "Tired", callback_data: "needStrength",},
+                [{ text: "Angry", callback_data: "angry", },
+                { text: "Broken Hearted", callback_data: "brokenHearted", }],
+                [{ text: "Insecure", callback_data: "insecure", },
+                { text: "Confused", callback_data: "confused", },
+                { text: "Faithless", callback_data: "needFaith", }],
+                [{ text: "upset", callback_data: "needEncouragement", },
+                { text: "unforgiving", callback_data: "needForgiveness", },
+                { text: "Tired", callback_data: "needStrength", },
                 ]
             ],
             one_time_keyboard: true,
@@ -2194,7 +2222,7 @@ bot.onText(/\/feeling/, function (msg, match) {
                 }
                 var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                 bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
-                if (chosenVerse)  marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
+                if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
             });
         });
 
@@ -2230,9 +2258,9 @@ bot.onText(/\/getweatherreport/i, function (msg, match) {
                 //console.log(msg);
                 bbAutoChecker(chatDetails);
 
-                db.locations.count({name: msg.text}, function (err, doc) {
+                db.locations.count({ name: msg.text }, function (err, doc) {
                     if (doc === 1) {
-                        db.locations.find({name: msg.text}, function (err, doc) {
+                        db.locations.find({ name: msg.text }, function (err, doc) {
                             if (err) throw err;
                             if (doc) {
                                 //console.log(doc[0]);
@@ -2285,10 +2313,10 @@ bot.onText(/\/getsunrise/i, function (msg, match) {
                 console.log("Sunrise location message is here!!");
                 //console.log(msg);
 
-                db.locations.count({name: msg.text}, function (err, doc) {
+                db.locations.count({ name: msg.text }, function (err, doc) {
                     if (doc === 1) {
                         //console.log("doc is 1");
-                        db.locations.find({name: msg.text}, function (err, doc) {
+                        db.locations.find({ name: msg.text }, function (err, doc) {
                             if (err) throw err;
                             if (doc) {
                                 //console.log(doc[0]);
@@ -2377,7 +2405,7 @@ bot.onText(/\/getxrate/i, function (msg, match) {
         }
     };
     bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
-            "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
+        "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
         .then(function () {
             bot.once('message', function (msg) {
                 console.log("Exchange rate message is here!!");
@@ -2424,10 +2452,10 @@ bot.onText(/\/getxrate/i, function (msg, match) {
                     amount: amount.length > 0 ? Number(amount) : 1
                 };
                 var id = currentDate + "_" + from + "_" + to;
-                db.xrates.count({_id: id, from: from, to: to}, function (err, doc) {
+                db.xrates.count({ _id: id, from: from, to: to }, function (err, doc) {
                     if (doc === 1) {
                         console.log("doc is 1");
-                        db.xrates.find({_id: id, from: from, to: to}, function (err, doc) {
+                        db.xrates.find({ _id: id, from: from, to: to }, function (err, doc) {
                             if (err) throw err;
                             if (doc) {
                                 //console.log(doc[0]);
