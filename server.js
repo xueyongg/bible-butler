@@ -1129,6 +1129,7 @@ async function getVerseMethod(key_word) {
         title: key_word,
         verse: `#en-${version}-30214`,
     })
+    log.info(JSON.stringify(result.data, null, 2));
     return result.data;
 
 }
