@@ -1120,6 +1120,18 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version) {
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
+
+async function getVerseMethod(key_word) {
+    const search = key_word.replace(' ', '%20');
+    const version = "NIV";
+    const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
+    const result = await scrapeIt(url, {
+        title: key_word,
+        verse: `#en-${version}-30214`,
+    })
+    return result.data;
+
+}
 function getLatLongMethod(locationInput, chatDetails, type) {
     //type: weather or sunrise
     var fromId = chatDetails.fromId;
@@ -2127,6 +2139,51 @@ bot.onText(/\/getverse/i, function (msg, match) {
             });
         });
 });
+bot.onText(/\/getvverse/i, function (msg, match) {
+    var chat = msg.chat;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    var chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+
+    var opt = {
+        reply_markup: {
+
+            force_reply: true,
+        }
+    };
+
+    bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
+        .then(function () {
+            bot.once('message', function (msg) {
+                console.log("message is here!!");
+                console.log(msg);
+
+                var verse = "john3:30-31";
+                var fetchingVerse = msg.text;
+                if (fetchingVerse) {
+                    const result = getVerseMethod(fetchingVerse);
+                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
+                    bot.sendMessage(fromId, result.verse);
+                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
+                        ". Success retrieval of " + fetchingVerse +
+                        "! Fetch from DB is a success! " + emoji.kissing_smiling_eyes);
+                }
+
+            });
+        });
+});
+
 bot.onText(/\/getnewverse/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
