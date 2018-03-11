@@ -4,4 +4,5 @@
 # misc
 .idea/workspace.xml
 *.xml
+.env
 
