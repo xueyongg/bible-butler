@@ -19,7 +19,9 @@
             },
             "externalConsole": false,
             "sourceMaps": false,
-            "outDir": null
+            "outFiles": [
+                "${workspaceRoot}/build/**/*"
+            ],
         },
         {
             "name": "Attach",
@@ -29,7 +31,7 @@
             "address": "localhost",
             "restart": false,
             "sourceMaps": false,
-            "outDir": null,
+            "outFiles": ["null"],
             "localRoot": "${workspaceRoot}",
             "remoteRoot": null
         }
