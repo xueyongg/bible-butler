@@ -1,3 +1,7 @@
+# dependencies
+/node_modules
 
+# misc
 .idea/workspace.xml
 *.xml
+
