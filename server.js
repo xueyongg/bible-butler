@@ -2,6 +2,7 @@ var TelegramBot = require('node-telegram-bot-api');
 var mongojs = require('mongojs');
 var MongoClient = require('mongodb').MongoClient
     , format = require('util').format;
+const ngrok = require('ngrok');
 
 var request = require('request');
 var moment = require('moment');
@@ -19,7 +20,77 @@ var holidayAPIKey = '834092a6-24f3-4302-af9c-ddc702514c32';
 var exchangeRateAPIKey = 'c1b6d9a982abfc8fdb30f307fcc3aa92';
 var myId = 56328814;
 // Setup polling way
-var bot = new TelegramBot(token, { polling: true });
+const PORT = process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const HOST = process.env.OPENSHIFT_NODEJS_IP || process.env.LOCAL_IP;
+let DOMAIN = process.env.OPENSHIFT_APP_DNS || process.env.LOCAL_URL;
+
+console.log("< PORT", PORT);
+console.log("< TELEGRAM_TOKEN", TELEGRAM_TOKEN);
+console.log("< HOST", HOST);
+console.log("< DOMAIN", DOMAIN);
+
+let bot = new TelegramBot(token, { polling: true });
+// Method that creates the bot and starts listening for updates
+const takeOff = () => {
+	//Setup WebHook way
+	const bot = new TelegramBot(token, {
+		webHook: {
+			host: HOST
+			, port: PORT
+		}
+		, onlyFirstMatch: true
+	});
+
+	bot.getMe()
+	.then(me => {
+		bot.setWebHook(DOMAIN + ':443/bot' + TELEGRAM_TOKEN);
+		let info = [];
+		const date = new Date();
+		info.push('------------------------------');
+		info.push('Bot successfully deployed!');
+		info.push('------------------------------');
+		info.push('Bot info:');
+		info.push(`- ID: ${me.id}`);
+		info.push(`- Name: ${me.first_name}`);
+		info.push(`- Username: ${me.username}`);
+		info.push('\n');
+		info.push('Server info:');
+		info.push(`- Host: ${HOST}`);
+		info.push(`- Port: ${PORT}`);
+		info.push(`- Domain: ${DOMAIN}`);
+		info.push(`- Node version: ${process.version}`);
+		info.push('\n');
+		info.push('Time Info:');
+		info.push(
+			`- Date: ${date.getDay()}/${date.getMonth()}/${date.getFullYear()}`);
+		info.push(
+			`- Time: ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+			);
+		info.push('------------------------------');
+		console.log(info.join('\n'));
+	})
+	.catch(console.log);
+
+	// Here I'd call a setListeners to set all the event listeners for the updates
+};
+
+if (!DOMAIN) {
+	// If no URL is provided for the WebHook from environment variables, we open an ngrok tunnel
+	bot.openTunnel(PORT)
+	.then(host => {
+		// Once we have the ngrok tunnel host, we set the coresponding variable
+		DOMAIN = host;
+		console.log(`Ngrok tunnel opened at ${host}`);
+		// Then start listening for updates
+		takeOff();
+	})
+	.catch(console.log);
+} else {
+	// If environment variables define a url, we start listening for the updates without opening a tunnel
+	takeOff();
+}
+
 var bot_name = "Marvin";
 var numOfBebePhotos = 3;
 // var ip_addr = '76.8.60.212';

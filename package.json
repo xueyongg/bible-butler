@@ -15,5 +15,18 @@
   "bugs": {
     "url": "https://github.com/xueyongg/bible-butler/issues"
   },
-  "homepage": "https://github.com/xueyongg/bible-butler#readme"
+  "homepage": "https://github.com/xueyongg/bible-butler#readme",
+  "dependencies": {
+    "google-translate": "^2.1.0",
+    "moment": "^2.21.0",
+    "moment-timezone": "^0.5.14",
+    "mongodb": "^3.0.4",
+    "mongojs": "^2.5.0",
+    "ngrok": "^3.0.0",
+    "node-emoji": "^1.8.1",
+    "node-telegram-bot-api": "^0.30.0",
+    "request": "^2.83.0",
+    "scrape-it": "^5.0.2",
+    "util": "^0.10.3"
+  }
 }
