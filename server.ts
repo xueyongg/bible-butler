@@ -195,7 +195,7 @@ bot.on('message', function (msg) {
     if (matchVerse) {
         bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
     } else {
-        bot.sendMessage(fromId, trimmed_message);
+        // bot.sendMessage(fromId, trimmed_message);
         if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Fall back on echo..");
     }
 });
@@ -635,17 +635,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
     } else if (/^marvin (.+goodjob.*)/ig.exec(msg.text.trim())) {
     } else if (/^marvin (.+lost.*)/ig.exec(msg.text.trim())) {
-
-    }
-    else if (/^marvin (.+songs.*)/ig.exec(msg.text.trim())) {
-
-    }
-    else if (/^marvin (.+save.*(favourite|favorite).*verse.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+songs.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+save.*(favourite|favorite).*verse.*)/ig.exec(msg.text.trim())) {
         //TODO: Access the db check my credentials and save, up to 100 verses
         //TODO: verse structure = {verse, text, description}
 
-    }
-    else if (/^marvin (.+be.*your.*bb.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+be.*your.*bb.*)/ig.exec(msg.text.trim())) {
         //TODO: Access the db check my credentials and check if user is bb
         //TODO: verse structure = {verse, text, description}
 
@@ -705,163 +700,35 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         });
     }
-    else if (/^marvin (.+pray for me.*)/ig.exec(msg.text.trim())) {
-        var opt = {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "Yes", callback_data: "yes", },
-                    { text: "No", callback_data: "no", }]
-                ],
-                one_time_keyboard: true,
-                resize_keyboard: true,
-                force_reply: true,
-            }
-        };
-
-        /*bot.sendMessage(fromId, "What happened " + first_name + "? " + emoji.slightly_frowning_face + "What can i pray for you?", opt)
-         .then(function (ans) {
-         bot.once('callback_query', function (msg) {
-         var feeling = "needEncouragement";
-         var response = msg.data;
-         console.log("This is my response: " + response);
-         if (response === "yes") {
-         var chosenFeeling = "needEncouragement";
-         var arrayOfFeelings = verseArchive[chosenFeeling];
-         if (!arrayOfFeelings) {
-         bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
-         if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error! " + emoji.sob);
-         }
-         var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
-         marvinGetVerseMethod(chatDetails, chosenVerse, "sad");
-         bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
-         } else {
-         bot.sendMessage(fromId, "Oh okay~ Just talk to me if you need anything else! " + emoji.sob);
-         }
-         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is sad " + emoji.sob);
-         })
-         })*/
-
-
-    } //TODO: TO BE COMPLETED
-    //-----------------------------------------------Comments related use---------------------------------------------------------
-    else if (/^marvin what.*(favourite|favorite).*song/ig.exec(msg.text.trim())) {
-        bot.sendMessage(fromId, "Let me share it with you!" + emoji.relieved);
-        bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
-        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite song. " + emoji.kissing_smiling_eyes);
-
-    }
-    else if (/^marvin what.*(favourite|favorite).*gif/ig.exec(msg.text.trim())) {
-        bot.sendMessage(fromId, "Let me show you!" + emoji.relieved);
-        bot.sendDocument(fromId, "./server/data/Webarebear.gif");
-        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName ? chatName : "individual chat" + " asked me for my favourite gif. " + emoji.kissing_smiling_eyes);
-
-    }
-    else if (/^marvin convey.*(msg|message)/ig.exec(msg.text.trim())) {
-        bot.sendMessage(fromId, "What do you want to convey?" + emoji.slightly_smiling_face)
-            .then(function (ans) {
-                bot.once('message', function (msg) {
-                    var response = msg.text;
-                    bot.sendMessage(fromId, "Oh okay! I will convey the message! " + emoji.kissing_closed_eyes);
-                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " said that: "
-                        + response + " "
-                        + emoji.astonished);
-                })
-            });
-    }
-    else if (/^marvin (.+new comment.*)(.+)/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //take out the comment, and save it
-        //alert user if got more than 50 comments, and the last comment is how long ago
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
-
-    } //TODO: TO BE COMPLETED
-    else if (/^marvin (.+)(last comment.*)/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //ensure that the validation is done within 30mins
-        //first, second, third, fourth, fifth
-        //anything ask if want to get the last 10, if yes then take the last 10
-
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
-
-    } //TODO: TO BE COMPLETED
-    else if (/^marvin .+last(.+)comment.*/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //numeric value
-        //then retrieve after confirming that the number is last then 10 and is numeric
-
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
-
-    } //TODO: TO BE COMPLETED
-    else if (/^marvin (.+bb rights.*)/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
-        var verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
-
-    } //TODO: TO BE COMPLETED
     //----------------------------------------------- Weather related use---------------------------------------------------------
     else if (/^marvin (.+)weather.*/ig.exec(msg.text.trim())) {
-        //console.log(db);
-        //let her/him know what are your rights, give the options and then a brief description. After that ask if they want to add in or edit
         var weatherMatches = /^marvin (.+)weather.*/ig.exec(msg.text.trim());
-        console.log("This is weatherMatches:" + weatherMatches);
         var splitWord = weatherMatches[1].split(/\W+/);
-        console.log("this is splitWord: " + splitWord);
-        console.log("this is splitWord: " + splitWord[splitWord.length - 2]);
         var name = splitWord[splitWord.length - 2].trim();
 
-        db.locations.count({ name: name }, function (err, doc) {
-            if (doc === 1) {
-                db.locations.find({ name: name }, function (err, doc) {
-                    if (err) throw err;
-                    if (doc) {
-                        //console.log(doc[0]);
-                        //bot.sendMessage(fromId, doc[0].name);
-                        var locationDetails = {
-                            name: doc[0].name,
-                            lat: doc[0].lat,
-                            long: doc[0].long,
-                        };
-                        //console.log("locationDetails: ");
-                        //console.log(locationDetails);
-                        weatherReportMethod(locationDetails, chatDetails);
-                    }
-                });
-            } else { //the name of the location doesnt exist in the db yet
-                getLatLongMethod(name, chatDetails);
-            }
-        });
+        getLatLongMethod(chatDetails, name);
+
+        // db.locations.count({ name: name }, function (err, doc) {
+        //     if (doc === 1) {
+        //         db.locations.find({ name: name }, function (err, doc) {
+        //             if (err) throw err;
+        //             if (doc) {
+        //                 //console.log(doc[0]);
+        //                 //bot.sendMessage(fromId, doc[0].name);
+        //                 var locationDetails = {
+        //                     name: doc[0].name,
+        //                     lat: doc[0].lat,
+        //                     long: doc[0].long,
+        //                 };
+        //                 //console.log("locationDetails: ");
+        //                 //console.log(locationDetails);
+        //                 weatherReportMethod(locationDetails, chatDetails);
+        //             }
+        //         });
+        //     } else { //the name of the location doesnt exist in the db yet
+        //         getLatLongMethod(name, chatDetails);
+        //     }
+        // });
 
     }
     //-----------------------------------------------Only for admin to use---------------------------------------------------------
@@ -876,9 +743,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                 bot.sendMessage(fromId, doc.text);
             }
         });
-
-    }
-    else if (/^marvin (.+bb list elephant.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+bb list elephant.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
         var verses = db.collection('verses');
         // log each of the first ten docs in the collection
@@ -890,8 +755,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         });
 
-    }
-    else if (/^marvin (.+verse list elephant.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+verse list elephant.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
         var verses = db.collection('verses');
         // log each of the first ten docs in the collection
@@ -903,8 +767,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         });
 
-    }
-    else if (/^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim())) {
 
         //getting the country name for current year every month
         var matches = /^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim());
@@ -920,8 +783,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         // log each of the first ten docs in the collection
         holidayRetrieveAndSaveOnly(chatDetails, holidayDetails)
 
-    }
-    else if (/^marvin (.+translate test)(.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+translate test)(.*)/ig.exec(msg.text.trim())) {
         var wordMatches = /^marvin (.+translate test)(.*)/ig.exec(msg.text.trim());
         console.log("This is wordMatches:" + wordMatches);
         var wordMatchesWords = wordMatches[1].split(/\W+/);
@@ -934,8 +796,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         //    bot.sendMessage(fromId, translatedMessage);
         //});
 
-    }
-    else if (/^marvin (where.*am.*i)(.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (where.*am.*i)(.*)/ig.exec(msg.text.trim())) {
         let opt = {
             reply_markup: {
                 force_reply: true,
@@ -967,12 +828,31 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     }
     //-----------------------------------------------Exchange rate related use---------------------------------------------------------
     else if (/^marvin (.+)/ig.exec(msg.text.trim())) {
-
         var matches = /^marvin (.+)/ig.exec(msg.text.trim());
         var text1 = matches[1].trim().toUpperCase();
         var resp = match[1];
         bot.sendMessage(fromId, resp);
     }
+});
+
+bot.onText(/^what.*your.*name/i, function (msg, match) {
+    //console.log("This is the message:" + msg);
+    //console.log("This is the match:" + match);
+
+    var chat = msg.chat;
+    var chatId = msg.chat.id;
+    var fromId = msg.from.id;
+    var userId = msg.from.id;
+    var first_name = msg.from.first_name;
+    var chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+
+    var resp = match[1];
+    bot.sendMessage(fromId, "My name is " + bot_name + "! Nice to meet you");
+    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my name. " + emoji.kissing_smiling_eyes);
 });
 
 function marvinGetVerseMethod(chatDetails, fetchingVerse, type) {
@@ -1026,9 +906,9 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
     request(url, function (error, response, body) {
 
         var info = "";
-        try { info = JSON.parse(body); } catch{ 
+        try { info = JSON.parse(body); } catch{
             info = body.replace(/<b>/g, "\n").replace(/<\/b>/g, "");
-         }
+        }
         if (response.statusCode != 200) {
             //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
             bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
@@ -1045,20 +925,7 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
-
-async function getVerseMethod(key_word) {
-    const search = key_word[0].replace(' ', '%20');
-    const version = "NIV";
-    const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
-    const result = await scrapeIt(url, {
-        title: key_word,
-        verse: `#en-${version}-30214`,
-    })
-    console.log(JSON.stringify(result.data, null, 2));
-    return result.data;
-
-}
-function getLatLongMethod(locationInput, chatDetails, type = "weather") {
+function getLatLongMethod(chatDetails, locationInput, type = "weather") {
     //type: weather or sunrise
     var fromId = chatDetails.fromId;
     var chatName = chatDetails.chatName;
@@ -1066,11 +933,9 @@ function getLatLongMethod(locationInput, chatDetails, type = "weather") {
     var userId = chatDetails.userId;
 
     var locationSearch = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationInput + "&key=" + googleAPIKey;
-    //console.log(locationSearch);
-
+    console.log("LocationSearch URL", locationSearch);
     request(locationSearch, function (err, res, body) {
-        if (res.status === "ZERO_RESULTS"
-        ) {
+        if (res.status === "ZERO_RESULTS") {
             //error occurred show that no results can be found
             bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
             return;
@@ -1086,83 +951,151 @@ function getLatLongMethod(locationInput, chatDetails, type = "weather") {
         var latlng = [lat, lng];
         //bot.sendMessage(fromId, "This is your lat : long: " + lat + " : " + lng);
 
+        if (type === "weather") {
+            var weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
+            console.log(weatherSearch);
+            request(weatherSearch, function (err, res, body) {
+                if (res.status === "ZERO_RESULTS") {
+                    //error occurred show that no results can be found
+                    bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
+                    return;
+                }
+                //console.log(res);
+                var info = JSON.parse(body);
+                //console.log(info);
+                var weatherInfo;
+                weatherInfo.temp = info.currently.temperature;
+                weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
+                weatherInfo["hourlySummary"] = info.hourly.summary;
+                weatherInfo["hourlyIcon"] = info.hourly.icon;
+                weatherInfo["dailySummary"] = info.daily.summary;
+                weatherInfo["dailyIcon"] = info.daily.icon;
+
+                bot.sendMessage(fromId, capitalizeFirstLetter(locationInput) + "'s currently " + weatherInfo.temp + "°C but feels like " + weatherInfo.apparentTemp + "°C \n" +
+                    "Oh! and weather report says: " + weatherInfo.hourlySummary);
+            });
+        }
+        else if (type === "sunrise") {
+            var timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
+
+            //console.log(timezoneSearch);
+            request(timezoneSearch, function (TZerr, TZres, TZbody) {
+                var info2 = JSON.parse(TZbody);
+                console.log(info2);
+                if (info2.status !== "OK") {
+                    //error occurred show that no results can be found
+                    bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
+                    return;
+                }
+                var dateOffset = info2.rawOffset;
+                var timeZoneId = info2.timeZoneId;
+                var timeZoneName = info2.timeZoneName;
+                var timeZoneDetails = {
+                    dateOffset: dateOffset,
+                    timeZoneId: timeZoneId,
+                    timeZoneName: timeZoneName
+                };
+                var today = moment().tz(timeZoneId).format("YYYY-MM-DD");
+                var tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
+                var sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
+                    "&date=" + today + "&formatted=0";
+
+                //console.log(sunriseSearch);
+                request(sunriseSearch, function (err, res, body) {
+                    var info = JSON.parse(body);
+                    //console.log(info);
+                    if (info.status !== "OK") {
+                        //error occurred show that no results can be found
+                        bot.sendMessage(fromId, "Encountered an error with the sunrise report " + emoji.hushed);
+                        return;
+                    }
+                    //console.log(res);
+
+                    var sunrise = info.results.sunrise;
+                    var sunset = info.results.sunset;
+                    var sunriseDetails = { sunrise: sunrise, sunset: sunset }
+                    formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails);
+                });
+            });
+        }
+
         //save into db the location name and its latlong
-        db.locations.insert({
-            name: locationInput,
-            lat: lat,
-            long: lng
-        }, function (err, doc) {
-            if (doc) {
-                if (type === "weather") {
-                    var weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
+        // db.locations.insert({
+        //     name: locationInput,
+        //     lat: lat,
+        //     long: lng
+        // }, function (err, doc) {
+        //     if (doc) {
+        //         if (type === "weather") {
+        //             var weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
 
-                    console.log(weatherSearch);
-                    request(weatherSearch, function (err, res, body) {
-                        if (res.status === "ZERO_RESULTS") {
-                            //error occurred show that no results can be found
-                            bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
-                            return;
-                        }
-                        //console.log(res);
-                        var info = JSON.parse(body);
-                        //console.log(info);
-                        var weatherInfo;
-                        weatherInfo.temp = info.currently.temperature;
-                        weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
-                        weatherInfo["hourlySummary"] = info.hourly.summary;
-                        weatherInfo["hourlyIcon"] = info.hourly.icon;
-                        weatherInfo["dailySummary"] = info.daily.summary;
-                        weatherInfo["dailyIcon"] = info.daily.icon;
+        //             console.log(weatherSearch);
+        //             request(weatherSearch, function (err, res, body) {
+        //                 if (res.status === "ZERO_RESULTS") {
+        //                     //error occurred show that no results can be found
+        //                     bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
+        //                     return;
+        //                 }
+        //                 //console.log(res);
+        //                 var info = JSON.parse(body);
+        //                 //console.log(info);
+        //                 var weatherInfo;
+        //                 weatherInfo.temp = info.currently.temperature;
+        //                 weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
+        //                 weatherInfo["hourlySummary"] = info.hourly.summary;
+        //                 weatherInfo["hourlyIcon"] = info.hourly.icon;
+        //                 weatherInfo["dailySummary"] = info.daily.summary;
+        //                 weatherInfo["dailyIcon"] = info.daily.icon;
 
-                        bot.sendMessage(fromId, capitalizeFirstLetter(locationInput) + "'s currently " + weatherInfo.temp + "°C but feels like " + weatherInfo.apparentTemp + "°C \n" +
-                            "Oh! and weather report says: " + weatherInfo.hourlySummary);
-                    });
-                }
-                else if (type === "sunrise") {
-                    var timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
+        //                 bot.sendMessage(fromId, capitalizeFirstLetter(locationInput) + "'s currently " + weatherInfo.temp + "°C but feels like " + weatherInfo.apparentTemp + "°C \n" +
+        //                     "Oh! and weather report says: " + weatherInfo.hourlySummary);
+        //             });
+        //         }
+        //         else if (type === "sunrise") {
+        //             var timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
 
-                    //console.log(timezoneSearch);
-                    request(timezoneSearch, function (TZerr, TZres, TZbody) {
-                        var info2 = JSON.parse(TZbody);
-                        console.log(info2);
-                        if (info2.status !== "OK") {
-                            //error occurred show that no results can be found
-                            bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
-                            return;
-                        }
-                        var dateOffset = info2.rawOffset;
-                        var timeZoneId = info2.timeZoneId;
-                        var timeZoneName = info2.timeZoneName;
-                        var timeZoneDetails = {
-                            dateOffset: dateOffset,
-                            timeZoneId: timeZoneId,
-                            timeZoneName: timeZoneName
-                        };
-                        var today = moment().tz(timeZoneId).format("YYYY-MM-DD");
-                        var tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
-                        var sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
-                            "&date=" + today + "&formatted=0";
+        //             //console.log(timezoneSearch);
+        //             request(timezoneSearch, function (TZerr, TZres, TZbody) {
+        //                 var info2 = JSON.parse(TZbody);
+        //                 console.log(info2);
+        //                 if (info2.status !== "OK") {
+        //                     //error occurred show that no results can be found
+        //                     bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
+        //                     return;
+        //                 }
+        //                 var dateOffset = info2.rawOffset;
+        //                 var timeZoneId = info2.timeZoneId;
+        //                 var timeZoneName = info2.timeZoneName;
+        //                 var timeZoneDetails = {
+        //                     dateOffset: dateOffset,
+        //                     timeZoneId: timeZoneId,
+        //                     timeZoneName: timeZoneName
+        //                 };
+        //                 var today = moment().tz(timeZoneId).format("YYYY-MM-DD");
+        //                 var tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
+        //                 var sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
+        //                     "&date=" + today + "&formatted=0";
 
-                        //console.log(sunriseSearch);
-                        request(sunriseSearch, function (err, res, body) {
-                            var info = JSON.parse(body);
-                            //console.log(info);
-                            if (info.status !== "OK") {
-                                //error occurred show that no results can be found
-                                bot.sendMessage(fromId, "Encountered an error with the sunrise report " + emoji.hushed);
-                                return;
-                            }
-                            //console.log(res);
+        //                 //console.log(sunriseSearch);
+        //                 request(sunriseSearch, function (err, res, body) {
+        //                     var info = JSON.parse(body);
+        //                     //console.log(info);
+        //                     if (info.status !== "OK") {
+        //                         //error occurred show that no results can be found
+        //                         bot.sendMessage(fromId, "Encountered an error with the sunrise report " + emoji.hushed);
+        //                         return;
+        //                     }
+        //                     //console.log(res);
 
-                            var sunrise = info.results.sunrise;
-                            var sunset = info.results.sunset;
-                            var sunriseDetails = { sunrise: sunrise, sunset: sunset }
-                            formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails);
-                        });
-                    });
-                }
-            }
-        });
+        //                     var sunrise = info.results.sunrise;
+        //                     var sunset = info.results.sunset;
+        //                     var sunriseDetails = { sunrise: sunrise, sunset: sunset }
+        //                     formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails);
+        //                 });
+        //             });
+        //         }
+        //     }
+        // });
 
 
     });
@@ -1393,7 +1326,6 @@ function getHolidayMethod(chatDetails, holidayDetails) {
 
     bot.sendMessage(fromId, "Currently searching for your holidays for " + holidayCountry + ".. " + emoji.bow);
 }
-
 /**
  * Only if the currency is not acquired then enter this method
  * @param chatDetails details about the chat, ID, person's name etc
@@ -1511,6 +1443,23 @@ function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
         fromCurrency + " to " + toCurrency + " at the rate of " + rate + "! Success!");
 }
 
+// -------------------------------Beta Methods---------------------------------------
+// Still in beta mode:
+async function getVerseMethod(chatDetails, key_word) {
+    const search = key_word[0].replace(' ', '%20');
+    const version = "NIV";
+    const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
+    const result = await scrapeIt(url, {
+        title: key_word,
+        verse: `#en-${version}-30214`,
+    })
+    console.log(JSON.stringify(result.data, null, 2));
+    bot.sendMessage(chatDetails.fromId, result.data);
+    return result.data;
+
+}
+
+// -------------------------------Incompleted Methods---------------------------------------
 //TODO: incomplete as of 6 June 17(tues)
 /**
  *
@@ -1565,27 +1514,6 @@ function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
     bot.sendMessage(fromId, "Let me take some time to think..");
 
 }
-
-bot.onText(/^what.*your.*name/i, function (msg, match) {
-    //console.log("This is the message:" + msg);
-    //console.log("This is the match:" + match);
-
-    var chat = msg.chat;
-    var chatId = msg.chat.id;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-
-    var resp = match[1];
-    bot.sendMessage(fromId, "My name is " + bot_name + "! Nice to meet you");
-    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my name. " + emoji.kissing_smiling_eyes);
-});
-
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
 bot.onText(/\/bbchecker/i, function (msg, match) {
@@ -1680,7 +1608,6 @@ bot.onText(/\/help/i, function (msg, match) {
         "\n/excuseme - eating sticker " +
         "\n/yay - eating sticker ");
 });
-
 bot.onText(/\/stun/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
@@ -1968,7 +1895,6 @@ bot.onText(/\/aniyo/i, function (msg, match) {
     bot.sendSticker(fromId, "CAADBQADXgADlHOkCdKqgJ7HMfk2Ag");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful aiyo sticker!");
 });
-
 bot.onText(/\/givefeedback/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
@@ -2109,7 +2035,6 @@ bot.onText(/\/getvverse/i, function (msg, match) {
             });
         });
 });
-
 bot.onText(/\/getnewverse/i, function (msg, match) {
     var chat = msg.chat;
     var fromId = msg.from.id;
