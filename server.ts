@@ -12,14 +12,14 @@ var emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 //var googleTranslate = require('google-translate')(apiKey);
 
-var token = '311713449:AAE8kINWy4vv3TClcweV_2s9SR8G9suWheM';
-var privateGenderAPIKey = 'MkyJFLbMbQWkRUldHg';
-var darkskyAPIKey = '0346c6b3679a03d0c5466770c2e1a7c0';
-var googleAPIKey = 'AIzaSyA70sfM2o9s9T8kidX6XJs0mcAzIWQJiso';
-var googleTimeZoneAPIKey = 'AIzaSyDwBUr9JV50B6FUuhzICMHwRGWBFmCLx8c';
-var holidayAPIKey = '834092a6-24f3-4302-af9c-ddc702514c32';
-var exchangeRateAPIKey = 'c1b6d9a982abfc8fdb30f307fcc3aa92';
-var myId = 56328814;
+var token = process.env.TELEGRAM_TOKEN;
+var privateGenderAPIKey = process.env.privateGenderAPIKey;
+var darkskyAPIKey = process.env.darkskyAPIKey;
+var googleAPIKey = process.env.googleAPIKey;
+var googleTimeZoneAPIKey = process.env.googleTimeZoneAPIKey;
+var holidayAPIKey = process.env.holidayAPIKey;
+var exchangeRateAPIKey = process.env.exchangeRateAPIKey;
+var myId = process.env.myId;
 // Setup polling way
 const environment = "development";
 // const environment = "live"
@@ -184,7 +184,8 @@ bot.on('message', function (msg) {
     }
     // photo can be: a file path, a stream or a Telegram file_id
     // Will only reply when its username is called
-    const match = /^@bible_butler_bot$/.exec(msg.text.trim());
+    const trimmed_message = msg.text.trim();
+    const match = /^@bible_butler_bot$/.exec(trimmed_message);
     //console.log("This is the match: " + match);
     if (match) {
         const contentOfMesageMatches = /^@bible_butler_bot what.*favourite.*gif/gi.exec(msg.text.trim());
@@ -199,6 +200,9 @@ bot.on('message', function (msg) {
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Success calling of Marvin!");
 
         }
+    } else {
+        bot.sendMessage(fromId, trimmed_message);
+        if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Fall back on echo..");
     }
 });
 
@@ -224,8 +228,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         userId: userId,
     };
 
-    console.log("Message for Marvin received: ");
-    console.log(msg);
+    console.log("< Message received: ", msg);
     const command = /^get verse/.exec(match[1]);
     if (command) {
         var matches = /^marvin (.+verse)(.+[0-9]$)/ig.exec(msg.text.trim());
@@ -234,16 +237,14 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal", "NIV");
         else bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
 
-    }
-    else if (/^marvin (.*get)(.+[0-9]$)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.*get)(.+[0-9]$)/ig.exec(msg.text.trim())) {
         //just the verse, since im the only one that's gonna use this
         var matches = /^marvin (.*get)(.+[0-9]$)/ig.exec(msg.text.trim());
         var fetchingVerse = matches[2].trim();
 
         marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
 
-    }
-    else if (/^marvin (.+sad)/ig.exec(msg.text.trim())) { //this is when people tell marvin, they are sad
+    } else if (/^marvin (.+sad)/ig.exec(msg.text.trim())) { //this is when people tell marvin, they are sad
         var opt = {
             reply_markup: {
                 inline_keyboard: [
@@ -279,8 +280,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                 })
             })
 
-    }
-    else if (/^marvin (.+angry)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+angry)/ig.exec(msg.text.trim())) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
@@ -397,8 +397,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                 })
             })
 
-    }
-    else if (/^marvin (.+broken.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+broken.*)/ig.exec(msg.text.trim())) {
         var opt = {
             reply_markup: {
                 inline_keyboard: [
@@ -515,8 +514,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             })
 
 
-    }
-    else if (/^marvin (.+broke[^n].*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+broke[^n].*)/ig.exec(msg.text.trim())) {
         //https://www.youtube.com/watch?v=dNwt7LQiYck
         var opt = {
             reply_markup: {
@@ -634,20 +632,15 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                 })
             })
 
-    }
-    else if (/^marvin (.+lost.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+lost.*)/ig.exec(msg.text.trim())) {
         //Jesus I come
         //https://www.youtube.com/watch?v=_8Fx06jskfY
 
-    }
-    else if (/^marvin (.+am.*your bb.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+am.*your bb.*)/ig.exec(msg.text.trim())) {
         //TODO: Access the db check my credentials and save, up to 100 bb
 
-    }
-    else if (/^marvin (.+goodjob.*)/ig.exec(msg.text.trim())) {
-
-    }
-    else if (/^marvin (.+lost.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+goodjob.*)/ig.exec(msg.text.trim())) {
+    } else if (/^marvin (.+lost.*)/ig.exec(msg.text.trim())) {
 
     }
     else if (/^marvin (.+songs.*)/ig.exec(msg.text.trim())) {
@@ -983,75 +976,6 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
         var matches = /^marvin (.+)/ig.exec(msg.text.trim());
         var text1 = matches[1].trim().toUpperCase();
-
-        var error = false;
-        if (text1.length < 7) {
-            error = true;
-        } else if (text1.length == 7 && text1.split("")[text1.split("").length - 4] !== "2") {
-            error = true;
-        } else if (text1.length == 7 && !/^[a-z]/ig.exec(text1[0])) {
-            error = true;
-        } else if (text1.length > 7 && !/([\d|.]+)([A-Z]{3})2([A-Z]{3})/ig.exec(text1)) {
-            error = true;
-        }
-        if (error) {
-            bot.sendMessage(fromId, "Incorrect format used! Try again!");
-            return;
-        }
-
-        //format the message to include 1
-        if (text1.length == 7) {
-            text1 = 1 + text1;
-        }
-
-        var xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
-        var amount = xrateToken[1];
-        var from = xrateToken[2];
-        var to = xrateToken[3];
-
-        //console.log(xrateToken);
-        //console.log(amount);
-        //console.log(from);
-        //console.log(to);
-
-        //TODO: check if the to currency is legit *impt!
-        var currentDate = moment().format("DD-MM-YYYY");
-        var exchangeRateDetails = {
-            from: from,
-            to: to,
-            date: currentDate,
-            amount: amount.length > 0 ? Number(amount) : 1
-        };
-        let id = currentDate + "_" + from + "_" + to;
-        // db.xrates.count({ _id: id, from: from, to: to }, function (err, doc) {
-        //     if (doc === 1) {
-        //         console.log("doc is 1");
-        //         db.xrates.find({ _id: id, from: from, to: to }, function (err, doc) {
-        //             if (err) throw err;
-        //             if (doc) {
-        //                 //console.log(doc[0]);
-
-        //                 exchangeRateDetails = {
-        //                     from: doc[0].from,
-        //                     to: doc[0].to,
-        //                     date: doc[0].date,
-        //                     rate: doc[0].rate,
-        //                     amount: amount.length > 0 ? Number(amount) : 1
-        //                 };
-        //                 //console.log("locationDetails: ");
-        //                 //console.log(locationDetails);
-        //                 sendExchangeRateMethod(chatDetails, exchangeRateDetails);
-        //             }
-        //         });
-        //     } else { //the name of the rate doesnt exist in the db yet
-        //         console.log("doc is not 1");
-        //         getExchangeRateMethod(chatDetails, exchangeRateDetails);
-        //     }
-        // });
-        getExchangeRateMethod(chatDetails, exchangeRateDetails);
-        bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
-    }
-    else {
         var resp = match[1];
         bot.sendMessage(fromId, resp);
     }
