@@ -28,7 +28,11 @@
     "node-telegram-bot-api": "^0.30.0",
     "request": "^2.83.0",
     "scrape-it": "^5.0.2",
-    "typescript": "^2.7.2",
     "util": "^0.10.3"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^4.0.2",
+    "typescript": "^2.8.3"
   }
 }
