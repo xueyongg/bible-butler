@@ -19,10 +19,8 @@ var googleAPIKey = process.env.googleAPIKey;
 var googleTimeZoneAPIKey = process.env.googleTimeZoneAPIKey;
 var holidayAPIKey = process.env.holidayAPIKey;
 var exchangeRateAPIKey = process.env.exchangeRateAPIKey;
-var myId = process.env.myId;
-// Setup polling way
-const environment = "development";
-// const environment = "live"
+var myId = Number(process.env.myId);
+const environment = process.env.NODE_ENV;
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const HOST = environment !== "development" ? process.env.HOST : "LOCALHOST";
@@ -182,24 +180,20 @@ bot.on('message', function (msg) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    var chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+
     // photo can be: a file path, a stream or a Telegram file_id
     // Will only reply when its username is called
     const trimmed_message = msg.text.trim();
-    const match = /^@bible_butler_bot$/.exec(trimmed_message);
+    const matchVerse = /(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/g.exec(trimmed_message);
     //console.log("This is the match: " + match);
-    if (match) {
-        const contentOfMesageMatches = /^@bible_butler_bot what.*favourite.*gif/gi.exec(msg.text.trim());
-        if (contentOfMesageMatches) {
-            bot.sendMessage(fromId, "Let me show you!" + emoji.relieved);
-            bot.sendDocument(fromId, "./server/data/Webarebear.gif");
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my favourite gif. " + emoji.kissing_smiling_eyes);
-        } else {
-            bot.sendMessage(fromId, "Yes, " + capitalizeFirstLetter(first_name) + " you called me?" +
-                emoji.upside_down_face + "\nYou can type /help to control me!");
-
-            if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Success calling of Marvin!");
-
-        }
+    if (matchVerse) {
+        bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
     } else {
         bot.sendMessage(fromId, trimmed_message);
         if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Fall back on echo..");
@@ -1024,108 +1018,36 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
     var book = matches[1].trim();
     var chapterAndVerse = matches[2].trim();
     fetchingVerse = book + chapterAndVerse;
-    console.log(fetchingVerse);
+    console.log("From new get verse method: ", fetchingVerse);
 
     var testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
     var url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
     //var url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
-    request(testingUrl, function (error, response, body) {
-        var info = JSON.parse(body);
+    request(url, function (error, response, body) {
+
+        var info = "";
+        try { info = JSON.parse(body); } catch{ 
+            info = body.replace(/<b>/g, "\n").replace(/<\/b>/g, "");
+         }
         if (response.statusCode != 200) {
             //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
             bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
         } else {
-            var verseReference = info.reference;
+            var verseReference = info;
             console.log(verseReference);
-            if (db)
-                db.verses.count({ _id: verseReference }, function (err, doc) { //check whether verse exist in db or not
-                    if (doc === 1) {
-                        //console.log("im in doc == 1")
-                        db.verses.find({ _id: verseReference }, function (err, doc2) {
-                            if (err) throw err;
-                            if (doc2) {
-                                //console.log("im  in doc2")
-                                //console.log(doc[0]);
-                                //bot.sendMessage(fromId, doc[0].name);
-                                var oldCounter = doc2[0].counter;
-                                var newCounter = oldCounter + 1;
-                                //console.log("updating the counter..");
+            bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!\n" + info);
 
-                                doc2[0].counter = doc2[0].counter + 1;
-                                db.verses.update({
-                                    _id: verseReference
-                                }, {
-                                        $set: {
-                                            counter: newCounter
-                                        }
-                                    }, function (err, doc) {
-                                        if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is added into " + fetchingVerse + " database counter. " +
-                                            "Current counter is " + newCounter + emoji.smiley);
-                                    });
-                                //console.log(doc2);
-                                switch (type) {
-                                    case "normal":
-                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
-                                        break;
-                                    case "sad":
-                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + verseReference + " says:");
-                                        break;
-                                }
-
-                                var verseBody = doc2[0].text;
-                                bot.sendMessage(fromId, verseBody);
-                                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + fetchingVerse + "! Fetch from DB is a success! " + emoji.kissing_smiling_eyes);
-                            }
-                        });
-                    } else { //the verse doesn't exist in the db yet
-                        //console.log("im not in doc == 1")
-                        var r = request({ url: url },
-                            function (error, response, body) {
-                                var str = body;
-                                var formattedBody = str.replace(/<b>/gi, function myFunction(x) {
-                                    return "\n";
-                                });
-                                var formattedBody2 = formattedBody.replace(/<\/b>/gi, function myFunction(x) {
-                                    return "";
-                                });
-
-                                switch (type) {
-                                    case "normal":
-                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
-                                        break;
-                                    case "sad":
-                                        bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + verseReference + " says:");
-                                        break;
-                                }
-
-                                //add this verse into db
-                                db.verses.insert({
-                                    _id: verseReference,
-                                    verse: verseReference,
-                                    text: formattedBody2,
-                                    counter: 1
-                                });
-
-                                bot.sendMessage(fromId, formattedBody2);
-                                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + verseReference + "! New versed added into DB! " + emoji.kissing_smiling_eyes);
-                            });
-                    }
-                });
-            else {
-                bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
-                    ". Success retrieval of " + fetchingVerse +
-                    "! Fetch from DB is a success! " + emoji.kissing_smiling_eyes);
-
-            }
+            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
+                ". Success retrieval of " + fetchingVerse +
+                "!" + emoji.kissing_smiling_eyes);
         }
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
 
 async function getVerseMethod(key_word) {
-    const search = key_word.replace(' ', '%20');
+    const search = key_word[0].replace(' ', '%20');
     const version = "NIV";
     const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
     const result = await scrapeIt(url, {
