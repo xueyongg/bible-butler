@@ -106,6 +106,7 @@ let db;
 if (HOST !== "LOCALHOST") {
     MongoClient.connect(connection_string, function (err, db) {
         if (err) {
+            bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
             throw err;
         } else {
             console.log("successfully connected to the database");
@@ -114,7 +115,7 @@ if (HOST !== "LOCALHOST") {
 
     db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"], (err, res) => {
         if (err) {
-            bot.sendMessage(myId, "Error connecting to db, rescue me soon!");
+            bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
             throw err
         } else {
             console.log("successfully connected to the database");
@@ -129,68 +130,6 @@ if (HOST !== "LOCALHOST") {
 //    certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
 //});
 
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-async function emojiFinder(key_word) {
-    const url = "https://emojifinder.com/" + key_word;
-    const results = await scrapeIt(url, {
-        emojis: {
-            listItem: "#results input",
-            data: {
-                content: {
-                    attr: "value",
-                }
-            }
-        }
-    }, (err, data) => {
-        if (err) {
-            console.log("An error occured!", err);
-            return;
-        }
-    });
-    if (results) {
-        let emojis: emoji[] = results.data.emojis;
-        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return chosen_emoji.content;
-    }
-}
-
-// Matches /echo [whatever]
-bot.onText(/\/echo (.+)/, function (msg, match) {
-    let fromId = msg.from.id;
-    let resp = match[1];
-    bot.sendMessage(fromId, resp);
-});
-
-bot.onText(/\/set/, function (msg, match) {
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-
-    let message = first_name + ", there's currently only New International Version. " +
-        "\nApologies for the inconveniences caused.";
-
-    let keyboard = [
-        [{ text: 'KJV' }, { text: 'WEB' }]
-    ];
-    let replyObject = {
-        reply_markup: keyboard,
-        resize_keyboard: true
-    };
-
-    bot.sendMessage(fromId, message);
-    bot.sendSticker(fromId, "CAADBQADqgADCmwYBH3hVuODnzmHAg");
-    if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". He/ She wants to set up the version!");
-
-});
 // Any kind of message
 let fallback = true;
 bot.on('message', function (msg) {
@@ -215,10 +154,11 @@ bot.on('message', function (msg) {
     const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
     if (matchVerse && fallback) {
         bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
-    } else {
-        // bot.sendMessage(fromId, trimmed_message);
-        if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + " called a function!");
     }
+    // } else if (/^(?![marvin | /.*].*$).*/.exec(trimmed_message)) {
+    //     bot.sendMessage(fromId, trimmed_message + "? Sorry " + first_name + ", I do not understand but here's the list of tasks perhaps i can help you with.", getDefaultOpt());
+    //     if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + " called a function!");
+    // }
 });
 /*
  this method will try to call methods based on messages to BA, as if its a conversation
@@ -854,7 +794,6 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         bot.sendMessage(fromId, resp);
     }
 });
-
 bot.onText(/^what.*your.*name/i, function (msg, match) {
     //console.log("This is the message:" + msg);
     //console.log("This is the match:" + match);
@@ -874,6 +813,49 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
     bot.sendMessage(fromId, "My name is " + bot_name + "! Nice to meet you");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my name. " + emoji.kissing_smiling_eyes);
 });
+
+// -------------------------------Functional Methods---------------------------------------
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+async function emojiFinder(key_word) {
+    const url = "https://emojifinder.com/" + key_word;
+    const results = await scrapeIt(url, {
+        emojis: {
+            listItem: "#results input",
+            data: {
+                content: {
+                    attr: "value",
+                }
+            }
+        }
+    }, (err, data) => {
+        if (err) {
+            console.log("An error occured!", err);
+            return;
+        }
+    });
+    if (results) {
+        let emojis: emoji[] = results.data.emojis;
+        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        return chosen_emoji.content;
+    }
+}
+function getDefaultOpt() {
+    return {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "Back to main menu", callback_data: "menu", },
+                { text: "Get exchange rate", callback_data: "exchangeRate", }],
+                [{ text: "Get weather status", callback_data: "weather", },
+                { text: "Get sunrise timing", callback_data: "sunrise", }],
+            ],
+            one_time_keyboard: true,
+            resize_keyboard: true,
+        },
+        parse_mode: "Markdown",
+    }
+};
 function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NIV") {
     //chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -891,7 +873,7 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
 
         let info = "";
         try { info = JSON.parse(body); } catch{
-            info = body.replace(/<b>/g, "\n").replace(/<\/b>/g, "");
+            info = body.replace(/<b>/g, "").replace(/<\/b>/g, "");
         }
         if (response.statusCode != 200) {
             //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
@@ -2209,6 +2191,39 @@ bot.onText(/\/getxrate/i, function (msg, match) {
 
             });
         });
+});
+// Matches /echo [whatever]
+bot.onText(/\/echo (.+)/, function (msg, match) {
+    let fromId = msg.from.id;
+    let resp = match[1];
+    bot.sendMessage(fromId, resp);
+});
+bot.onText(/\/set/, function (msg, match) {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+
+    let message = first_name + ", there's currently only New International Version. " +
+        "\nApologies for the inconveniences caused.";
+
+    let keyboard = [
+        [{ text: 'KJV' }, { text: 'WEB' }]
+    ];
+    let replyObject = {
+        reply_markup: keyboard,
+        resize_keyboard: true
+    };
+
+    bot.sendMessage(fromId, message);
+    bot.sendSticker(fromId, "CAADBQADqgADCmwYBH3hVuODnzmHAg");
+    if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". He/ She wants to set up the version!");
+
 });
 
 let verseArchive = {
