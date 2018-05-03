@@ -194,7 +194,6 @@ bot.onText(/\/set/, function (msg, match) {
 // Any kind of message
 let fallback = true;
 bot.on('message', function (msg) {
-
     let chat = msg.chat;
     let chatId = msg.chat.id;
     let fromId = msg.from.id;
@@ -218,10 +217,9 @@ bot.on('message', function (msg) {
         bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
     } else {
         // bot.sendMessage(fromId, trimmed_message);
-        if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Fall back on echo..");
+        if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + " called a function!");
     }
 });
-
 /*
  this method will try to call methods based on messages to BA, as if its a conversation
  */
@@ -876,39 +874,6 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
     bot.sendMessage(fromId, "My name is " + bot_name + "! Nice to meet you");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my name. " + emoji.kissing_smiling_eyes);
 });
-
-function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
-    let fromId = chatDetails.fromId;
-    let chatName = chatDetails.chatName;
-    let first_name = chatDetails.first_name;
-    let userId = chatDetails.userId;
-
-    let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
-
-    request(url, function (error, response, body) {
-        if (response.statusCode != 200) {
-            //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
-            bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
-            if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
-        } else {
-            let info = JSON.parse(body);
-            let formattedVerse = info.text;
-            let translation_name = info.translation_name;
-            //console.log(formattedVerse);
-            switch (type) {
-                case "normal":
-                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
-                    break;
-                case "sad":
-                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + fetchingVerse + " says:");
-                    break;
-            }
-            bot.sendMessage(fromId, formattedVerse + "\n(" + translation_name + ")");
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + fetchingVerse + "! " + emoji.kissing_smiling_eyes);
-        }
-    });
-    bot.sendMessage(fromId, "Fetching verse now..");
-}
 function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NIV") {
     //chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -1077,29 +1042,6 @@ function getSunriseMethod(chatDetails, locationDetails) {
 
     // bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 }
-function bbAutoChecker(chatDetails) {
-    let { fromId, chatName, first_name, userId } = chatDetails;
-
-    db.users.count({ _id: userId }, function (err, doc) {
-        if (doc === 1) {
-            //exist and is already my bb
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " already added " + first_name + "'s id hehe! Check from db is a success!");
-        } else {
-            db.users.update({
-                _id: userId
-            }, {
-                    $set: {
-                        profile: {
-                            chatId: userId,
-                        }
-                    }
-                }, function (err, doc) {
-                    if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + "'s ChatId is added into database" + emoji.smiley);
-                });
-
-        }
-    });
-}
 function formattingSunriseMessage(chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
     //chat related
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -1137,73 +1079,6 @@ function formattingSunriseMessage(chatDetails, sunriseDetails, timeZoneDetails, 
     }
 
     bot.sendMessage(fromId, message);
-}
-function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
-    //chat details
-    let fromId = chatDetails.fromId;
-    let chatName = chatDetails.chatName;
-    let first_name = chatDetails.first_name;
-    let userId = chatDetails.userId;
-
-    //holiday details
-    let holidayCountry = holidayDetails.holidayCountry;
-    let holidayYear = holidayDetails.holidayYear;
-
-    let listOfCountries = {
-        "singapore": "SG",
-
-    };
-
-    //go through the twelve months
-    for (let holidayMonth = 9; holidayMonth < 10; holidayMonth++) {
-        let holidayURL = "https://holidayapi.com/v1/holidays?key=" + holidayAPIKey +
-            "&country=" + holidayCountry + "&year=" + holidayYear + "&month=" + holidayMonth;
-
-        console.log(holidayURL);
-        request(holidayURL, function (err, res, body) {
-            //console.log(res);
-            let info = JSON.parse(body);
-            if (info.status !== 200) {
-                //error occurred show that no results can be found
-                bot.sendMessage(fromId, "Encountered an error with the holiday search " + emoji.hushed);
-                return;
-            }
-            let holidayId = info.holidays[0].date + "-" + info.holidays[0].name;
-            console.log(holidayId);
-            let newHolidayObject = {
-                _id: holidayId,
-                date: info.holidays[0].date,
-                details: info.holidays
-            };
-            console.log(newHolidayObject);
-            db.holidays.find({ _id: holidayId }, function (err, doc) {
-                if (doc !== 1) { //dont exist in the system
-                    //availableCountries: doc[0].availableCountries + holidayCountry,
-                    db.holidays.insert({ _id: holidayId }, newHolidayObject);
-                    bot.sendMessage(fromId, "I'm connected! And populated the db with holiday " + holidayCountry + " " + holidayMonth + " month" + holidayYear);
-                } else {
-
-                }
-
-            });
-
-        });
-    }
-    bot.sendMessage(fromId, "I'm connected! And am populating the db with holiday");
-}
-function getHolidayMethod(chatDetails, holidayDetails) {
-    //chat related
-    let { fromId, chatName, first_name, userId } = chatDetails;
-
-    //holiday details
-    let holidayCountry = holidayDetails.holidayCountry;
-    let holidayYear = holidayDetails.holidayYear;
-    let holidayMonth = holidayDetails.holidayMonth;
-
-    //TODO: get the holiday details for the Country for the month from DB and send it out
-
-
-    bot.sendMessage(fromId, "Currently searching for your holidays for " + holidayCountry + ".. " + emoji.bow);
 }
 /**
  * Only if the currency is not acquired then enter this method
@@ -1397,6 +1272,130 @@ function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
     });
     bot.sendMessage(fromId, "Let me take some time to think..");
 
+}
+
+// -------------------------------Deprecated Methods---------------------------------------
+function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
+    let fromId = chatDetails.fromId;
+    let chatName = chatDetails.chatName;
+    let first_name = chatDetails.first_name;
+    let userId = chatDetails.userId;
+
+    let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
+
+    request(url, function (error, response, body) {
+        if (response.statusCode != 200) {
+            //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
+            bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
+            if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
+        } else {
+            let info = JSON.parse(body);
+            let formattedVerse = info.text;
+            let translation_name = info.translation_name;
+            //console.log(formattedVerse);
+            switch (type) {
+                case "normal":
+                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
+                    break;
+                case "sad":
+                    bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + ", " + fetchingVerse + " says:");
+                    break;
+            }
+            bot.sendMessage(fromId, formattedVerse + "\n(" + translation_name + ")");
+            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success retrieval of " + fetchingVerse + "! " + emoji.kissing_smiling_eyes);
+        }
+    });
+    bot.sendMessage(fromId, "Fetching verse now..");
+}
+function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
+    //chat details
+    let fromId = chatDetails.fromId;
+    let chatName = chatDetails.chatName;
+    let first_name = chatDetails.first_name;
+    let userId = chatDetails.userId;
+
+    //holiday details
+    let holidayCountry = holidayDetails.holidayCountry;
+    let holidayYear = holidayDetails.holidayYear;
+
+    let listOfCountries = {
+        "singapore": "SG",
+
+    };
+
+    //go through the twelve months
+    for (let holidayMonth = 9; holidayMonth < 10; holidayMonth++) {
+        let holidayURL = "https://holidayapi.com/v1/holidays?key=" + holidayAPIKey +
+            "&country=" + holidayCountry + "&year=" + holidayYear + "&month=" + holidayMonth;
+
+        console.log(holidayURL);
+        request(holidayURL, function (err, res, body) {
+            //console.log(res);
+            let info = JSON.parse(body);
+            if (info.status !== 200) {
+                //error occurred show that no results can be found
+                bot.sendMessage(fromId, "Encountered an error with the holiday search " + emoji.hushed);
+                return;
+            }
+            let holidayId = info.holidays[0].date + "-" + info.holidays[0].name;
+            console.log(holidayId);
+            let newHolidayObject = {
+                _id: holidayId,
+                date: info.holidays[0].date,
+                details: info.holidays
+            };
+            console.log(newHolidayObject);
+            db.holidays.find({ _id: holidayId }, function (err, doc) {
+                if (doc !== 1) { //dont exist in the system
+                    //availableCountries: doc[0].availableCountries + holidayCountry,
+                    db.holidays.insert({ _id: holidayId }, newHolidayObject);
+                    bot.sendMessage(fromId, "I'm connected! And populated the db with holiday " + holidayCountry + " " + holidayMonth + " month" + holidayYear);
+                } else {
+
+                }
+
+            });
+
+        });
+    }
+    bot.sendMessage(fromId, "I'm connected! And am populating the db with holiday");
+}
+function getHolidayMethod(chatDetails, holidayDetails) {
+    //chat related
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    //holiday details
+    let holidayCountry = holidayDetails.holidayCountry;
+    let holidayYear = holidayDetails.holidayYear;
+    let holidayMonth = holidayDetails.holidayMonth;
+
+    //TODO: get the holiday details for the Country for the month from DB and send it out
+
+
+    bot.sendMessage(fromId, "Currently searching for your holidays for " + holidayCountry + ".. " + emoji.bow);
+}
+function bbAutoChecker(chatDetails) {
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    db.users.count({ _id: userId }, function (err, doc) {
+        if (doc === 1) {
+            //exist and is already my bb
+            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " already added " + first_name + "'s id hehe! Check from db is a success!");
+        } else {
+            db.users.update({
+                _id: userId
+            }, {
+                    $set: {
+                        profile: {
+                            chatId: userId,
+                        }
+                    }
+                }, function (err, doc) {
+                    if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + "'s ChatId is added into database" + emoji.smiley);
+                });
+
+        }
+    });
 }
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
