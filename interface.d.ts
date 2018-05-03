@@ -10,3 +10,10 @@ interface weatherDetails {
 interface emoji {
     content: string,
 }
+
+interface chatDetails {
+    fromId: number,
+    chatName: string,
+    first_name: string,
+    userId: number,
+}

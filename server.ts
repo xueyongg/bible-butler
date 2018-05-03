@@ -10,6 +10,7 @@ let moment = require('moment');
 let moment_tz = require('moment-timezone');
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
+const axios = require('axios');
 //let googleTranslate = require('google-translate')(apiKey);
 
 let token = process.env.TELEGRAM_TOKEN;
@@ -818,48 +819,8 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
 });
 
 // -------------------------------Functional Methods---------------------------------------
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-async function emojiFinder(key_word) {
-    const url = "https://emojifinder.com/" + key_word;
-    const results = await scrapeIt(url, {
-        emojis: {
-            listItem: "#results input",
-            data: {
-                content: {
-                    attr: "value",
-                }
-            }
-        }
-    }, (err, data) => {
-        if (err) {
-            console.log("An error occured!", err);
-            return;
-        }
-    });
-    if (results) {
-        let emojis: emoji[] = results.data.emojis;
-        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return chosen_emoji.content;
-    }
-}
-function getDefaultOpt() {
-    return {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "Back to main menu", callback_data: "menu", },
-                { text: "Get exchange rate", callback_data: "exchangeRate", }],
-                [{ text: "Get weather status", callback_data: "weather", },
-                { text: "Get sunrise timing", callback_data: "sunrise", }],
-            ],
-            one_time_keyboard: true,
-            resize_keyboard: true,
-        },
-        parse_mode: "Markdown",
-    }
-};
-function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NIV") {
+
+function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, version = "NIV") {
     //chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -895,7 +856,7 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
-function getLatLongMethod(chatDetails, locationInput, type = "weather") {
+function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weather") {
     //type: weather or sunrise
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -951,7 +912,8 @@ function getLatLongMethod(chatDetails, locationInput, type = "weather") {
     if (type === "sunrise") bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationInput) + "'s sunrise timing.. " + emoji.bow);
 
 }
-function weatherReportMethod(locationDetails, chatDetails) {
+function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
+    //chat details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
     let locationName = locationDetails.name;
@@ -983,7 +945,7 @@ function weatherReportMethod(locationDetails, chatDetails) {
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
-function getSunriseMethod(chatDetails, locationDetails) {
+function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
     //chat details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1027,7 +989,7 @@ function getSunriseMethod(chatDetails, locationDetails) {
 
     // bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 }
-function formattingSunriseMessage(chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
+function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
     //chat related
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1070,7 +1032,7 @@ function formattingSunriseMessage(chatDetails, sunriseDetails, timeZoneDetails, 
  * @param chatDetails details about the chat, ID, person's name etc
  * @param exchangeRateDetails from and to currency to get the exchange rate as of the date
  */
-function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
+function getExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     //chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1126,7 +1088,7 @@ function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
  * @param chatDetails details about the chat, ID, person's name etc
  * @param exchangeRateDetails from and to currency to get the exchange rate as of the date
  */
-function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
+function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     // chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1178,8 +1140,48 @@ function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved exchange rate " +
         fromCurrency + " to " + toCurrency + " at the rate of " + rate + "! Success!");
 }
-
-function teachMeMath(chatDetails, number: number) {
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+async function emojiFinder(key_word) {
+    const url = "https://emojifinder.com/" + key_word;
+    const results = await scrapeIt(url, {
+        emojis: {
+            listItem: "#results input",
+            data: {
+                content: {
+                    attr: "value",
+                }
+            }
+        }
+    }, (err, data) => {
+        if (err) {
+            console.log("An error occured!", err);
+            return;
+        }
+    });
+    if (results) {
+        let emojis: emoji[] = results.data.emojis;
+        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        return chosen_emoji.content;
+    }
+}
+function getDefaultOpt() {
+    return {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "Back to main menu", callback_data: "menu", },
+                { text: "Get exchange rate", callback_data: "exchangeRate", }],
+                [{ text: "Get weather status", callback_data: "weather", },
+                { text: "Get sunrise timing", callback_data: "sunrise", }],
+            ],
+            one_time_keyboard: true,
+            resize_keyboard: true,
+        },
+        parse_mode: "Markdown",
+    }
+};
+function teachMeMath(chatDetails: chatDetails, number: number) {
     // chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1204,7 +1206,7 @@ function teachMeMath(chatDetails, number: number) {
 }
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
-function getVerseMethod(chatDetails, key_word) {
+function getVerseMethod(chatDetails: chatDetails, key_word) {
     // chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1228,6 +1230,9 @@ function getVerseMethod(chatDetails, key_word) {
         }
     });
 }
+function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
+
+}
 
 // -------------------------------Incompleted Methods---------------------------------------
 //TODO: incomplete as of 6 June 17(tues)
@@ -1237,11 +1242,9 @@ function getVerseMethod(chatDetails, key_word) {
  * @param fetchingVerse the verse to be fetched
  * @param type type of prayer to be prayed, so can do up the filling according to the tone of the prayer
  */
-function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
-    let fromId = chatDetails.fromId;
-    let chatName = chatDetails.chatName;
-    let first_name = chatDetails.first_name;
-    let userId = chatDetails.userId;
+function marvinCraftPrayer(chatDetails: chatDetails, fetchingVerse, type) {
+    //chat details
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
 
@@ -1286,11 +1289,9 @@ function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
 }
 
 // -------------------------------Deprecated Methods---------------------------------------
-function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
-    let fromId = chatDetails.fromId;
-    let chatName = chatDetails.chatName;
-    let first_name = chatDetails.first_name;
-    let userId = chatDetails.userId;
+function getVerseMethod1(chatDetails: chatDetails, fetchingVerse, type = "kjv") {
+    //chat details
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
 
@@ -1318,12 +1319,9 @@ function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
     });
     bot.sendMessage(fromId, "Fetching verse now..");
 }
-function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
+function holidayRetrieveAndSaveOnly(chatDetails: chatDetails, holidayDetails) {
     //chat details
-    let fromId = chatDetails.fromId;
-    let chatName = chatDetails.chatName;
-    let first_name = chatDetails.first_name;
-    let userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     //holiday details
     let holidayCountry = holidayDetails.holidayCountry;
@@ -1371,7 +1369,7 @@ function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
     }
     bot.sendMessage(fromId, "I'm connected! And am populating the db with holiday");
 }
-function getHolidayMethod(chatDetails, holidayDetails) {
+function getHolidayMethod(chatDetails: chatDetails, holidayDetails) {
     //chat related
     let { fromId, chatName, first_name, userId } = chatDetails;
 
@@ -1385,7 +1383,7 @@ function getHolidayMethod(chatDetails, holidayDetails) {
 
     bot.sendMessage(fromId, "Currently searching for your holidays for " + holidayCountry + ".. " + emoji.bow);
 }
-function bbAutoChecker(chatDetails) {
+function bbAutoChecker(chatDetails: chatDetails) {
     let { fromId, chatName, first_name, userId } = chatDetails;
 
     db.users.count({ _id: userId }, function (err, doc) {
@@ -1421,10 +1419,6 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    // log each of the first ten docs in the collection
-    //console.log("This is the userID: " + userId);
-    //console.log("This is the first_name: " + first_name);
-    //console.log("This is the retrieved user: ");
     if (db) {
         db.users.count({ _id: userId }, function (err, doc) {
             if (doc === 1) {
@@ -1483,10 +1477,8 @@ bot.onText(/\/help/i, function (msg, match) {
     bot.sendMessage(fromId, "This spectacular bot have a few commands." +
         "\n/feeling - to fetch verses for you based on how you feel" +
         "\n/insult - to get insulted" +
-        "\n/bbchecker - check if you’re Marvin’s bb! If not, you got to tell him you want to be his bb!" +
         "\n/getverse - get verses!" +
         "\n/givefeedback - give Marvin some feedback!" +
-        "\n/set - set the bible version (In progress)" +
         "\n/shock - shock sticker " + emoji.astonished +
         "\n/stun - stun sticker " + emoji.astonished +
         "\n/smirk - smirk sticker " + emoji.smirk +
