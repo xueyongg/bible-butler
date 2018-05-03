@@ -1,25 +1,25 @@
-var TelegramBot = require('node-telegram-bot-api');
+let TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
-var mongojs = require('mongojs');
-var MongoClient = require('mongodb').MongoClient
+let mongojs = require('mongojs');
+let MongoClient = require('mongodb').MongoClient
     , format = require('util').format;
 const ngrok = require('ngrok');
 
-var request = require('request');
-var moment = require('moment');
-var moment = require('moment-timezone');
-var emoji = require('node-emoji').emoji;
+let request = require('request');
+let moment = require('moment');
+let moment_tz = require('moment-timezone');
+let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
-//var googleTranslate = require('google-translate')(apiKey);
+//let googleTranslate = require('google-translate')(apiKey);
 
-var token = process.env.TELEGRAM_TOKEN;
-var privateGenderAPIKey = process.env.privateGenderAPIKey;
-var darkskyAPIKey = process.env.darkskyAPIKey;
-var googleAPIKey = process.env.googleAPIKey;
-var googleTimeZoneAPIKey = process.env.googleTimeZoneAPIKey;
-var holidayAPIKey = process.env.holidayAPIKey;
-var exchangeRateAPIKey = process.env.exchangeRateAPIKey;
-var myId = Number(process.env.myId);
+let token = process.env.TELEGRAM_TOKEN;
+let privateGenderAPIKey = process.env.privateGenderAPIKey;
+let darkskyAPIKey = process.env.darkskyAPIKey;
+let googleAPIKey = process.env.googleAPIKey;
+let googleTimeZoneAPIKey = process.env.googleTimeZoneAPIKey;
+let holidayAPIKey = process.env.holidayAPIKey;
+let exchangeRateAPIKey = process.env.exchangeRateAPIKey;
+let myId = Number(process.env.myId);
 const environment = process.env.NODE_ENV;
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
@@ -79,10 +79,10 @@ const takeOff = () => {
 };
 
 if (!DOMAIN) {
-    // If no URL is provided for the WebHook from environment variables, we open an ngrok tunnel
+    // If no URL is provided for the WebHook from environment letiables, we open an ngrok tunnel
     bot.openTunnel(PORT)
         .then(host => {
-            // Once we have the ngrok tunnel host, we set the coresponding variable
+            // Once we have the ngrok tunnel host, we set the coresponding letiable
             DOMAIN = host;
             console.log(`Ngrok tunnel opened at ${host}`);
             // Then start listening for updates
@@ -90,12 +90,12 @@ if (!DOMAIN) {
         })
         .catch(console.log);
 } else {
-    // If environment variables define a url, we start listening for the updates without opening a tunnel
+    // If environment letiables define a url, we start listening for the updates without opening a tunnel
     takeOff();
 }
 
-var bot_name = "Marvin";
-var numOfBebePhotos = 3;
+let bot_name = "Marvin";
+let numOfBebePhotos = 3;
 
 let connection_string = "mongodb://" + DB_HOST + ":27017" + "/biblebutler";
 //Connecting to the db at the start of the code
@@ -133,31 +133,55 @@ function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+async function emojiFinder(key_word) {
+    const url = "https://emojifinder.com/" + key_word;
+    const results = await scrapeIt(url, {
+        emojis: {
+            listItem: "#results input",
+            data: {
+                content: {
+                    attr: "value",
+                }
+            }
+        }
+    }, (err, data) => {
+        if (err) {
+            console.log("An error occured!", err);
+            return;
+        }
+    });
+    if (results) {
+        let emojis: emoji[] = results.data.emojis;
+        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        return chosen_emoji.content;
+    }
+}
+
 // Matches /echo [whatever]
 bot.onText(/\/echo (.+)/, function (msg, match) {
-    var fromId = msg.from.id;
-    var resp = match[1];
+    let fromId = msg.from.id;
+    let resp = match[1];
     bot.sendMessage(fromId, resp);
 });
 
 bot.onText(/\/set/, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    var message = first_name + ", there's currently only New International Version. " +
+    let message = first_name + ", there's currently only New International Version. " +
         "\nApologies for the inconveniences caused.";
 
-    var keyboard = [
+    let keyboard = [
         [{ text: 'KJV' }, { text: 'WEB' }]
     ];
-    var replyObject = {
+    let replyObject = {
         reply_markup: keyboard,
         resize_keyboard: true
     };
@@ -171,17 +195,17 @@ bot.onText(/\/set/, function (msg, match) {
 let fallback = true;
 bot.on('message', function (msg) {
 
-    var chat = msg.chat;
-    var chatId = msg.chat.id;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let chatId = msg.chat.id;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
@@ -203,17 +227,17 @@ bot.on('message', function (msg) {
  */
 bot.onText(/^marvin (.+)/i, function (msg, match) {
     //chat details
-    var chat = msg.chat;
-    var chatId = msg.chat.id;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let chatId = msg.chat.id;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
@@ -223,21 +247,21 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     console.log("< Message received: ", msg);
     const command = /^get verse/.exec(match[1]);
     if (command) {
-        var matches = /^marvin (.+verse)(.+[0-9]$)/ig.exec(msg.text.trim());
-        var fetchingVerse = matches[2].trim();
+        let matches = /^marvin (.+verse)(.+[0-9]$)/ig.exec(msg.text.trim());
+        let fetchingVerse = matches[2].trim();
 
         if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal", "NIV");
         else bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
 
     } else if (/^marvin (.*get)(.+[0-9]$)/ig.exec(msg.text.trim())) {
         //just the verse, since im the only one that's gonna use this
-        var matches = /^marvin (.*get)(.+[0-9]$)/ig.exec(msg.text.trim());
-        var fetchingVerse = matches[2].trim();
+        let matches = /^marvin (.*get)(.+[0-9]$)/ig.exec(msg.text.trim());
+        let fetchingVerse = matches[2].trim();
 
         marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
 
     } else if (/^marvin (.+sad)/ig.exec(msg.text.trim())) { //this is when people tell marvin, they are sad
-        var opt = {
+        let opt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Yes", callback_data: "yes", },
@@ -252,17 +276,17 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         bot.sendMessage(fromId, "What happened " + first_name + "? " + emoji.slightly_frowning_face + " Do you need a verse?", opt)
             .then(function (ans) {
                 bot.once('callback_query', function (msg) {
-                    var feeling = "needEncouragement";
-                    var response = msg.data;
+                    let feeling = "needEncouragement";
+                    let response = msg.data;
                     console.log("This is my response: " + response);
                     if (response === "yes") {
-                        var chosenFeeling = "needEncouragement";
-                        var arrayOfFeelings = verseArchive[chosenFeeling];
+                        let chosenFeeling = "needEncouragement";
+                        let arrayOfFeelings = verseArchive[chosenFeeling];
                         if (!arrayOfFeelings) {
                             bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
                             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error! " + emoji.sob);
                         }
-                        var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+                        let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                         marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
                         bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                     } else {
@@ -273,7 +297,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             })
 
     } else if (/^marvin (.+angry)/ig.exec(msg.text.trim())) {
-        var opt = {
+        let opt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Music", callback_data: "music", },
@@ -286,7 +310,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        var secondOpt = {
+        let secondOpt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Yes", callback_data: "yes", },
@@ -298,7 +322,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        var thirdOpt = {
+        let thirdOpt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Jackie", callback_data: "no", },
@@ -317,8 +341,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         bot.sendMessage(fromId, "What happened " + first_name + "? " + emoji.slightly_frowning_face + " Do you need a song or a verse?", opt)
             .then(function (ans) {
                 bot.once('callback_query', function (msg) {
-                    var feeling = "needEncouragement";
-                    var response = msg.data;
+                    let feeling = "needEncouragement";
+                    let response = msg.data;
                     //console.log("This is my response: " + response);
 
                     switch (response) {
@@ -330,7 +354,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             bot.sendMessage(fromId, "Do you want the song? Although I have to first verify that you're not a bot & not a stranger " + emoji.hushed, secondOpt)
                                 .then(function () {
                                     bot.once('callback_query', function (secondMsg) {
-                                        var secondResponse = secondMsg.data;
+                                        let secondResponse = secondMsg.data;
                                         //console.log("this is the secondResponse: " + secondResponse);
                                         switch (secondResponse) {
                                             case 'yes':
@@ -338,10 +362,10 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                 bot.sendMessage(fromId, "What is the name of my dog? " + emoji.thinking_face + " (Only one try, make it count!)", thirdOpt)
                                                     .then(function () {
                                                         bot.once('callback_query', function (thirdMsg) {
-                                                            var thirdResponse = thirdMsg.data;
+                                                            let thirdResponse = thirdMsg.data;
                                                             console.log("this is the thirdMsg: " + thirdMsg);
                                                             if (thirdResponse.toUpperCase() === "BEBE") {
-                                                                var songOption = {
+                                                                let songOption = {
                                                                     duration: 615,
                                                                     performer: "Elevation Worship",
                                                                     title: "Do it again"
@@ -351,7 +375,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 bot.sendAudio(fromId, "./server/data/Do It Again.mp3", songOption);
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's name, sent the song 'Do It Again' over! " + emoji.sob);
                                                             } else {
-                                                                var theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
+                                                                let theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
                                                                 console.log("theRandomizedPhotoNumber: " + theRandomizedPhotoNumber);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
@@ -370,13 +394,13 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             break;
 
                         case 'verse':
-                            var chosenFeeling = "angry";
-                            var arrayOfFeelings = verseArchive[chosenFeeling];
+                            let chosenFeeling = "angry";
+                            let arrayOfFeelings = verseArchive[chosenFeeling];
                             if (!arrayOfFeelings) {
                                 bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
                                 if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error! " + emoji.sob);
                             }
-                            var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+                            let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                             marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
                             bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                             break;
@@ -390,7 +414,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             })
 
     } else if (/^marvin (.+broken.*)/ig.exec(msg.text.trim())) {
-        var opt = {
+        let opt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Music", callback_data: "music", },
@@ -403,7 +427,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        var secondOpt = {
+        let secondOpt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Yes", callback_data: "yes", },
@@ -415,7 +439,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        var thirdOpt = {
+        let thirdOpt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "9 Weeks old", callback_data: "no", },
@@ -434,8 +458,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         bot.sendMessage(fromId, "What happened " + first_name + "? " + emoji.slightly_frowning_face + " Do you need a song or a verse?", opt)
             .then(function (ans) {
                 bot.once('callback_query', function (msg) {
-                    var feeling = "needEncouragement";
-                    var response = msg.data;
+                    let feeling = "needEncouragement";
+                    let response = msg.data;
                     //console.log("This is my response: " + response);
 
                     switch (response) {
@@ -447,7 +471,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             bot.sendMessage(fromId, "Do you want the song? Although I have to first verify that you're not a bot & not a stranger " + emoji.hushed, secondOpt)
                                 .then(function () {
                                     bot.once('callback_query', function (secondMsg) {
-                                        var secondResponse = secondMsg.data;
+                                        let secondResponse = secondMsg.data;
                                         //console.log("this is the secondResponse: " + secondResponse);
                                         switch (secondResponse) {
                                             case 'yes':
@@ -455,10 +479,10 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                 bot.sendMessage(fromId, "How old was my dog when she first joined the family? " + emoji.thinking_face + " (Only one try, make it count!)", thirdOpt)
                                                     .then(function () {
                                                         bot.once('callback_query', function (thirdMsg) {
-                                                            var thirdResponse = thirdMsg.data;
+                                                            let thirdResponse = thirdMsg.data;
                                                             console.log("this is the thirdMsg: " + thirdMsg);
                                                             if (thirdResponse.toUpperCase() === "BEBE") {
-                                                                var songOption = {
+                                                                let songOption = {
                                                                     duration: 351,
                                                                     performer: "All Sons & Daughters",
                                                                     title: "Brokenness Aside"
@@ -468,7 +492,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 bot.sendAudio(fromId, "./server/data/Brokenness Aside.mp3", songOption);
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's age when she first joined, sent the song 'Brokenness Aside' over! " + emoji.sob);
                                                             } else {
-                                                                var theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
+                                                                let theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
                                                                 bot.sendPhoto(fromId, "./server/data/bebe" + theRandomizedPhotoNumber + ".jpg");
@@ -486,13 +510,13 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             break;
 
                         case 'verse':
-                            var chosenFeeling = "needStrength";
-                            var arrayOfFeelings = verseArchive[chosenFeeling];
+                            let chosenFeeling = "needStrength";
+                            let arrayOfFeelings = verseArchive[chosenFeeling];
                             if (!arrayOfFeelings) {
                                 bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
                                 if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error! " + emoji.sob);
                             }
-                            var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+                            let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                             marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
                             bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                             break;
@@ -508,7 +532,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
     } else if (/^marvin (.+broke[^n].*)/ig.exec(msg.text.trim())) {
         //https://www.youtube.com/watch?v=dNwt7LQiYck
-        var opt = {
+        let opt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Music", callback_data: "music", },
@@ -521,7 +545,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        var secondOpt = {
+        let secondOpt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Yes", callback_data: "yes", },
@@ -533,7 +557,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        var thirdOpt = {
+        let thirdOpt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Puffy", callback_data: "no", },
@@ -552,8 +576,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         bot.sendMessage(fromId, "What happened " + first_name + "? " + emoji.slightly_frowning_face + " Do you need a song or a verse?", opt)
             .then(function (ans) {
                 bot.once('callback_query', function (msg) {
-                    var feeling = "brokenHearted";
-                    var response = msg.data;
+                    let feeling = "brokenHearted";
+                    let response = msg.data;
                     //console.log("This is my response: " + response);
 
                     switch (response) {
@@ -565,7 +589,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             bot.sendMessage(fromId, "Do you want the song? Although I have to first verify that you're not a bot & not a stranger " + emoji.hushed, secondOpt)
                                 .then(function () {
                                     bot.once('callback_query', function (secondMsg) {
-                                        var secondResponse = secondMsg.data;
+                                        let secondResponse = secondMsg.data;
                                         //console.log("this is the secondResponse: " + secondResponse);
                                         switch (secondResponse) {
                                             case 'yes':
@@ -574,10 +598,10 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                 bot.sendMessage(fromId, "What's the name of the smaller dog? " + emoji.thinking_face + " (Only one try, make it count!)", thirdOpt)
                                                     .then(function () {
                                                         bot.once('callback_query', function (thirdMsg) {
-                                                            var thirdResponse = thirdMsg.data;
+                                                            let thirdResponse = thirdMsg.data;
                                                             console.log("this is the thirdMsg: " + thirdMsg);
                                                             if (thirdResponse.toUpperCase() === "BEBE") {
-                                                                var songOption = {
+                                                                let songOption = {
                                                                     duration: 295,
                                                                     performer: "Elevation Worship",
                                                                     title: "Give Me Faith"
@@ -587,7 +611,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 bot.sendAudio(fromId, "./server/data/Give Me Faith.mp3", songOption);
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's age when she first joined, sent the song 'Brokenness Aside' over! " + emoji.sob);
                                                             } else {
-                                                                var theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
+                                                                let theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
                                                                 bot.sendPhoto(fromId, "./server/data/bebe" + theRandomizedPhotoNumber + ".jpg");
@@ -605,13 +629,13 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             break;
 
                         case 'verse':
-                            var chosenFeeling = "brokenHearted";
-                            var arrayOfFeelings = verseArchive[chosenFeeling];
+                            let chosenFeeling = "brokenHearted";
+                            let arrayOfFeelings = verseArchive[chosenFeeling];
                             if (!arrayOfFeelings) {
                                 bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
                                 if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error! " + emoji.sob);
                             }
-                            var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+                            let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                             marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
                             bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                             break;
@@ -642,7 +666,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         //TODO: Access the db check my credentials and check if user is bb
         //TODO: verse structure = {verse, text, description}
 
-        var opt = {
+        let opt = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Xueyong", callback_data: "no", },
@@ -667,7 +691,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                 bot.sendMessage(fromId, "What does my owner's sisters call him?", opt)
                     .then(function (ans) {
                         bot.once("callback_query", function (msg) {
-                            var response = msg.data.toLowerCase();
+                            let response = msg.data.toLowerCase();
                             switch (response) {
                                 case 'xue':
                                     //correct answer
@@ -700,9 +724,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     }
     //----------------------------------------------- Weather related use---------------------------------------------------------
     else if (/^marvin (.+)weather.*/ig.exec(msg.text.trim())) {
-        var weatherMatches = /^marvin (.+)weather.*/ig.exec(msg.text.trim());
-        var splitWord = weatherMatches[1].split(/\W+/);
-        var name = splitWord[splitWord.length - 2].trim();
+        let weatherMatches = /^marvin (.+)weather.*/ig.exec(msg.text.trim());
+        let splitWord = weatherMatches[1].split(/\W+/);
+        let name = splitWord[splitWord.length - 2].trim();
 
         getLatLongMethod(chatDetails, name);
 
@@ -713,7 +737,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         //             if (doc) {
         //                 //console.log(doc[0]);
         //                 //bot.sendMessage(fromId, doc[0].name);
-        //                 var locationDetails = {
+        //                 let locationDetails = {
         //                     name: doc[0].name,
         //                     lat: doc[0].lat,
         //                     long: doc[0].long,
@@ -732,7 +756,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     //-----------------------------------------------Only for admin to use---------------------------------------------------------
     else if (/^marvin (.+connect test.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
-        var verses = db.collection('verses');
+        let verses = db.collection('verses');
         // log each of the first ten docs in the collection
         db.verses.find({}).limit(1).forEach(function (err, doc) {
             if (err) throw err;
@@ -743,7 +767,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         });
     } else if (/^marvin (.+bb list elephant.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
-        var verses = db.collection('verses');
+        let verses = db.collection('verses');
         // log each of the first ten docs in the collection
         bot.sendMessage(fromId, "I'm connected! And here are your first ten bbs");
         db.users.find({ "bb": true }).limit(10).forEach(function (err, doc) {
@@ -755,7 +779,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
     } else if (/^marvin (.+verse list elephant.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
-        var verses = db.collection('verses');
+        let verses = db.collection('verses');
         // log each of the first ten docs in the collection
         bot.sendMessage(fromId, "I'm connected! And here are your first ten verses");
         db.verses.find().limit(10).forEach(function (err, doc) {
@@ -768,12 +792,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     } else if (/^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim())) {
 
         //getting the country name for current year every month
-        var matches = /^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim());
-        var holidayMatches = matches[2].trim();
-        var splitWords = holidayMatches.split(/\W+/);
+        let matches = /^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim());
+        let holidayMatches = matches[2].trim();
+        let splitWords = holidayMatches.split(/\W+/);
         bot.sendMessage(fromId, splitWords.toString());
 
-        var holidayDetails = {
+        let holidayDetails = {
             holidayCountry: splitWords[0],
             holidayYear: splitWords[1],
         };
@@ -782,13 +806,13 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         holidayRetrieveAndSaveOnly(chatDetails, holidayDetails)
 
     } else if (/^marvin (.+translate test)(.*)/ig.exec(msg.text.trim())) {
-        var wordMatches = /^marvin (.+translate test)(.*)/ig.exec(msg.text.trim());
+        let wordMatches = /^marvin (.+translate test)(.*)/ig.exec(msg.text.trim());
         console.log("This is wordMatches:" + wordMatches);
-        var wordMatchesWords = wordMatches[1].split(/\W+/);
+        let wordMatchesWords = wordMatches[1].split(/\W+/);
         console.log("This is wordMatchesWords:" + wordMatchesWords);
 
         //googleTranslate.translate('My name is Joshua', 'es', function (err, translation) {
-        //    var translatedMessage = translation.translatedText;
+        //    let translatedMessage = translation.translatedText;
         //    console.log(translatedMessage);
         //    // =>  Mi nombre es Brandon
         //    bot.sendMessage(fromId, translatedMessage);
@@ -817,7 +841,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             });
 
         //googleTranslate.translate('My name is Joshua', 'es', function (err, translation) {
-        //    var translatedMessage = translation.translatedText;
+        //    let translatedMessage = translation.translatedText;
         //    console.log(translatedMessage);
         //    // =>  Mi nombre es Brandon
         //    bot.sendMessage(fromId, translatedMessage);
@@ -826,9 +850,9 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     }
     //-----------------------------------------------Exchange rate related use---------------------------------------------------------
     else if (/^marvin (.+)/ig.exec(msg.text.trim())) {
-        var matches = /^marvin (.+)/ig.exec(msg.text.trim());
-        var text1 = matches[1].trim().toUpperCase();
-        var resp = match[1];
+        let matches = /^marvin (.+)/ig.exec(msg.text.trim());
+        let text1 = matches[1].trim().toUpperCase();
+        let resp = match[1];
         bot.sendMessage(fromId, resp);
     }
 });
@@ -837,29 +861,29 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
     //console.log("This is the message:" + msg);
     //console.log("This is the match:" + match);
 
-    var chat = msg.chat;
-    var chatId = msg.chat.id;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let chatId = msg.chat.id;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    var resp = match[1];
+    let resp = match[1];
     bot.sendMessage(fromId, "My name is " + bot_name + "! Nice to meet you");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my name. " + emoji.kissing_smiling_eyes);
 });
 
 function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let fromId = chatDetails.fromId;
+    let chatName = chatDetails.chatName;
+    let first_name = chatDetails.first_name;
+    let userId = chatDetails.userId;
 
-    var url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
+    let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
 
     request(url, function (error, response, body) {
         if (response.statusCode != 200) {
@@ -867,9 +891,9 @@ function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
             bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
         } else {
-            var info = JSON.parse(body);
-            var formattedVerse = info.text;
-            var translation_name = info.translation_name;
+            let info = JSON.parse(body);
+            let formattedVerse = info.text;
+            let translation_name = info.translation_name;
             //console.log(formattedVerse);
             switch (type) {
                 case "normal":
@@ -886,24 +910,21 @@ function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
     bot.sendMessage(fromId, "Fetching verse now..");
 }
 function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NIV") {
-    //chate related details
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    //chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
-    var matches = /^([1-4]*\s*[a-zA-Z]+)\s*(.+)/ig.exec(fetchingVerse.trim());
-    var book = matches[1].trim();
-    var chapterAndVerse = matches[2].trim();
+    let matches = /^([1-4]*\s*[a-zA-Z]+)\s*(.+)/ig.exec(fetchingVerse.trim());
+    let book = matches[1].trim();
+    let chapterAndVerse = matches[2].trim();
     fetchingVerse = book + chapterAndVerse;
     console.log("From new get verse method: ", fetchingVerse);
 
-    // var testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
-    var url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
-    //var url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
+    // let testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
+    let url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
+    //let url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
     request(url, function (error, response, body) {
 
-        var info = "";
+        let info = "";
         try { info = JSON.parse(body); } catch{
             info = body.replace(/<b>/g, "\n").replace(/<\/b>/g, "");
         }
@@ -912,7 +933,7 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
             bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
         } else {
-            var verseReference = info;
+            let verseReference = info;
             // console.log(verseReference);
             bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
                 "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
@@ -926,12 +947,9 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
 }
 function getLatLongMethod(chatDetails, locationInput, type = "weather") {
     //type: weather or sunrise
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
-    var locationSearch = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationInput + "&key=" + googleAPIKey;
+    let locationSearch = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationInput + "&key=" + googleAPIKey;
     console.log("LocationSearch URL", locationSearch);
     request(locationSearch, function (err, res, body) {
         if (res.status === "ZERO_RESULTS") {
@@ -940,82 +958,43 @@ function getLatLongMethod(chatDetails, locationInput, type = "weather") {
             return;
         }
 
-        var info = JSON.parse(body);
+        let info = JSON.parse(body);
         //console.log(info);
-        var address = info.results[0].formatted_address;
-        var placeID = info.results[0].place_id;
-        var types = info.results[0].types;
-        var lat = info.results[0].geometry.location.lat;
-        var lng = info.results[0].geometry.location.lng;
-        var latlng = [lat, lng];
+        let address = info.results[0].formatted_address;
+        let placeID = info.results[0].place_id;
+        let types = info.results[0].types;
+        let lat = info.results[0].geometry.location.lat;
+        let lng = info.results[0].geometry.location.lng;
+        let latlng = [lat, lng];
         //bot.sendMessage(fromId, "This is your lat : long: " + lat + " : " + lng);
 
         if (type === "weather") {
-            var weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
-            console.log(weatherSearch);
-            request(weatherSearch, function (err, res, body) {
+            let weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
+            console.log("Weather API Search: ", weatherSearch);
+            request(weatherSearch, async (err, res, body) => {
                 if (res.status === "ZERO_RESULTS") {
                     //error occurred show that no results can be found
                     bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
                     return;
                 }
-                //console.log(res);
-                var info = JSON.parse(body);
-                //console.log(info);
-                var weatherInfo;
+                let info = JSON.parse(body);
+                let weatherInfo: weatherDetails = {
+                    temp: 0, apparentTemp: 0, hourlySummary: "", hourlyIcon: "", dailySummary: "", dailyIcon: ""
+                };
                 weatherInfo.temp = info.currently.temperature;
                 weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
                 weatherInfo["hourlySummary"] = info.hourly.summary;
                 weatherInfo["hourlyIcon"] = info.hourly.icon;
                 weatherInfo["dailySummary"] = info.daily.summary;
                 weatherInfo["dailyIcon"] = info.daily.icon;
+                let chosen_emoji = await emojiFinder(weatherInfo.dailyIcon);
 
                 bot.sendMessage(fromId, capitalizeFirstLetter(locationInput) + "'s currently " + weatherInfo.temp + "°C but feels like " + weatherInfo.apparentTemp + "°C \n" +
-                    "Oh! and weather report says: " + weatherInfo.hourlySummary);
+                    "Oh! and weather report says: " + weatherInfo.hourlySummary + chosen_emoji);
             });
         }
         else if (type === "sunrise") {
-            var timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
-
-            //console.log(timezoneSearch);
-            request(timezoneSearch, function (TZerr, TZres, TZbody) {
-                var info2 = JSON.parse(TZbody);
-                console.log(info2);
-                if (info2.status !== "OK") {
-                    //error occurred show that no results can be found
-                    bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
-                    return;
-                }
-                var dateOffset = info2.rawOffset;
-                var timeZoneId = info2.timeZoneId;
-                var timeZoneName = info2.timeZoneName;
-                var timeZoneDetails = {
-                    dateOffset: dateOffset,
-                    timeZoneId: timeZoneId,
-                    timeZoneName: timeZoneName
-                };
-                var today = moment().tz(timeZoneId).format("YYYY-MM-DD");
-                var tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
-                var sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
-                    "&date=" + today + "&formatted=0";
-
-                //console.log(sunriseSearch);
-                request(sunriseSearch, function (err, res, body) {
-                    var info = JSON.parse(body);
-                    //console.log(info);
-                    if (info.status !== "OK") {
-                        //error occurred show that no results can be found
-                        bot.sendMessage(fromId, "Encountered an error with the sunrise report " + emoji.hushed);
-                        return;
-                    }
-                    //console.log(res);
-
-                    var sunrise = info.results.sunrise;
-                    var sunset = info.results.sunset;
-                    var sunriseDetails = { sunrise: sunrise, sunset: sunset }
-                    formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails);
-                });
-            });
+            getSunriseMethod(chatDetails, { locationName: locationInput, lat, lng })
         }
     });
     if (type === "weather") bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
@@ -1023,16 +1002,13 @@ function getLatLongMethod(chatDetails, locationInput, type = "weather") {
 
 }
 function weatherReportMethod(locationDetails, chatDetails) {
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
-    var locationName = locationDetails.name;
-    var lat = locationDetails.lat;
-    var lng = locationDetails.long;
+    let locationName = locationDetails.name;
+    let lat = locationDetails.lat;
+    let lng = locationDetails.long;
 
-    var weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
+    let weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
 
     //console.log(weatherSearch);
     request(weatherSearch, function (err, res, body) {
@@ -1042,9 +1018,9 @@ function weatherReportMethod(locationDetails, chatDetails) {
             return;
         }
         //console.log(res);
-        var info = JSON.parse(body);
+        let info = JSON.parse(body);
         //console.log(info);
-        var weatherInfo;
+        let weatherInfo;
         weatherInfo["temp"] = info.currently.temperature;
         weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
         weatherInfo["hourlySummary"] = info.hourly.summary;
@@ -1057,60 +1033,52 @@ function weatherReportMethod(locationDetails, chatDetails) {
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
-function getSunriseMethod(locationDetails, chatDetails) {
+function getSunriseMethod(chatDetails, locationDetails) {
     //chat details
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     //location details
-    var locationName = locationDetails.name;
-    var lat = locationDetails.lat;
-    var lng = locationDetails.long;
+    let { locationName, lat, lng } = locationDetails;
 
-    var timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
+    let timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
     //console.log(timezoneSearch);
 
     request(timezoneSearch, function (TZerr, TZres, TZbody) {
-        var info2 = JSON.parse(TZbody);
+        let info2 = JSON.parse(TZbody);
         console.log(info2);
         if (info2.status !== "OK") {
             //error occurred show that no results can be found
             bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
             return;
         }
-        var dateOffset = info2.rawOffset;
-        var timeZoneId = info2.timeZoneId;
-        var timeZoneName = info2.timeZoneName;
-        var timeZoneDetails = { dateOffset: dateOffset, timeZoneId: timeZoneId, timeZoneName: timeZoneName }
-        var today = moment().tz(timeZoneId).format("YYYY-MM-DD");
-        var tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
-        var sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
+        let dateOffset = info2.rawOffset;
+        let timeZoneId = info2.timeZoneId;
+        let timeZoneName = info2.timeZoneName;
+        let timeZoneDetails = { dateOffset: dateOffset, timeZoneId: timeZoneId, timeZoneName: timeZoneName }
+        let today = moment().tz(timeZoneId).format("YYYY-MM-DD");
+        let tomorrow = moment().tz(timeZoneId).add(1, 'd').format("YYYY-MM-DD");
+        let sunriseSearch = "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng +
             "&date=" + today + "&formatted=0";
 
         request(sunriseSearch, function (err, res, body) {
-            var info = JSON.parse(body);
+            let info = JSON.parse(body);
             if (info.status !== "OK") {
                 //error occurred show that no results can be found
                 bot.sendMessage(fromId, "Encountered an error with the sunrise report " + emoji.hushed);
                 return;
             }
-            var sunrise = info.results.sunrise;
-            var sunset = info.results.sunset;
-            var sunriseDetails = { sunrise: sunrise, sunset: sunset };
-            formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationName, chatDetails);
+            let sunrise = info.results.sunrise;
+            let sunset = info.results.sunset;
+            let sunriseDetails = { sunrise: sunrise, sunset: sunset };
+            formattingSunriseMessage(chatDetails, sunriseDetails, timeZoneDetails, locationName);
         });
 
     });
 
-    bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
+    // bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 }
 function bbAutoChecker(chatDetails) {
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     db.users.count({ _id: userId }, function (err, doc) {
         if (doc === 1) {
@@ -1132,33 +1100,28 @@ function bbAutoChecker(chatDetails) {
         }
     });
 }
-function formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput, chatDetails) {
+function formattingSunriseMessage(chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
     //chat related
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     //time zone details
-    var dateOffset = timeZoneDetails.dateOffset;
-    var timeZoneId = timeZoneDetails.timeZoneId;
-    var timeZoneName = timeZoneDetails.timeZoneName;
+    let { dateOffset, timeZoneId, timeZoneName } = timeZoneDetails;
 
     //sunrise related
-    var sunrise = sunriseDetails.sunrise;
-    var sunset = sunriseDetails.sunset;
-    var sunriseArray = sunrise.split("+");
-    var sunsetArray = sunset.split("+");
-    var formattedSunrise = moment(sunriseArray[0]).add(dateOffset, 's').format("h:mm:ss a");
-    var formattedSunset = moment(sunsetArray[0]).add(dateOffset, 's').format("h:mm:ss a");
-    var formattedDate = moment(sunriseArray[0]).add(dateOffset, 's').format("Do MMMM YYYY");
+    let sunrise = sunriseDetails.sunrise;
+    let sunset = sunriseDetails.sunset;
+    let sunriseArray = sunrise.split("+");
+    let sunsetArray = sunset.split("+");
+    let formattedSunrise = moment(sunriseArray[0]).add(dateOffset, 's').format("h:mm:ss a");
+    let formattedSunset = moment(sunsetArray[0]).add(dateOffset, 's').format("h:mm:ss a");
+    let formattedDate = moment(sunriseArray[0]).add(dateOffset, 's').format("Do MMMM YYYY");
 
     //get the duration from till the next sunrise/sunset
-    var sunriseDurationFromNow = moment(sunrise).from(moment().tz(timeZoneId));
-    var sunsetDurationFromNow = moment(sunset).from(moment().tz(timeZoneId));
+    let sunriseDurationFromNow = moment(sunrise).from(moment().tz(timeZoneId));
+    let sunsetDurationFromNow = moment(sunset).from(moment().tz(timeZoneId));
     //console.log(sunsetDurationFromNow);
 
-    var message = capitalizeFirstLetter(locationInput) + "'s sunrise details:";
+    let message = capitalizeFirstLetter(locationInput) + "'s sunrise details:";
 
     message = message + "\nThe current " + timeZoneName + " is " + moment().tz(timeZoneId).format("h:mm:ss a");
 
@@ -1177,37 +1140,37 @@ function formattingSunriseMessage(sunriseDetails, timeZoneDetails, locationInput
 }
 function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
     //chat details
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let fromId = chatDetails.fromId;
+    let chatName = chatDetails.chatName;
+    let first_name = chatDetails.first_name;
+    let userId = chatDetails.userId;
 
     //holiday details
-    var holidayCountry = holidayDetails.holidayCountry;
-    var holidayYear = holidayDetails.holidayYear;
+    let holidayCountry = holidayDetails.holidayCountry;
+    let holidayYear = holidayDetails.holidayYear;
 
-    var listOfCountries = {
+    let listOfCountries = {
         "singapore": "SG",
 
     };
 
     //go through the twelve months
-    for (var holidayMonth = 9; holidayMonth < 10; holidayMonth++) {
-        var holidayURL = "https://holidayapi.com/v1/holidays?key=" + holidayAPIKey +
+    for (let holidayMonth = 9; holidayMonth < 10; holidayMonth++) {
+        let holidayURL = "https://holidayapi.com/v1/holidays?key=" + holidayAPIKey +
             "&country=" + holidayCountry + "&year=" + holidayYear + "&month=" + holidayMonth;
 
         console.log(holidayURL);
         request(holidayURL, function (err, res, body) {
             //console.log(res);
-            var info = JSON.parse(body);
+            let info = JSON.parse(body);
             if (info.status !== 200) {
                 //error occurred show that no results can be found
                 bot.sendMessage(fromId, "Encountered an error with the holiday search " + emoji.hushed);
                 return;
             }
-            var holidayId = info.holidays[0].date + "-" + info.holidays[0].name;
+            let holidayId = info.holidays[0].date + "-" + info.holidays[0].name;
             console.log(holidayId);
-            var newHolidayObject = {
+            let newHolidayObject = {
                 _id: holidayId,
                 date: info.holidays[0].date,
                 details: info.holidays
@@ -1230,15 +1193,12 @@ function holidayRetrieveAndSaveOnly(chatDetails, holidayDetails) {
 }
 function getHolidayMethod(chatDetails, holidayDetails) {
     //chat related
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     //holiday details
-    var holidayCountry = holidayDetails.holidayCountry;
-    var holidayYear = holidayDetails.holidayYear;
-    var holidayMonth = holidayDetails.holidayMonth;
+    let holidayCountry = holidayDetails.holidayCountry;
+    let holidayYear = holidayDetails.holidayYear;
+    let holidayMonth = holidayDetails.holidayMonth;
 
     //TODO: get the holiday details for the Country for the month from DB and send it out
 
@@ -1252,24 +1212,21 @@ function getHolidayMethod(chatDetails, holidayDetails) {
  */
 function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
     //chat related details
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
     //currency related details
-    var amount = exchangeRateDetails.amount;
-    var fromCurrency = exchangeRateDetails.from;
-    var toCurrency = exchangeRateDetails.to;
-    var date = exchangeRateDetails.date;
+    let amount = exchangeRateDetails.amount;
+    let fromCurrency = exchangeRateDetails.from;
+    let toCurrency = exchangeRateDetails.to;
+    let date = exchangeRateDetails.date;
 
-    var exchangeRateURL = "http://api.fixer.io/latest?symbols=" + toCurrency + "&base=" + fromCurrency;
+    let exchangeRateURL = "http://api.fixer.io/latest?symbols=" + toCurrency + "&base=" + fromCurrency;
     //console.log(exchangeRateURL);
     //TODO: Request the url done
     //TODO: #2 insert into the DB
     //TODO: #3 callback the insert query to send the message out
     request(exchangeRateURL, function (err, res, body) {
-        var info = JSON.parse(body);
+        let info = JSON.parse(body);
 
         //error handling
         if (info.error || Object.keys(info.rates).length == 0) {
@@ -1279,48 +1236,28 @@ function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
         }
 
         //values from info
-        var infoDate = info.date;
-        var infoRates = info.rates;
-        var base = info.base;
-        var keys = Object.keys(infoRates);
-        var numOfKeys = keys.length;
-        var infoValue = [];
+        let infoDate = info.date;
+        let infoRates = info.rates;
+        let base = info.base;
+        let keys = Object.keys(infoRates);
+        let numOfKeys = keys.length;
+        let infoValue = [];
 
         keys.forEach(function (key) {
-            var value = infoRates[key];
+            let value = infoRates[key];
             infoValue.push(value);
             //do something with value;
         });
 
         //set up a updated exchangeRate details to pass to send
-        var updatedExchangeRateDetails = {
+        let updatedExchangeRateDetails = {
             amount: amount,
             from: fromCurrency,
             to: toCurrency,
             date: date,
             rate: numOfKeys == 1 ? infoRates[toCurrency] : infoValue,
         };
-
-        //create a new ID
-        var id = date + "_" + fromCurrency + "_" + toCurrency;
-        db.xrates.insert({
-            _id: id,
-            from: base,
-            to: Object.keys(infoRates),
-            date: infoDate,
-            rate: numOfKeys == 1 ? infoRates[toCurrency] : infoValue,
-        }, function (err, doc) {
-            if (err) {
-                //error occurred show that no results can be found
-                bot.sendMessage(fromId, "Encountered an error with retrieving exchange rate here " + emoji.hushed);
-                return;
-            }
-            if (doc) {
-                sendExchangeRateMethod(chatDetails, updatedExchangeRateDetails);
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved exchange rate " +
-                    fromCurrency + " to " + toCurrency + " at the rate of " + infoValue + " got saved in the db! Success!");
-            }
-        })
+        sendExchangeRateMethod(chatDetails, updatedExchangeRateDetails);
 
     });
 }
@@ -1330,22 +1267,31 @@ function getExchangeRateMethod(chatDetails, exchangeRateDetails) {
  * @param exchangeRateDetails from and to currency to get the exchange rate as of the date
  */
 function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
-    //chat related details
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
-    //currency related details
-    var amount = exchangeRateDetails.amount;
-    var fromCurrency = exchangeRateDetails.from;
-    var toCurrency = exchangeRateDetails.to;
-    var rate = exchangeRateDetails.rate;
-    var date = exchangeRateDetails.date;
-    var totalAmount = amount * rate;
+    // currency related details
+    let { amount, rate, date } = exchangeRateDetails;
+    let fromCurrency = exchangeRateDetails.from;
+    let toCurrency = exchangeRateDetails.to;
+    let totalAmount = amount * rate;
 
-    //message related
-    var message = "";
+    // message options
+    let opt = {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "Correct!", callback_data: "correct", },
+                { text: "Please invert", callback_data: "flip", }],
+            ],
+            one_time_keyboard: true,
+            resize_keyboard: true,
+            force_reply: true,
+        },
+        parse_mode: 'Markdown',
+    }
+
+    // message related
+    let message = "";
 
     if (amount !== 1) {
         //amount got value
@@ -1354,9 +1300,20 @@ function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
 
     } else {
         //amount is left blank or is 1
-        message = "The rate is " + rate + toCurrency + "/" + fromCurrency + " " + emoji.hushed;
+        message = "The rate is *" + rate + "*" + toCurrency + "/" + fromCurrency + " " + emoji.hushed + "\n\nIs this what you are looking for or you wish to flip the currency?";
     }
-    bot.sendMessage(fromId, message);
+    bot.sendMessage(fromId, message, opt)
+        .then((ans) => {
+            bot.once('callback_query', (callback_message) => {
+                if (callback_message.data === "correct") {
+                    bot.sendMessage(fromId, "Great! Good to serve you " + first_name + "!" + emoji.hushed);
+                }
+                if (callback_message.data === "flip") {
+                    message = "Got it! The rate is *" + (1 / rate).toFixed(2) + "*" + fromCurrency + "/" + toCurrency + emoji.smile;
+                    bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
+                }
+            })
+        });
 
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved exchange rate " +
         fromCurrency + " to " + toCurrency + " at the rate of " + rate + "! Success!");
@@ -1395,17 +1352,17 @@ function getVerseMethod(chatDetails, key_word) {
  * @param type type of prayer to be prayed, so can do up the filling according to the tone of the prayer
  */
 function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
-    var fromId = chatDetails.fromId;
-    var chatName = chatDetails.chatName;
-    var first_name = chatDetails.first_name;
-    var userId = chatDetails.userId;
+    let fromId = chatDetails.fromId;
+    let chatName = chatDetails.chatName;
+    let first_name = chatDetails.first_name;
+    let userId = chatDetails.userId;
 
-    var url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
+    let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
 
-    var genderVerification = "https://gender-api.com/get?name=" + first_name + "&key=" + privateGenderAPIKey;
+    let genderVerification = "https://gender-api.com/get?name=" + first_name + "&key=" + privateGenderAPIKey;
 
     request(url, function (error, response, body) {
-        var statusCode = response.statusCode;
+        let statusCode = response.statusCode;
         switch (statusCode) {
             case 10:
                 if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error " + statusCode + "! See Valid country codes" + emoji.sob);
@@ -1422,9 +1379,9 @@ function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
             bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
         } else {
-            var info = JSON.parse(body);
-            var formattedVerse = info.text;
-            var translation_name = info.translation_name;
+            let info = JSON.parse(body);
+            let formattedVerse = info.text;
+            let translation_name = info.translation_name;
             //console.log(formattedVerse);
             switch (type) {
                 case "normal":
@@ -1444,11 +1401,11 @@ function marvinCraftPrayer(chatDetails, fetchingVerse, type) {
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
 bot.onText(/\/bbchecker/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1465,7 +1422,7 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
                 bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is my bb! Check from db is a success!");
             } else {
-                var bbRejectionArchive = [
+                let bbRejectionArchive = [
                     "You are not my bb! Who are you?" + emoji.scream_cat,
                     first_name + "? Who is that?",
                     "It is an exclusive club, sadly you're not in it"
@@ -1476,7 +1433,7 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
             }
         });
     } else {
-        var fallbackArchive = [
+        let fallbackArchive = [
             "Bb is currently under maintenance right now. " + emoji.scream_cat,
             first_name + ", that is a nice name! But bb is currently under maintenance",
             "And she will be loved~ oh, sorry I was distracted. I'm currently under maintenance right"
@@ -1488,27 +1445,27 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
 
 });
 bot.onText(/\/insult/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    var insults = ["Dumbass", "Out of 100,000 sperm, you were the fastest?", "Look, you aint funny. Your life is just a joke."];
-    var chosenInsult = insults[Math.floor(Math.random() * insults.length)];
+    let insults = ["Dumbass", "Out of 100,000 sperm, you were the fastest?", "Look, you aint funny. Your life is just a joke."];
+    let chosenInsult = insults[Math.floor(Math.random() * insults.length)];
     bot.sendMessage(fromId, chosenInsult);
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get the insult! Success!");
 });
 bot.onText(/\/help/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1536,11 +1493,11 @@ bot.onText(/\/help/i, function (msg, match) {
         "\n/yay - eating sticker ");
 });
 bot.onText(/\/stun/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1549,11 +1506,11 @@ bot.onText(/\/stun/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved stun sticker! Success!");
 });
 bot.onText(/\/shock/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1562,11 +1519,11 @@ bot.onText(/\/shock/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved shocked sticker! Success!");
 });
 bot.onText(/\/smirk/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1575,11 +1532,11 @@ bot.onText(/\/smirk/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved smirk sticker! Success!");
 });
 bot.onText(/\/sad/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1588,11 +1545,11 @@ bot.onText(/\/sad/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved sad sticker! Success!");
 });
 bot.onText(/\/hug/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1601,11 +1558,11 @@ bot.onText(/\/hug/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved hug sticker! Success!");
 });
 bot.onText(/\/cryandhug/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1614,11 +1571,11 @@ bot.onText(/\/cryandhug/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved hug and cry sticker! Success!");
 });
 bot.onText(/\/seeyou/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1627,11 +1584,11 @@ bot.onText(/\/seeyou/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved seeyou sticker! Success!");
 });
 bot.onText(/\/goodjob/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1640,11 +1597,11 @@ bot.onText(/\/goodjob/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved goodjob sticker! Success!");
 });
 bot.onText(/\/timeout/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1653,11 +1610,11 @@ bot.onText(/\/timeout/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved timeout sticker! Success!");
 });
 bot.onText(/\/hmph/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1666,11 +1623,11 @@ bot.onText(/\/hmph/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/hungry/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1680,11 +1637,11 @@ bot.onText(/\/hungry/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/shower/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1693,11 +1650,11 @@ bot.onText(/\/shower/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/what/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1706,11 +1663,11 @@ bot.onText(/\/what/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/hooray/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1719,11 +1676,11 @@ bot.onText(/\/hooray/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/excuseme/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1732,11 +1689,11 @@ bot.onText(/\/excuseme/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/yay/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1745,11 +1702,11 @@ bot.onText(/\/yay/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
 bot.onText(/\/cry/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1758,11 +1715,11 @@ bot.onText(/\/cry/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful cry sticker!");
 });
 bot.onText(/\/xysmirk/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1771,11 +1728,11 @@ bot.onText(/\/xysmirk/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful xy's smirk sticker!");
 });
 bot.onText(/\/buthor/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1784,11 +1741,11 @@ bot.onText(/\/buthor/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful butt sticker!");
 });
 bot.onText(/\/aiyo/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1797,11 +1754,11 @@ bot.onText(/\/aiyo/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful aiyo sticker!");
 });
 bot.onText(/\/hehe/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1810,11 +1767,11 @@ bot.onText(/\/hehe/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful hehe sticker!");
 });
 bot.onText(/\/aniyo/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
@@ -1823,17 +1780,17 @@ bot.onText(/\/aniyo/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Successful aiyo sticker!");
 });
 bot.onText(/\/givefeedback/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -1853,17 +1810,17 @@ bot.onText(/\/givefeedback/i, function (msg, match) {
 
 });
 bot.onText(/\/talktomarvin/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -1883,23 +1840,23 @@ bot.onText(/\/talktomarvin/i, function (msg, match) {
 
 });
 bot.onText(/\/getverse/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
 
-    var opt = {
+    let opt = {
         reply_markup: {
 
             force_reply: true,
@@ -1912,30 +1869,30 @@ bot.onText(/\/getverse/i, function (msg, match) {
                 console.log("message is here!!");
                 console.log(msg);
 
-                var verse = "john3:30-31";
-                var fetchingVerse = msg.text;
+                let verse = "john3:30-31";
+                let fetchingVerse = msg.text;
                 if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
             });
         });
 });
 bot.onText(/\/getvverse/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
 
-    var opt = {
+    let opt = {
         reply_markup: {
 
             force_reply: true,
@@ -1946,8 +1903,8 @@ bot.onText(/\/getvverse/i, function (msg, match) {
         .then(function () {
             bot.once('message', function (msg) {
                 console.log("message is here!!", msg);
-                var verse = "john3:30-31";
-                var fetchingVerse = msg.text;
+                let verse = "john3:30-31";
+                let fetchingVerse = msg.text;
                 if (fetchingVerse) {
                     const result: any = getVerseMethod(chatDetails, fetchingVerse);
                     bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!");
@@ -1961,23 +1918,23 @@ bot.onText(/\/getvverse/i, function (msg, match) {
         });
 });
 bot.onText(/\/getnewverse/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
 
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -1989,9 +1946,9 @@ bot.onText(/\/getnewverse/i, function (msg, match) {
                 console.log("message is here!!");
                 console.log(msg);
 
-                var verse = "john3:30-31";
-                var version = "niv";
-                var fetchingVerse = msg.text;
+                let verse = "john3:30-31";
+                let version = "niv";
+                let fetchingVerse = msg.text;
                 if (fetchingVerse) {
                     //marvinGetVerseMethod(chatDetails, fetchingVerse, "normal");
                     marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal", version);
@@ -2001,24 +1958,24 @@ bot.onText(/\/getnewverse/i, function (msg, match) {
         });
 });
 bot.onText(/\/feeling/, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
 
-    var opt = {
+    let opt = {
         reply_markup: {
             inline_keyboard: [
                 [{ text: "Angry", callback_data: "angry", },
@@ -2039,21 +1996,21 @@ bot.onText(/\/feeling/, function (msg, match) {
 
     bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, opt)
         .then(function (ans) {
-            bot.once('callback_query', function (msg) {
+            bot.once('callback_query', (msg) => {
 
                 //console.log("feeling message is here!!");
                 //console.log(msg);
 
                 //bot.onText(/.+/g, function (msg, match) {
-                var feeling = "happy";
+                let feeling = "happy";
 
-                var chosenFeeling = msg.data;
-                var arrayOfFeelings = verseArchive[chosenFeeling];
+                let chosenFeeling = msg.data;
+                let arrayOfFeelings = verseArchive[chosenFeeling];
                 if (!arrayOfFeelings) {
                     bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
                     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Encountered error! " + emoji.sob);
                 }
-                var chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+                let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
                 bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                 if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
             });
@@ -2061,24 +2018,23 @@ bot.onText(/\/feeling/, function (msg, match) {
 
 });
 bot.onText(/\/getweatherreport/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
-    bbAutoChecker(chatDetails);
 
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -2087,54 +2043,50 @@ bot.onText(/\/getweatherreport/i, function (msg, match) {
     bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("message is here!!");
-                //console.log(msg);
-                bbAutoChecker(chatDetails);
-
-                db.locations.count({ name: msg.text }, function (err, doc) {
-                    if (doc === 1) {
-                        db.locations.find({ name: msg.text }, function (err, doc) {
-                            if (err) throw err;
-                            if (doc) {
-                                //console.log(doc[0]);
-                                //bot.sendMessage(fromId, doc[0].name);
-                                var locationDetails = {
-                                    name: doc[0].name,
-                                    lat: doc[0].lat,
-                                    long: doc[0].long,
-                                };
-                                //console.log("locationDetails: ");
-                                //console.log(locationDetails);
-                                weatherReportMethod(locationDetails, chatDetails);
-                            }
-                        });
-                    } else { //the name of the location doesnt exist in the db yet
-                        getLatLongMethod(msg.text, chatDetails, "weather");
-                    }
-                });
+                getLatLongMethod(chatDetails, msg.text, "weather");
+                // db.locations.count({ name: msg.text }, function (err, doc) {
+                //     if (doc === 1) {
+                //         db.locations.find({ name: msg.text }, function (err, doc) {
+                //             if (err) throw err;
+                //             if (doc) {
+                //                 //console.log(doc[0]);
+                //                 //bot.sendMessage(fromId, doc[0].name);
+                //                 let locationDetails = {
+                //                     name: doc[0].name,
+                //                     lat: doc[0].lat,
+                //                     long: doc[0].long,
+                //                 };
+                //                 //console.log("locationDetails: ");
+                //                 //console.log(locationDetails);
+                //                 weatherReportMethod(locationDetails, chatDetails);
+                //             }
+                //         });
+                //     } else { //the name of the location doesnt exist in the db yet
+                //         getLatLongMethod(msg.text, chatDetails, "weather");
+                //     }
+                // });
 
             });
         });
 });
 bot.onText(/\/getsunrise/i, function (msg, match) {
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
-    bbAutoChecker(chatDetails);
 
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -2145,46 +2097,22 @@ bot.onText(/\/getsunrise/i, function (msg, match) {
             bot.once('message', function (msg) {
                 console.log("Sunrise location message is here!!");
                 //console.log(msg);
-
-                db.locations.count({ name: msg.text }, function (err, doc) {
-                    if (doc === 1) {
-                        //console.log("doc is 1");
-                        db.locations.find({ name: msg.text }, function (err, doc) {
-                            if (err) throw err;
-                            if (doc) {
-                                //console.log(doc[0]);
-                                //bot.sendMessage(fromId, doc[0].name);
-                                var locationDetails = {
-                                    name: doc[0].name,
-                                    lat: doc[0].lat,
-                                    long: doc[0].long,
-                                };
-                                //console.log("locationDetails: ");
-                                //console.log(locationDetails);
-                                getSunriseMethod(locationDetails, chatDetails);
-                            }
-                        });
-                    } else { //the name of the location doesnt exist in the db yet
-                        //console.log("doc is not 1");
-                        getLatLongMethod(msg.text, chatDetails, "sunrise");
-                    }
-                });
-
+                getLatLongMethod(chatDetails, msg.text, "sunrise");
             });
         });
 });
 bot.onText(/\/getHoliday/i, function (msg, match) {
     //chat details
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
@@ -2193,7 +2121,7 @@ bot.onText(/\/getHoliday/i, function (msg, match) {
     bbAutoChecker(chatDetails);
 
     //keyboard options
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -2214,25 +2142,24 @@ bot.onText(/\/getHoliday/i, function (msg, match) {
 });
 bot.onText(/\/getxrate/i, function (msg, match) {
     //chat details
-    var chat = msg.chat;
-    var fromId = msg.from.id;
-    var userId = msg.from.id;
-    var first_name = msg.from.first_name;
-    var chatName = first_name;
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
-    var chatDetails = {
+    let chatDetails = {
         fromId: fromId,
         chatName: chatName,
         first_name: first_name,
         userId: userId,
     };
-    bbAutoChecker(chatDetails);
 
     //keyboard options
-    var opt = {
+    let opt = {
         reply_markup: {
             force_reply: true,
         }
@@ -2241,12 +2168,10 @@ bot.onText(/\/getxrate/i, function (msg, match) {
         "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("Exchange rate message is here!!");
-                //console.log(msg);
-                var text1 = msg.text.toUpperCase().trim();
-                //console.log(text1);
+
+                let text1 = msg.text.toUpperCase().trim();
                 //error checks
-                var error = false;
+                let error = false;
                 if (text1.length < 7) {
                     error = true;
                 } else if (text1.length == 7 && text1.split("")[text1.split("").length - 4] !== "2") {
@@ -2266,50 +2191,20 @@ bot.onText(/\/getxrate/i, function (msg, match) {
                     text1 = 1 + text1;
                 }
 
-                var xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
-                var amount = xrateToken[1];
-                var from = xrateToken[2];
-                var to = xrateToken[3];
-
-                //console.log(xrateToken);
-                //console.log(amount);
-                //console.log(from);
-                //console.log(to);
+                let xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
+                let amount = xrateToken[1];
+                let from = xrateToken[2];
+                let to = xrateToken[3];
 
                 //TODO: check if the to currency is legit *impt!
-                var currentDate = moment().format("DD-MM-YYYY");
-                var exchangeRateDetails = {
+                let currentDate = moment().format("DD-MM-YYYY");
+                let exchangeRateDetails = {
                     from: from,
                     to: to,
                     date: currentDate,
                     amount: amount.length > 0 ? Number(amount) : 1
                 };
                 let id = currentDate + "_" + from + "_" + to;
-                // db.xrates.count({ _id: id, from: from, to: to }, function (err, doc) {
-                //     if (doc === 1) {
-                //         console.log("doc is 1");
-                //         db.xrates.find({ _id: id, from: from, to: to }, function (err, doc) {
-                //             if (err) throw err;
-                //             if (doc) {
-                //                 //console.log(doc[0]);
-
-                //                 exchangeRateDetails = {
-                //                     from: doc[0].from,
-                //                     to: doc[0].to,
-                //                     date: doc[0].date,
-                //                     rate: doc[0].rate,
-                //                     amount: amount.length > 0 ? Number(amount) : 1
-                //                 };
-                //                 //console.log("locationDetails: ");
-                //                 //console.log(locationDetails);
-                //                 sendExchangeRateMethod(chatDetails, exchangeRateDetails);
-                //             }
-                //         });
-                //     } else { //the name of the rate doesnt exist in the db yet
-                //         console.log("doc is not 1");
-                //         getExchangeRateMethod(chatDetails, exchangeRateDetails);
-                //     }
-                // });
                 getExchangeRateMethod(chatDetails, exchangeRateDetails);
                 bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
 
@@ -2317,7 +2212,7 @@ bot.onText(/\/getxrate/i, function (msg, match) {
         });
 });
 
-var verseArchive = {
+let verseArchive = {
     brokenHearted: [
         "Psalm 34:17-18",
         "Psalm 147:3",
@@ -2400,13 +2295,13 @@ var verseArchive = {
     ]
 };
 
-var youtubeArchive = {
+let youtubeArchive = {
     happy: [],
     conviction: [],
     reminder: [],
 };
 
-var prayerArchive = {
+let prayerArchive = {
     confidence: {
         lack: {
             self: [],
@@ -2435,7 +2330,7 @@ var prayerArchive = {
 
 };
 
-var bbStickerArchive = [
+let bbStickerArchive = [
     "CAADBQAD-wADCmwYBGNNElnBua4CAg",
     "CAADBQADNwADgIb7AV1SxhrjoTO7Ag",
     "CAADBQADjwADgIb7Ae-7bZnnY0_qAg",
