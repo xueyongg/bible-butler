@@ -155,6 +155,9 @@ bot.on('message', function (msg) {
     if (matchVerse && fallback) {
         bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
     }
+    let num_entered = Number(trimmed_message);
+    if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
+
     // } else if (/^(?![marvin | /.*].*$).*/.exec(trimmed_message)) {
     //     bot.sendMessage(fromId, trimmed_message + "? Sorry " + first_name + ", I do not understand but here's the list of tasks perhaps i can help you with.", getDefaultOpt());
     //     if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + " called a function!");
@@ -1179,6 +1182,9 @@ function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
 function getVerseMethod(chatDetails, key_word) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
     const search = key_word.replace(' ', '%20');
     const version = "NIV";
     const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
@@ -1198,6 +1204,30 @@ function getVerseMethod(chatDetails, key_word) {
             return result.data;
         }
     });
+}
+
+function teachMeMath(chatDetails, number: number) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    let url = "http://numbersapi.com/" + number;
+
+    request(url, (err, res, body) => {
+        if (err) {
+            console.log("Error occured!", err);
+            let message = {
+                raw: err,
+                fromId,
+                first_name,
+            }
+            bot.sendMessage(myId, JSON.stringify(message));
+        }
+        if (body) {
+            bot.sendMessage(fromId, body);
+        }
+    });
+    bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
+        { parse_mode: "Markdown" });
 }
 
 // -------------------------------Incompleted Methods---------------------------------------
