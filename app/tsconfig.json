@@ -1,0 +1,14 @@
+{
+    "files": [
+        "*.ts",
+    ],
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "sourceMap": true,
+        "removeComments": true,
+    },
+    "settings": {
+        "typescript.reportStyleChecksAsWarnings": false
+    }
+}
