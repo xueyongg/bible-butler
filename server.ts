@@ -1179,6 +1179,29 @@ function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
         fromCurrency + " to " + toCurrency + " at the rate of " + rate + "! Success!");
 }
 
+function teachMeMath(chatDetails, number: number) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    let url = "http://numbersapi.com/" + number;
+
+    request(url, (err, res, body) => {
+        if (err) {
+            console.log("Error occured!", err);
+            let message = {
+                raw: err,
+                fromId,
+                first_name,
+            }
+            bot.sendMessage(myId, JSON.stringify(message));
+        }
+        if (body) {
+            bot.sendMessage(fromId, body);
+        }
+    });
+    bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
+        { parse_mode: "Markdown" });
+}
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
 function getVerseMethod(chatDetails, key_word) {
@@ -1204,30 +1227,6 @@ function getVerseMethod(chatDetails, key_word) {
             return result.data;
         }
     });
-}
-
-function teachMeMath(chatDetails, number: number) {
-    // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
-
-    let url = "http://numbersapi.com/" + number;
-
-    request(url, (err, res, body) => {
-        if (err) {
-            console.log("Error occured!", err);
-            let message = {
-                raw: err,
-                fromId,
-                first_name,
-            }
-            bot.sendMessage(myId, JSON.stringify(message));
-        }
-        if (body) {
-            bot.sendMessage(fromId, body);
-        }
-    });
-    bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
-        { parse_mode: "Markdown" });
 }
 
 // -------------------------------Incompleted Methods---------------------------------------
