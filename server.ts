@@ -168,6 +168,7 @@ bot.onText(/\/set/, function (msg, match) {
 
 });
 // Any kind of message
+let fallback = true;
 bot.on('message', function (msg) {
 
     var chat = msg.chat;
@@ -186,13 +187,10 @@ bot.on('message', function (msg) {
         first_name: first_name,
         userId: userId,
     };
-
-    // photo can be: a file path, a stream or a Telegram file_id
-    // Will only reply when its username is called
+    // Will only reply when its just a verse
     const trimmed_message = msg.text.trim();
-    const matchVerse = /(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/g.exec(trimmed_message);
-    //console.log("This is the match: " + match);
-    if (matchVerse) {
+    const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
+    if (matchVerse && fallback) {
         bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
     } else {
         // bot.sendMessage(fromId, trimmed_message);
@@ -855,7 +853,7 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " asked me for my name. " + emoji.kissing_smiling_eyes);
 });
 
-function marvinGetVerseMethod(chatDetails, fetchingVerse, type) {
+function getVerseMethod1(chatDetails, fetchingVerse, type = "kjv") {
     var fromId = chatDetails.fromId;
     var chatName = chatDetails.chatName;
     var first_name = chatDetails.first_name;
@@ -900,7 +898,7 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
     fetchingVerse = book + chapterAndVerse;
     console.log("From new get verse method: ", fetchingVerse);
 
-    var testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
+    // var testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
     var url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
     //var url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
     request(url, function (error, response, body) {
@@ -915,8 +913,9 @@ function marvinNewGetVerseMethod(chatDetails, fetchingVerse, type, version = "NI
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
         } else {
             var verseReference = info;
-            console.log(verseReference);
-            bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) + "!\n" + info);
+            // console.log(verseReference);
+            bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
 
             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                 ". Success retrieval of " + fetchingVerse +
@@ -1365,18 +1364,26 @@ function sendExchangeRateMethod(chatDetails, exchangeRateDetails) {
 
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
-async function getVerseMethod(chatDetails, key_word) {
-    const search = key_word[0].replace(' ', '%20');
+function getVerseMethod(chatDetails, key_word) {
+    const search = key_word.replace(' ', '%20');
     const version = "NIV";
     const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
-    const result = await scrapeIt(url, {
+    console.log("URL: ", url);
+    const result = scrapeIt(url, {
         title: key_word,
-        verse: `#en-${version}-30214`,
-    })
-    console.log(JSON.stringify(result.data, null, 2));
-    bot.sendMessage(chatDetails.fromId, result.data);
-    return result.data;
-
+    }, (err, data) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (data) {
+            bot.sendMessage(chatDetails.fromId, "Fetching verse now..");
+            console.log(JSON.stringify(result.data, null, 2));
+            bot.sendMessage(chatDetails.fromId, result.data);
+            fallback = false;
+            return result.data;
+        }
+    });
 }
 
 // -------------------------------Incompleted Methods---------------------------------------
