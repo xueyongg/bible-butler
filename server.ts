@@ -1262,7 +1262,6 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
 function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
     // chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
-
     axios({
         method: 'GET',
         url: 'https://api.yelp.com/v3/businesses/search',
@@ -1280,18 +1279,21 @@ function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
             Authorization: "Bearer " + process.env.yelpAPIKey
         },
     }).then((response) => {
-        console.log("this is response: ", response);
-        let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = response.data.businesses[0];
-        let msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
-        msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
-        msg += "The actual address is __" + location.address1 + "__\n";
-        msg += "*Price*: " + price + ",\nRating: *" + rating + "*\n";
-        msg += "If you wish to find out more, I've managed to grab the url too!\n"
-        // msg += url;
-
-        console.log(msg);
+        let msg = "";
+        let url = "";
+        let chosen_stall = response.data.businesses[Math.floor(Math.random() * response.data.businesses.length)];
+        if (chosen_stall) {
+            let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = chosen_stall;
+            msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
+            msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
+            msg += "The actual address is __" + location.address1 + "__\n";
+            msg += "Price: *" + price + "*,\nRating: *" + rating + "*\n";
+        } else {
+            msg = "Sorry I did not managed to find anything from Yelp! " + emoji.sad;
+        }
         bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
-        bot.sendMessage(fromId, url);
+        if (chosen_stall && chosen_stall.url)
+            bot.sendMessage(fromId, "Oh oh! I've managed to grab the url too!\n" + chosen_stall.url);
     }).catch((err) => {
         if (err) {
             console.log("this is err: ", err);
@@ -1491,7 +1493,7 @@ bot.onText(/\/foodpls/i, async (msg, match) => {
         first_name: first_name,
         userId: userId,
     };
-    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts("location_based"))
+    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(() => {
             bot.once('message', (msg) => {
                 console.log("hungrygowhere message is here!!", msg);
@@ -1499,8 +1501,6 @@ bot.onText(/\/foodpls/i, async (msg, match) => {
                     getLatLongMethod(chatDetails, msg.text, "food");
                 }
                 if (msg.location) {
-                    console.log("lat: ", msg.location.latitude);
-                    console.log("long: ", msg.location.longitude);
                     let locationDetails = {
                         lat: msg.location.latitude,
                         lng: msg.location.longitude,
