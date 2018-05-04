@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "^10.0.3",
+    "eslint": "^4.19.1",
     "gulp": "^3.9.1",
     "gulp-typescript": "^4.0.2",
     "typescript": "^2.8.3"
