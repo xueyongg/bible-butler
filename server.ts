@@ -1,5 +1,5 @@
-let TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
+let TelegramBot = require('node-telegram-bot-api');
 let mongojs = require('mongojs');
 let MongoClient = require('mongodb').MongoClient
     , format = require('util').format;
@@ -27,12 +27,6 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const HOST = environment !== "development" ? process.env.HOST : "LOCALHOST";
 let DOMAIN = process.env.LOCAL_URL || "https://localhost";
 let DB_HOST = process.env.DB_HOST;
-
-// console.log("< process:", process);
-// console.log("< PORT:", PORT);
-// console.log("< TELEGRAM_TOKEN:", TELEGRAM_TOKEN);
-// console.log("< HOST:", HOST);
-// console.log("< DOMAIN:", DOMAIN);
 
 let bot = new TelegramBot(token, { polling: true });
 // Method that creates the bot and starts listening for updates
@@ -124,12 +118,6 @@ if (HOST !== "LOCALHOST") {
         console.log("Trying to connect to db..");
     });
 }
-
-//end of connecting to db
-
-//bot.setWebHook('public-url.com', {
-//    certificate: '/Users/Xueyong/Desktop/bibleButler/crt.pem', // Path to your crt.pem
-//});
 
 // Any kind of message
 let fallback = true;
@@ -1207,6 +1195,27 @@ function getReplyOpts(type: string) {
         };
     }
 
+    if (type === "feeling") {
+        opt = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "Angry", callback_data: "angry", },
+                    { text: "Broken Hearted", callback_data: "brokenHearted", }],
+                    [{ text: "Insecure", callback_data: "insecure", },
+                    { text: "Confused", callback_data: "confused", },
+                    { text: "Faithless", callback_data: "needFaith", }],
+                    [{ text: "upset", callback_data: "needEncouragement", },
+                    { text: "unforgiving", callback_data: "needForgiveness", },
+                    { text: "Tired", callback_data: "needStrength", },
+                    ]
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+                force_reply: true,
+            }
+        };
+    }
+
     return opt;
 };
 function teachMeMath(chatDetails: chatDetails, number: number) {
@@ -1496,7 +1505,7 @@ bot.onText(/\/foodpls/i, async (msg, match) => {
     bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(() => {
             bot.once('message', (msg) => {
-                console.log("hungrygowhere message is here!!", msg);
+                // console.log("hungrygowhere message is here!!", msg);
                 if (msg.text && msg.text !== "cancel") {
                     getLatLongMethod(chatDetails, msg.text, "food");
                 }
@@ -1907,9 +1916,6 @@ bot.onText(/\/givefeedback/i, function (msg, match) {
     bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", how can I improve? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("feedback is here!!");
-                console.log(msg);
-
                 bot.sendMessage(fromId, "Okie! I will take note! Thank you " + emoji.blush);
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " mentioned: "
                     + msg.text + ". " + emoji.kissing_smiling_eyes);
@@ -1937,10 +1943,6 @@ bot.onText(/\/talktomarvin/i, function (msg, match) {
     bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", Yes? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("the message is here!!");
-                console.log(msg);
-
-                //bot.sendMessage(fromId, "Okie! I will take note! Thank you " + emoji.blush);
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " talked to me and said: "
                     + msg.text + ". " + emoji.kissing_smiling_eyes);
             });
@@ -1974,9 +1976,6 @@ bot.onText(/\/getverse/i, function (msg, match) {
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("message is here!!");
-                console.log(msg);
-
                 let verse = "john3:30-31";
                 let fetchingVerse = msg.text;
                 if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
@@ -2010,7 +2009,7 @@ bot.onText(/\/getvverse/i, function (msg, match) {
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("message is here!!", msg);
+
                 let verse = "john3:30-31";
                 let fetchingVerse = msg.text;
                 if (fetchingVerse) {
@@ -2051,9 +2050,6 @@ bot.onText(/\/getnewverse/i, function (msg, match) {
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("message is here!!");
-                console.log(msg);
-
                 let verse = "john3:30-31";
                 let version = "niv";
                 let fetchingVerse = msg.text;
@@ -2065,7 +2061,7 @@ bot.onText(/\/getnewverse/i, function (msg, match) {
             });
         });
 });
-bot.onText(/\/feeling/, function (msg, match) {
+bot.onText(/\/feeling/, async (msg, match) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -2083,32 +2079,9 @@ bot.onText(/\/feeling/, function (msg, match) {
         userId: userId,
     };
 
-    let opt = {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "Angry", callback_data: "angry", },
-                { text: "Broken Hearted", callback_data: "brokenHearted", }],
-                [{ text: "Insecure", callback_data: "insecure", },
-                { text: "Confused", callback_data: "confused", },
-                { text: "Faithless", callback_data: "needFaith", }],
-                [{ text: "upset", callback_data: "needEncouragement", },
-                { text: "unforgiving", callback_data: "needForgiveness", },
-                { text: "Tired", callback_data: "needStrength", },
-                ]
-            ],
-            one_time_keyboard: true,
-            resize_keyboard: true,
-            force_reply: true,
-        }
-    };
-
-    bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, opt)
+    bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, await getReplyOpts("feeling"))
         .then(function (ans) {
             bot.once('callback_query', (msg) => {
-
-                //console.log("feeling message is here!!");
-                //console.log(msg);
-
                 //bot.onText(/.+/g, function (msg, match) {
                 let feeling = "happy";
 
@@ -2197,12 +2170,11 @@ bot.onText(/\/getsunrise/i, async (msg, match) => {
     bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("Sunrise location message is here!!", msg);
                 getLatLongMethod(chatDetails, msg.text, "sunrise");
             });
         });
 });
-bot.onText(/\/getHoliday/i, function (msg, match) {
+bot.onText(/\/getHoliday/i, async (msg, match) => {
     //chat details
     let chat = msg.chat;
     let fromId = msg.from.id;
@@ -2219,21 +2191,9 @@ bot.onText(/\/getHoliday/i, function (msg, match) {
         first_name: first_name,
         userId: userId,
     };
-    bbAutoChecker(chatDetails);
-
-    //keyboard options
-    let opt = {
-        reply_markup: {
-            force_reply: true,
-        }
-    };
-
-    bot.sendMessage(fromId, first_name + ", what location's holiday you wish to get? " + emoji.hushed, opt)
+    bot.sendMessage(fromId, first_name + ", what location's holiday you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
-            bot.once('message', function (msg) {
-                console.log("Holiday location message is here!!");
-                //console.log(msg);
-
+            bot.once('message', (msg) => {
                 db.holidays.count({}, function (err, doc) {
 
                 });
