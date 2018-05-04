@@ -151,18 +151,15 @@ bot.on('message', function (msg) {
         userId: userId,
     };
     // Will only reply when its just a verse
-    const trimmed_message = msg.text.trim();
-    const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
-    if (matchVerse && fallback) {
-        bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
+    if (msg.text) {
+        const trimmed_message = msg.text.trim();
+        const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
+        if (matchVerse && fallback) {
+            bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
+        }
+        let num_entered = Number(trimmed_message);
+        if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
     }
-    let num_entered = Number(trimmed_message);
-    if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
-
-    // } else if (/^(?![marvin | /.*].*$).*/.exec(trimmed_message)) {
-    //     bot.sendMessage(fromId, trimmed_message + "? Sorry " + first_name + ", I do not understand but here's the list of tasks perhaps i can help you with.", getDefaultOpt());
-    //     if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + " called a function!");
-    // }
 });
 /*
  this method will try to call methods based on messages to BA, as if its a conversation
@@ -764,7 +761,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
         let opt = {
             reply_markup: {
                 force_reply: true,
-                "one_time_keyboard": true,
+                one_time_keyboard: true,
                 // "keyboard": [
                 //     [{
                 //         text: "My location",
@@ -860,6 +857,7 @@ function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weath
     //type: weather or sunrise
     let { fromId, chatName, first_name, userId } = chatDetails;
 
+    // insert function for reverse geolocation search
     let locationSearch = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationInput + "&key=" + googleAPIKey;
     console.log("LocationSearch URL", locationSearch);
     request(locationSearch, function (err, res, body) {
@@ -905,12 +903,15 @@ function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weath
             });
         }
         else if (type === "sunrise") {
-            getSunriseMethod(chatDetails, { locationName: locationInput, lat, lng })
+            getSunriseMethod(chatDetails, { locationName: locationInput, lat, lng });
+        }
+        else if (type === "food") {
+            getNearestFood(chatDetails, { locationName: locationInput, lat, lng });
         }
     });
     if (type === "weather") bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
     if (type === "sunrise") bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationInput) + "'s sunrise timing.. " + emoji.bow);
-
+    if (type === "food") bot.sendMessage(fromId, "Currently searching for food around " + capitalizeFirstLetter(locationInput) + ".. " + emoji.bow);
 }
 function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
     //chat details
@@ -1166,20 +1167,47 @@ async function emojiFinder(key_word) {
         return chosen_emoji.content;
     }
 }
-function getDefaultOpt() {
-    return {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "Back to main menu", callback_data: "menu", },
-                { text: "Get exchange rate", callback_data: "exchangeRate", }],
-                [{ text: "Get weather status", callback_data: "weather", },
-                { text: "Get sunrise timing", callback_data: "sunrise", }],
-            ],
-            one_time_keyboard: true,
-            resize_keyboard: true,
-        },
-        parse_mode: "Markdown",
+function getReplyOpts(type: string) {
+    let opt = {};
+    if (type === "force_only") {
+        opt = {
+            reply_markup: {
+                force_reply: true,
+            },
+            parse_mode: "Markdown",
+        }
     }
+    if (type === "main_menu") {
+        opt = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "Back to main menu", callback_data: "menu", },
+                    { text: "Get exchange rate", callback_data: "exchangeRate", }],
+                    [{ text: "Get weather status", callback_data: "weather", },
+                    { text: "Get sunrise timing", callback_data: "sunrise", }],
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+            },
+            parse_mode: "Markdown",
+        }
+    }
+    if (type === "location_based") {
+        opt = {
+            reply_markup: {
+                keyboard: [
+                    [{
+                        text: "Get my current location", request_location: true,
+                    }],
+                    [{ text: "Cancel" }],
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+            }
+        };
+    }
+
+    return opt;
 };
 function teachMeMath(chatDetails: chatDetails, number: number) {
     // chat related details
@@ -1198,6 +1226,7 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
             bot.sendMessage(myId, JSON.stringify(message));
         }
         if (body) {
+
             bot.sendMessage(fromId, body);
         }
     });
@@ -1231,7 +1260,45 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
     });
 }
 function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
 
+    axios({
+        method: 'GET',
+        url: 'https://api.yelp.com/v3/businesses/search',
+        params: {
+            term: "food",
+            latitude: locationDetails.lat,
+            longitude: locationDetails.lng,
+            radius: 200, // in meters
+            limit: 15, // max 50
+            sort_by: "distance", // default: best_match
+            price: "1,2,3,4",
+            open_now: false, // default: false
+        },
+        headers: {
+            Authorization: "Bearer " + process.env.yelpAPIKey
+        },
+    }).then((response) => {
+        console.log("this is response: ", response);
+        let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = response.data.businesses[0];
+        let msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
+        msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
+        msg += "The actual address is __" + location.address1 + "__\n";
+        msg += "*Price*: " + price + ",\nRating: *" + rating + "*\n";
+        msg += "If you wish to find out more, I've managed to grab the url too!\n"
+        // msg += url;
+
+        console.log(msg);
+        bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
+        bot.sendMessage(fromId, url);
+    }).catch((err) => {
+        if (err) {
+            console.log("this is err: ", err);
+            // bot.sendMessage(myId, err.request._header + "\n" + err.request._headers.host + err.request.path + "\n\n" + err.message);
+            return;
+        }
+    })
 }
 
 // -------------------------------Incompleted Methods---------------------------------------
@@ -1408,6 +1475,45 @@ function bbAutoChecker(chatDetails: chatDetails) {
 }
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
+bot.onText(/\/foodpls/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts("location_based"))
+        .then(() => {
+            bot.once('message', (msg) => {
+                console.log("hungrygowhere message is here!!", msg);
+                if (msg.text && msg.text !== "cancel") {
+                    getLatLongMethod(chatDetails, msg.text, "food");
+                }
+                if (msg.location) {
+                    console.log("lat: ", msg.location.latitude);
+                    console.log("long: ", msg.location.longitude);
+                    let locationDetails = {
+                        lat: msg.location.latitude,
+                        lng: msg.location.longitude,
+                        location: "not given",
+                    };
+                    bot.sendMessage(fromId, "Currently searching for food around you.. " + emoji.bow);
+                    getNearestFood(chatDetails, locationDetails);
+                }
+            });
+        });
+
+});
+
 bot.onText(/\/bbchecker/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
@@ -2071,7 +2177,7 @@ bot.onText(/\/getweatherreport/i, function (msg, match) {
             });
         });
 });
-bot.onText(/\/getsunrise/i, function (msg, match) {
+bot.onText(/\/getsunrise/i, async (msg, match) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -2088,17 +2194,10 @@ bot.onText(/\/getsunrise/i, function (msg, match) {
         userId: userId,
     };
 
-    let opt = {
-        reply_markup: {
-            force_reply: true,
-        }
-    };
-
-    bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, opt)
+    bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', function (msg) {
-                console.log("Sunrise location message is here!!");
-                //console.log(msg);
+                console.log("Sunrise location message is here!!", msg);
                 getLatLongMethod(chatDetails, msg.text, "sunrise");
             });
         });
