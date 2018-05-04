@@ -1298,7 +1298,7 @@ function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
             msg += "The actual address is __" + location.address1 + "__\n";
             msg += "Price: *" + price + "*,\nRating: *" + rating + "*\n";
         } else {
-            msg = "Sorry I did not managed to find anything from Yelp! " + emoji.white_frowning_face;
+            msg = "Sorry I did not managed to find anything from [Yelp](https://www.yelp.com/)! " + emoji.white_frowning_face;
         }
         bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
         if (chosen_stall && chosen_stall.url)
