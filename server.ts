@@ -133,7 +133,7 @@ let fallback = {
     }
 };
 // Inform xy bot is online
-bot.sendMessage(myId, "Im back online! No actions required.");
+bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
 bot.on('message', async (msg) => {
     let chat = msg.chat;
