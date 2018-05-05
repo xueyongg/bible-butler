@@ -183,13 +183,14 @@ bot.on('message', async (msg) => {
     let fromId = msg.from.id;
     let userId = msg.from.id;
     let first_name = msg.from.first_name;
-    let messageId = msg.message_id
+
 
     let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
         fromId,
         chatName,
@@ -906,7 +907,7 @@ async function emojiFinder(key_word) {
     if (results) {
         let emojis: emoji[] = results.data.emojis;
         let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        if (chosen_emoji.content) return chosen_emoji.content;
+        if (chosen_emoji && chosen_emoji.content) return chosen_emoji.content;
         else
             return emoji.blush;
     }
@@ -1621,11 +1622,13 @@ bot.on('location', (msg) => {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
     let location = msg.location;
     let currentContext = fallback.get_context();
@@ -1649,11 +1652,13 @@ bot.onText(/\/menu/i, async (msg, match) => {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
     bot.sendMessage(fromId, "Hi " + first_name + ", how may I help?", await getReplyOpts("main_menu"));
     bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
@@ -1669,11 +1674,13 @@ bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
     fallback.set_context("foodpls");
     bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
@@ -2134,11 +2141,13 @@ bot.onText(/\/getverse/i, function (msg, match) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
         raw: msg.chat,
     };
 
@@ -2185,11 +2194,13 @@ bot.onText(/\/getvverse/i, function (msg, match) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     let opt = {
@@ -2227,11 +2238,13 @@ bot.onText(/\/getnewverse/i, function (msg, match) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     let opt = {
@@ -2265,11 +2278,13 @@ bot.onText(/\/feeling/, async (msg, match) => {
         chatName = chat.title ? chat.title : "individual chat";
     }
 
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, await getReplyOpts("feeling"))
@@ -2301,11 +2316,13 @@ bot.onText(/\/getweatherreport/i, function (msg, match) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     let opt = {
@@ -2353,11 +2370,13 @@ bot.onText(/\/getsunrise/i, async (msg, match) => {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
@@ -2405,11 +2424,13 @@ bot.onText(/\/getxrate/i, function (msg, match) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
+    let messageId = msg.message_id
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     //keyboard options
