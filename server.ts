@@ -138,6 +138,22 @@ let fallback = {
 // Inform xy bot is online
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
+async function basic_fallback(chatDetails, msg: any) {
+    // Will only reply when its just a verse
+    if (msg.text) {
+        const trimmed_message = msg.text.trim();
+        // Check if its a verse
+        const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
+        if (matchVerse && fallback.check_context_cleared()) {
+            bot.sendMessage(myId, await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
+        }
+        // Check for number
+        let num_entered = Number(trimmed_message);
+        if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
+
+        // Check if its an insult
+    }
+}
 bot.on('message', async (msg) => {
     let chat = msg.chat;
     let chatId = msg.chat.id;
@@ -155,17 +171,27 @@ bot.on('message', async (msg) => {
         first_name: first_name,
         userId: userId,
     };
-    // Will only reply when its just a verse
-    if (msg.text) {
-        const trimmed_message = msg.text.trim();
-        const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
-        if (matchVerse && fallback.check_context_cleared()) {
-            bot.sendMessage(myId, await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
-        }
-        let num_entered = Number(trimmed_message);
-        if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
-    }
+    basic_fallback(chatDetails, msg);
 });
+bot.on('edited_message', async (edited_message) => {
+    let chat = edited_message.chat;
+    let chatId = edited_message.chat.id;
+    let fromId = edited_message.from.id;
+    let userId = edited_message.from.id;
+    let first_name = edited_message.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+    basic_fallback(chatDetails, edited_message);
+})
 /*
  this method will try to call methods based on messages to BA, as if its a conversation
  */
@@ -214,7 +240,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                 one_time_keyboard: true,
                 resize_keyboard: true,
                 force_reply: true,
-            }
+            },
+            parse_mode: "Markdown",
         };
 
         bot.sendMessage(fromId, "What happened " + first_name + "? " + emoji.slightly_frowning_face + " Do you need a verse?", opt)
@@ -235,10 +262,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                         bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                     } else {
                         bot.sendMessage(fromId, "Oh okay~ Just talk to me if you need anything else! " + emoji.sob);
+                        bot.sendVideo(fromId, "./server/data/pikachu_holding_can.mp4");
                     }
                     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is sad " + emoji.sob);
                 })
             })
+        bot.sendVideo(fromId, "./server/data/sad_bat.mp4");
 
     } else if (/^marvin (.+angry)/ig.exec(msg.text.trim())) {
         let opt = {
@@ -350,7 +379,8 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                             break;
 
                         default:
-                            bot.sendMessage(fromId, "Oh okay~ Just talk to me if you need anything else! " + emoji.sob);
+                            bot.sendMessage(fromId, "Oh okay~ Just talk to me if you need anything else!");
+                            bot.sendVideo(fromId, "./server/data/pikachu_holding_can.mp4");
                             break;
                     }
                     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is angry " + emoji.sob);
@@ -1596,7 +1626,7 @@ bot.onText(/\/menu/i, async (msg, match) => {
     bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 
 });
-bot.onText(/\/foodpls/i, async (msg, match) => {
+bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -1673,7 +1703,7 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
     }
 
 });
-bot.onText(/\/insult/i, function (msg, match) {
+bot.onText(/\/insult|^\/scold/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
