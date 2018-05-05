@@ -133,19 +133,42 @@ let fallback = {
     },
     check_context_cleared: () => {
         return this.previous_context === ("" || undefined);
-    }
+    },
+    latest_message_id: "",
+    latest_message_type: "",
+    get_latest_message_id: () => {
+        return this.latest_message_id;
+    },
+    set_latest_message_id: (id) => {
+        this.latest_message_id = id;
+    },
+    clear_latest_message_id: () => {
+        this.latest_message_id = "";
+    },
+    check_latest_message_id: () => {
+        return this.latest_message_id === ("" || undefined);
+    },
+
 };
 // Inform xy bot is online
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
-async function basic_fallback(chatDetails, msg: any) {
+async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
     // Will only reply when its just a verse
     if (msg.text) {
         const trimmed_message = msg.text.trim();
         // Check if its a verse
         const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
         if (matchVerse && fallback.check_context_cleared()) {
-            bot.sendMessage(myId, await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
+            marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
+            if (type_of_fallback === "edit_update") {
+                bot.editMessageText((type: string) => {
+                    switch (type) {
+                        case "verse":
+                            break;
+                    }
+                }, { message_id: fallback.get_latest_message_id() })
+            }
         }
         // Check for number
         let num_entered = Number(trimmed_message);
@@ -160,16 +183,19 @@ bot.on('message', async (msg) => {
     let fromId = msg.from.id;
     let userId = msg.from.id;
     let first_name = msg.from.first_name;
+    let messageId = msg.message_id
+
     let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
     basic_fallback(chatDetails, msg);
 });
@@ -179,19 +205,22 @@ bot.on('edited_message', async (edited_message) => {
     let fromId = edited_message.from.id;
     let userId = edited_message.from.id;
     let first_name = edited_message.from.first_name;
+    let messageId = edited_message.message_id
     let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
-    basic_fallback(chatDetails, edited_message);
+    basic_fallback(chatDetails, edited_message, "edit_update");
 })
+
 /*
  this method will try to call methods based on messages to BA, as if its a conversation
  */
@@ -202,16 +231,18 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     let fromId = msg.from.id;
     let userId = msg.from.id;
     let first_name = msg.from.first_name;
+    let messageId = msg.message_id
     let chatName = first_name;
     if (chat) {
         fromId = chat.id;
         chatName = chat.title ? chat.title : "individual chat";
     }
     let chatDetails = {
-        fromId: fromId,
-        chatName: chatName,
-        first_name: first_name,
-        userId: userId,
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
     };
 
     console.log("< Message received: ", msg);
@@ -956,7 +987,7 @@ function getReplyOpts(type: string) {
 // -------------------------------Location Methods---------------------------------------
 function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weather") {
     //type: weather or sunrise
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     // insert function for reverse geolocation search
     let locationSearch = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationInput + "&key=" + googleAPIKey;
@@ -991,7 +1022,7 @@ function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weath
 }
 function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
     //chat details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     //location details
     let { locationName, lat, lng } = locationDetails;
 
@@ -1023,7 +1054,7 @@ function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
 }
 function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
     // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     //location details
     let { locationName, lat, lng } = locationDetails;
 
@@ -1071,7 +1102,7 @@ function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
 };
 function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
     //chat details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     //location details
     let { locationName, lat, lng } = locationDetails;
@@ -1116,7 +1147,7 @@ function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
 }
 function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
     //chat related
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     //time zone details
     let { dateOffset, timeZoneId, timeZoneName } = timeZoneDetails;
@@ -1155,7 +1186,7 @@ function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, time
 // -------------------------------Other Methods---------------------------------------
 function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, version = "NIV") {
     //chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     let matches = /^([1-4]*\s*[a-zA-Z]+)\s*(.+)/ig.exec(fetchingVerse.trim());
     let book = matches[1].trim();
@@ -1182,7 +1213,7 @@ function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, 
             // console.log(verseReference);
             bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
                 "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
-
+            fallback.set_latest_message_id(messageId);
             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                 ". Success retrieval of " + fetchingVerse +
                 "!" + emoji.kissing_smiling_eyes);
@@ -1197,7 +1228,7 @@ function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, 
  */
 function getExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     //chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     //currency related details
     let amount = exchangeRateDetails.amount;
@@ -1253,7 +1284,7 @@ function getExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
  */
 function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     // currency related details
     let { amount, rate, date } = exchangeRateDetails;
@@ -1352,7 +1383,7 @@ async function getGender(first_name: string) {
 };
 function teachMeMath(chatDetails: chatDetails, number: number) {
     // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     let url = "http://numbersapi.com/" + number;
 
@@ -1381,7 +1412,7 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
 // Still in beta mode:
 function getVerseMethod(chatDetails: chatDetails, key_word) {
     // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     const search = key_word.replace(' ', '%20');
     const version = "NIV";
@@ -1414,7 +1445,7 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
  */
 function marvinCraftPrayer(chatDetails: chatDetails, fetchingVerse, type) {
     //chat details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
 
@@ -1461,7 +1492,7 @@ function marvinCraftPrayer(chatDetails: chatDetails, fetchingVerse, type) {
 // -------------------------------Deprecated Methods---------------------------------------
 function getVerseMethod1(chatDetails: chatDetails, fetchingVerse, type = "kjv") {
     //chat details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     let url = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
 
@@ -1491,7 +1522,7 @@ function getVerseMethod1(chatDetails: chatDetails, fetchingVerse, type = "kjv") 
 }
 function holidayRetrieveAndSaveOnly(chatDetails: chatDetails, holidayDetails) {
     //chat details
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     //holiday details
     let holidayCountry = holidayDetails.holidayCountry;
@@ -1541,7 +1572,7 @@ function holidayRetrieveAndSaveOnly(chatDetails: chatDetails, holidayDetails) {
 }
 function getHolidayMethod(chatDetails: chatDetails, holidayDetails) {
     //chat related
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     //holiday details
     let holidayCountry = holidayDetails.holidayCountry;
@@ -1554,7 +1585,7 @@ function getHolidayMethod(chatDetails: chatDetails, holidayDetails) {
     bot.sendMessage(fromId, "Currently searching for your holidays for " + holidayCountry + ".. " + emoji.bow);
 }
 function bbAutoChecker(chatDetails: chatDetails) {
-    let { fromId, chatName, first_name, userId } = chatDetails;
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
     db.users.count({ _id: userId }, function (err, doc) {
         if (doc === 1) {

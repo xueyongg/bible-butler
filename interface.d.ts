@@ -16,4 +16,5 @@ interface chatDetails {
     chatName: string,
     first_name: string,
     userId: number,
+    messageId: number,
 }
