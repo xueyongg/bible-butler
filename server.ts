@@ -122,6 +122,9 @@ if (HOST !== "LOCALHOST") {
 // Any kind of message
 let fallback = {
     previous_context: "",
+    get_context: () => {
+        return this.previous_context;
+    },
     set_context: (context_name) => {
         this.previous_context = context_name;
     },
@@ -129,7 +132,7 @@ let fallback = {
         this.previous_context = "";
     },
     check_context_cleared: () => {
-        return this.previous_context === "";
+        return this.previous_context === ("" || undefined);
     }
 };
 // Inform xy bot is online
@@ -819,43 +822,108 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
 
 // -------------------------------Functional Methods---------------------------------------
 
-function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, version = "NIV") {
-    //chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
-
-    let matches = /^([1-4]*\s*[a-zA-Z]+)\s*(.+)/ig.exec(fetchingVerse.trim());
-    let book = matches[1].trim();
-    let chapterAndVerse = matches[2].trim();
-    fetchingVerse = book + chapterAndVerse;
-
-    console.log("From new get verse method: ", fetchingVerse);
-
-    // let testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
-    let url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
-    //let url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
-    request(url, function (error, response, body) {
-
-        let info = "";
-        try { info = JSON.parse(body); } catch{
-            info = body.replace(/<b>/g, "").replace(/<\/b>/g, "");
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+async function emojiFinder(key_word) {
+    const url = "https://emojifinder.com/" + key_word;
+    const results = await scrapeIt(url, {
+        emojis: {
+            listItem: "#results input",
+            data: {
+                content: {
+                    attr: "value",
+                }
+            }
         }
-        if (response.statusCode != 200) {
-            //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
-            bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
-            if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
-        } else {
-            let verseReference = info;
-            // console.log(verseReference);
-            bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
-
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
-                ". Success retrieval of " + fetchingVerse +
-                "!" + emoji.kissing_smiling_eyes);
+    }, (err, data) => {
+        if (err) {
+            console.log("An error occured!", err);
+            return;
         }
     });
-    bot.sendMessage(fromId, "Fetching verse now..");
+    if (results) {
+        let emojis: emoji[] = results.data.emojis;
+        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        return chosen_emoji.content;
+    }
 }
+function getReplyOpts(type: string) {
+    let opt = {};
+    if (type === "force_only") {
+        opt = {
+            reply_markup: {
+                force_reply: true,
+            },
+            parse_mode: "Markdown",
+        }
+    }
+    if (type === "main_menu") {
+        opt = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "Back to main menu", callback_data: "menu", },
+                    { text: "Get exchange rate", callback_data: "exchangeRate", }],
+                    [{ text: "Get weather status", callback_data: "weather", },
+                    { text: "Get sunrise timing", callback_data: "sunrise", }],
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+            },
+            parse_mode: "Markdown",
+        }
+    }
+    if (type === "back_to_main_menu") {
+        opt = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "Back to main menu", callback_data: "/menu", }],
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+            },
+            parse_mode: "Markdown",
+        }
+    }
+    if (type === "location_based") {
+        opt = {
+            reply_markup: {
+                keyboard: [
+                    [{
+                        text: "Get my current location", request_location: true,
+                    }],
+                    [{ text: "Cancel" }],
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+            }
+        };
+    }
+
+    if (type === "feeling") {
+        opt = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "Angry", callback_data: "angry", },
+                    { text: "Broken Hearted", callback_data: "brokenHearted", }],
+                    [{ text: "Insecure", callback_data: "insecure", },
+                    { text: "Confused", callback_data: "confused", },
+                    { text: "Faithless", callback_data: "needFaith", }],
+                    [{ text: "upset", callback_data: "needEncouragement", },
+                    { text: "unforgiving", callback_data: "needForgiveness", },
+                    { text: "Tired", callback_data: "needStrength", },
+                    ]
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+                force_reply: true,
+            }
+        };
+    }
+
+    return opt;
+};
+// -------------------------------Location Methods---------------------------------------
 function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weather") {
     //type: weather or sunrise
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -881,29 +949,7 @@ function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weath
         //bot.sendMessage(fromId, "This is your lat : long: " + lat + " : " + lng);
 
         if (type === "weather") {
-            let weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
-            console.log("Weather API Search: ", weatherSearch);
-            request(weatherSearch, async (err, res, body) => {
-                if (res.status === "ZERO_RESULTS") {
-                    //error occurred show that no results can be found
-                    bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
-                    return;
-                }
-                let info = JSON.parse(body);
-                let weatherInfo: weatherDetails = {
-                    temp: 0, apparentTemp: 0, hourlySummary: "", hourlyIcon: "", dailySummary: "", dailyIcon: ""
-                };
-                weatherInfo.temp = info.currently.temperature;
-                weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
-                weatherInfo["hourlySummary"] = info.hourly.summary;
-                weatherInfo["hourlyIcon"] = info.hourly.icon;
-                weatherInfo["dailySummary"] = info.daily.summary;
-                weatherInfo["dailyIcon"] = info.daily.icon;
-                let chosen_emoji = await emojiFinder(weatherInfo.dailyIcon);
-
-                bot.sendMessage(fromId, capitalizeFirstLetter(locationInput) + "'s currently " + weatherInfo.temp + "°C but feels like " + weatherInfo.apparentTemp + "°C \n" +
-                    "Oh! and weather report says: " + weatherInfo.hourlySummary + chosen_emoji);
-            });
+            weatherReportMethod({ locationName: locationInput, lat, lng }, chatDetails);
         }
         else if (type === "sunrise") {
             getSunriseMethod(chatDetails, { locationName: locationInput, lat, lng });
@@ -912,43 +958,87 @@ function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weath
             getNearestFood(chatDetails, { locationName: locationInput, lat, lng });
         }
     });
-    if (type === "weather") bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
-    if (type === "sunrise") bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationInput) + "'s sunrise timing.. " + emoji.bow);
-    if (type === "food") bot.sendMessage(fromId, "Currently searching for food around " + capitalizeFirstLetter(locationInput) + ".. " + emoji.bow);
 }
 function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
     //chat details
     let { fromId, chatName, first_name, userId } = chatDetails;
-
-    let locationName = locationDetails.name;
-    let lat = locationDetails.lat;
-    let lng = locationDetails.long;
+    //location details
+    let { locationName, lat, lng } = locationDetails;
 
     let weatherSearch = "https://api.darksky.net/forecast/" + darkskyAPIKey + "/" + lat + "," + lng + "?units=si"; //set units as si Unit
-
-    //console.log(weatherSearch);
-    request(weatherSearch, function (err, res, body) {
+    // console.log("Weather API Search: ", weatherSearch);
+    request(weatherSearch, async (err, res, body) => {
         if (res.status === "ZERO_RESULTS") {
             //error occurred show that no results can be found
             bot.sendMessage(fromId, "Encountered an error with the location " + emoji.hushed);
             return;
         }
-        //console.log(res);
         let info = JSON.parse(body);
-        //console.log(info);
-        let weatherInfo;
-        weatherInfo["temp"] = info.currently.temperature;
+        let weatherInfo: weatherDetails = {
+            temp: 0, apparentTemp: 0, hourlySummary: "", hourlyIcon: "", dailySummary: "", dailyIcon: ""
+        };
+        weatherInfo.temp = info.currently.temperature;
         weatherInfo["apparentTemp"] = info.currently.apparentTemperature;
         weatherInfo["hourlySummary"] = info.hourly.summary;
         weatherInfo["hourlyIcon"] = info.hourly.icon;
         weatherInfo["dailySummary"] = info.daily.summary;
         weatherInfo["dailyIcon"] = info.daily.icon;
+        let chosen_emoji = await emojiFinder(weatherInfo.dailyIcon);
 
-        bot.sendMessage(fromId, capitalizeFirstLetter(locationName) + "'s currently " + weatherInfo.temp + "°C but feels like " + weatherInfo.apparentTemp + "°C \n" +
-            "Oh! and weather report says: " + weatherInfo.hourlySummary);
+        let message = capitalizeFirstLetter(locationName) + "'s currently *" + weatherInfo.temp + "*°C but feels like *" + weatherInfo.apparentTemp + "*°C \n" +
+            "Oh! and weather report says: " + weatherInfo.hourlySummary + chosen_emoji;
+        bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
+function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+    //location details
+    let { locationName, lat, lng } = locationDetails;
+
+    axios({
+        method: 'GET',
+        url: 'https://api.yelp.com/v3/businesses/search',
+        params: {
+            term: "food",
+            latitude: locationDetails.lat,
+            longitude: locationDetails.lng,
+            radius: 200, // in meters
+            limit: 15, // max 50
+            sort_by: "distance", // default: best_match
+            price: "1,2,3,4",
+            open_now: false, // default: false
+        },
+        headers: {
+            Authorization: "Bearer " + process.env.yelpAPIKey
+        },
+    }).then((response) => {
+        let msg = "";
+        let url = "";
+        let chosen_stall = response.data.businesses[Math.floor(Math.random() * response.data.businesses.length)];
+        fallback.clear_context();
+        if (chosen_stall) {
+            let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = chosen_stall;
+            msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
+            msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
+            msg += "The actual address is __" + location.address1 + "__\n";
+            msg += "Price: *" + price + "*,\nRating: *" + rating + "*\n";
+        } else {
+            msg = "Sorry I did not managed to find anything from [Yelp](https://www.yelp.com/)! " + emoji.white_frowning_face;
+        }
+        bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
+        if (chosen_stall && chosen_stall.url)
+            bot.sendMessage(fromId, "Oh oh! I've managed to grab the url too!\n" + chosen_stall.url);
+    }).catch((err) => {
+        if (err) {
+            console.log("this is err: ", err);
+            // bot.sendMessage(myId, err.request._header + "\n" + err.request._headers.host + err.request.path + "\n\n" + err.message);
+            return;
+        }
+    })
+    bot.sendMessage(fromId, "Currently searching for food around " + capitalizeFirstLetter(locationName) + ".. " + emoji.bow);
+};
 function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
     //chat details
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -961,7 +1051,7 @@ function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
 
     request(timezoneSearch, function (TZerr, TZres, TZbody) {
         let info2 = JSON.parse(TZbody);
-        console.log(info2);
+        // console.log(info2);
         if (info2.status !== "OK") {
             //error occurred show that no results can be found
             bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
@@ -990,6 +1080,7 @@ function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
         });
 
     });
+    bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 
     // bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 }
@@ -1030,6 +1121,44 @@ function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, time
     }
 
     bot.sendMessage(fromId, message);
+}
+// -------------------------------Other Methods---------------------------------------
+function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, version = "NIV") {
+    //chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    let matches = /^([1-4]*\s*[a-zA-Z]+)\s*(.+)/ig.exec(fetchingVerse.trim());
+    let book = matches[1].trim();
+    let chapterAndVerse = matches[2].trim();
+    fetchingVerse = book + chapterAndVerse;
+
+    console.log("From new get verse method: ", fetchingVerse);
+
+    // let testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
+    let url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
+    //let url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
+    request(url, function (error, response, body) {
+
+        let info = "";
+        try { info = JSON.parse(body); } catch{
+            info = body.replace(/<b>/g, "").replace(/<\/b>/g, "");
+        }
+        if (response.statusCode != 200) {
+            //bot.sendMessage(fromId, "Encountered error! Please check the verse again.");
+            bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
+            if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
+        } else {
+            let verseReference = info;
+            // console.log(verseReference);
+            bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
+
+            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
+                ". Success retrieval of " + fetchingVerse +
+                "!" + emoji.kissing_smiling_eyes);
+        }
+    });
+    bot.sendMessage(fromId, "Fetching verse now..");
 }
 /**
  * Only if the currency is not acquired then enter this method
@@ -1144,164 +1273,6 @@ function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved exchange rate " +
         fromCurrency + " to " + toCurrency + " at the rate of " + rate + "! Success!");
 }
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-async function emojiFinder(key_word) {
-    const url = "https://emojifinder.com/" + key_word;
-    const results = await scrapeIt(url, {
-        emojis: {
-            listItem: "#results input",
-            data: {
-                content: {
-                    attr: "value",
-                }
-            }
-        }
-    }, (err, data) => {
-        if (err) {
-            console.log("An error occured!", err);
-            return;
-        }
-    });
-    if (results) {
-        let emojis: emoji[] = results.data.emojis;
-        let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return chosen_emoji.content;
-    }
-}
-function getReplyOpts(type: string) {
-    let opt = {};
-    if (type === "force_only") {
-        opt = {
-            reply_markup: {
-                force_reply: true,
-            },
-            parse_mode: "Markdown",
-        }
-    }
-    if (type === "main_menu") {
-        opt = {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "Back to main menu", callback_data: "menu", },
-                    { text: "Get exchange rate", callback_data: "exchangeRate", }],
-                    [{ text: "Get weather status", callback_data: "weather", },
-                    { text: "Get sunrise timing", callback_data: "sunrise", }],
-                ],
-                one_time_keyboard: true,
-                resize_keyboard: true,
-            },
-            parse_mode: "Markdown",
-        }
-    }
-    if (type === "location_based") {
-        opt = {
-            reply_markup: {
-                keyboard: [
-                    [{
-                        text: "Get my current location", request_location: true,
-                    }],
-                    [{ text: "Cancel" }],
-                ],
-                one_time_keyboard: true,
-                resize_keyboard: true,
-            }
-        };
-    }
-
-    if (type === "feeling") {
-        opt = {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "Angry", callback_data: "angry", },
-                    { text: "Broken Hearted", callback_data: "brokenHearted", }],
-                    [{ text: "Insecure", callback_data: "insecure", },
-                    { text: "Confused", callback_data: "confused", },
-                    { text: "Faithless", callback_data: "needFaith", }],
-                    [{ text: "upset", callback_data: "needEncouragement", },
-                    { text: "unforgiving", callback_data: "needForgiveness", },
-                    { text: "Tired", callback_data: "needStrength", },
-                    ]
-                ],
-                one_time_keyboard: true,
-                resize_keyboard: true,
-                force_reply: true,
-            }
-        };
-    }
-
-    return opt;
-};
-function teachMeMath(chatDetails: chatDetails, number: number) {
-    // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
-
-    let url = "http://numbersapi.com/" + number;
-
-    request(url, (err, res, body) => {
-        if (err) {
-            console.log("Error occured!", err);
-            let message = {
-                raw: err,
-                fromId,
-                first_name,
-            }
-            bot.sendMessage(myId, JSON.stringify(message));
-        }
-        if (body) {
-
-            bot.sendMessage(fromId, body);
-            if (userId !== myId) bot.sendMessage(myId, "I taught " + capitalizeFirstLetter(first_name) + " from " + chatName + "about " + number + "!");
-
-        }
-    });
-    bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
-        { parse_mode: "Markdown" });
-}
-function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
-    // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
-    axios({
-        method: 'GET',
-        url: 'https://api.yelp.com/v3/businesses/search',
-        params: {
-            term: "food",
-            latitude: locationDetails.lat,
-            longitude: locationDetails.lng,
-            radius: 200, // in meters
-            limit: 15, // max 50
-            sort_by: "distance", // default: best_match
-            price: "1,2,3,4",
-            open_now: false, // default: false
-        },
-        headers: {
-            Authorization: "Bearer " + process.env.yelpAPIKey
-        },
-    }).then((response) => {
-        let msg = "";
-        let url = "";
-        let chosen_stall = response.data.businesses[Math.floor(Math.random() * response.data.businesses.length)];
-        if (chosen_stall) {
-            let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = chosen_stall;
-            msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
-            msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
-            msg += "The actual address is __" + location.address1 + "__\n";
-            msg += "Price: *" + price + "*,\nRating: *" + rating + "*\n";
-        } else {
-            msg = "Sorry I did not managed to find anything from [Yelp](https://www.yelp.com/)! " + emoji.white_frowning_face;
-        }
-        bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
-        if (chosen_stall && chosen_stall.url)
-            bot.sendMessage(fromId, "Oh oh! I've managed to grab the url too!\n" + chosen_stall.url);
-    }).catch((err) => {
-        if (err) {
-            console.log("this is err: ", err);
-            // bot.sendMessage(myId, err.request._header + "\n" + err.request._headers.host + err.request.path + "\n\n" + err.message);
-            return;
-        }
-    })
-};
 async function getGender(first_name: string) {
 
     let url = "https://gender-api.com/get?name=" + first_name + "&key=" + process.env.privateGenderAPIKey;
@@ -1349,6 +1320,33 @@ async function getGender(first_name: string) {
     };
 
 };
+function teachMeMath(chatDetails: chatDetails, number: number) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    let url = "http://numbersapi.com/" + number;
+
+    request(url, (err, res, body) => {
+        if (err) {
+            console.log("Error occured!", err);
+            let message = {
+                raw: err,
+                fromId,
+                first_name,
+            }
+            bot.sendMessage(myId, JSON.stringify(message));
+        }
+        if (body) {
+
+            bot.sendMessage(fromId, body);
+            if (userId !== myId) bot.sendMessage(myId, "I taught " + capitalizeFirstLetter(first_name) + " from " + chatName + "about " + number + "!");
+
+        }
+    });
+    bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
+        { parse_mode: "Markdown" });
+}
+
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
 function getVerseMethod(chatDetails: chatDetails, key_word) {
@@ -1550,6 +1548,54 @@ function bbAutoChecker(chatDetails: chatDetails) {
 }
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
+bot.on('location', (msg) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+    let location = msg.location;
+    let currentContext = fallback.get_context();
+    if (location && fallback.check_context_cleared()) {
+        let locationDetails = {
+            lat: msg.location.latitude,
+            lng: msg.location.longitude,
+            locationName: "Your position",
+        };
+        weatherReportMethod(locationDetails, chatDetails);
+    }
+});
+
+bot.onText(/\/menu/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let chatDetails = {
+        fromId: fromId,
+        chatName: chatName,
+        first_name: first_name,
+        userId: userId,
+    };
+    bot.sendMessage(fromId, "Hi " + first_name + ", how may I help?", await getReplyOpts("main_menu"));
+    bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
+
+});
 bot.onText(/\/foodpls/i, async (msg, match) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
@@ -1566,6 +1612,7 @@ bot.onText(/\/foodpls/i, async (msg, match) => {
         first_name: first_name,
         userId: userId,
     };
+    fallback.set_context("foodpls");
     bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(() => {
             bot.once('message', (msg) => {
@@ -1574,19 +1621,18 @@ bot.onText(/\/foodpls/i, async (msg, match) => {
                     getLatLongMethod(chatDetails, msg.text, "food");
                 }
                 if (msg.location) {
+
                     let locationDetails = {
                         lat: msg.location.latitude,
                         lng: msg.location.longitude,
-                        location: "not given",
+                        locationName: "your position",
                     };
-                    bot.sendMessage(fromId, "Currently searching for food around you.. " + emoji.bow);
                     getNearestFood(chatDetails, locationDetails);
                 }
             });
         });
 
 });
-
 bot.onText(/\/bbchecker/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
