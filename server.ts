@@ -1244,32 +1244,6 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
     bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
         { parse_mode: "Markdown" });
 }
-// -------------------------------Beta Methods---------------------------------------
-// Still in beta mode:
-function getVerseMethod(chatDetails: chatDetails, key_word) {
-    // chat related details
-    let { fromId, chatName, first_name, userId } = chatDetails;
-
-    const search = key_word.replace(' ', '%20');
-    const version = "NIV";
-    const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
-    console.log("URL: ", url);
-    const result = scrapeIt(url, {
-        title: key_word,
-    }, (err, data) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        if (data) {
-            bot.sendMessage(chatDetails.fromId, "Fetching verse now..");
-            console.log(JSON.stringify(result.data, null, 2));
-            bot.sendMessage(chatDetails.fromId, result.data);
-            fallback = false;
-            return result.data;
-        }
-    });
-};
 function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
     // chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -1359,6 +1333,32 @@ async function getGender(first_name: string) {
         return word;
     };
 
+};
+// -------------------------------Beta Methods---------------------------------------
+// Still in beta mode:
+function getVerseMethod(chatDetails: chatDetails, key_word) {
+    // chat related details
+    let { fromId, chatName, first_name, userId } = chatDetails;
+
+    const search = key_word.replace(' ', '%20');
+    const version = "NIV";
+    const url = `https://www.biblegateway.com/passage/?search=${search}&version=${version}`
+    console.log("URL: ", url);
+    const result = scrapeIt(url, {
+        title: key_word,
+    }, (err, data) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (data) {
+            bot.sendMessage(chatDetails.fromId, "Fetching verse now..");
+            console.log(JSON.stringify(result.data, null, 2));
+            bot.sendMessage(chatDetails.fromId, result.data);
+            fallback = false;
+            return result.data;
+        }
+    });
 };
 
 // -------------------------------Incompleted Methods---------------------------------------
