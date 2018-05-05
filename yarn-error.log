@@ -1,5 +1,5 @@
 Arguments: 
-  /Users/Xueyong/.nvm/versions/node/v9.4.0/bin/node /Users/Xueyong/.yarn/bin/yarn.js --save axios
+  /Users/Xueyong/.nvm/versions/node/v9.4.0/bin/node /Users/Xueyong/.yarn/bin/yarn.js run build
 
 PATH: 
   /Users/Xueyong/.yarn/bin:/Users/Xueyong/.config/yarn/global/node_modules/.bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/share/dotnet:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/Xueyong/.yarn/bin:/Users/Xueyong/.config/yarn/global/node_modules/.bin:/Users/Xueyong/.nvm/versions/node/v9.4.0/bin:/usr/local/mysql/bin/:/Users/Xueyong/.rvm/bin:/usr/local/mysql/bin/:/Users/Xueyong/.rvm/bin
@@ -33,6 +33,7 @@ npm manifest:
     },
     "homepage": "https://github.com/xueyongg/bible-butler#readme",
     "dependencies": {
+      "axios": "^0.18.0",
       "dotenv": "^5.0.1",
       "google-translate": "^2.1.0",
       "moment": "^2.21.0",
@@ -48,6 +49,7 @@ npm manifest:
     },
     "devDependencies": {
       "@types/node": "^10.0.3",
+      "eslint": "^4.19.1",
       "gulp": "^3.9.1",
       "gulp-typescript": "^4.0.2",
       "typescript": "^2.8.3"
@@ -1188,7 +1190,7 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"
 
 Trace: 
-  Error: Command "npm" not found.
+  Error: Command "build" not found.
       at new MessageError (/Users/Xueyong/.yarn/lib/cli.js:186:110)
       at /Users/Xueyong/.yarn/lib/cli.js:87307:17
       at Generator.next (<anonymous>)
@@ -1198,4 +1200,4 @@ Trace:
       at new F (/Users/Xueyong/.yarn/lib/cli.js:23451:28)
       at /Users/Xueyong/.yarn/lib/cli.js:95:12
       at runCommand (/Users/Xueyong/.yarn/lib/cli.js:87312:22)
-      at /Users/Xueyong/.yarn/lib/cli.js:87403:18
+      at Object.<anonymous> (/Users/Xueyong/.yarn/lib/cli.js:87412:14)

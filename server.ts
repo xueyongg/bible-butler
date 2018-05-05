@@ -1237,6 +1237,8 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
         if (body) {
 
             bot.sendMessage(fromId, body);
+            if (userId !== myId) bot.sendMessage(myId, "I taught " + capitalizeFirstLetter(first_name) + " from " + chatName + "about " + number + "!");
+
         }
     });
     bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
@@ -1267,7 +1269,7 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
             return result.data;
         }
     });
-}
+};
 function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
     // chat related details
     let { fromId, chatName, first_name, userId } = chatDetails;
@@ -1310,7 +1312,54 @@ function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
             return;
         }
     })
-}
+};
+async function getGender(first_name: string) {
+
+    let url = "https://gender-api.com/get?name=" + first_name + "&key=" + process.env.privateGenderAPIKey;
+    const response = await axios({
+        method: "GET",
+        url: "https://gender-api.com/get",
+        params: {
+            name: first_name,
+            key: process.env.privateGenderAPIKey,
+        }
+    }).catch((err) => {
+        if (err) {
+            console.log("Encountered error getting Gender", err);
+            return;
+        }
+    })
+
+    if (response.data) {
+        let word = {
+            cap_pronoun: "",
+            pronoun: "",
+            pronoun2: "",
+            pronoun3: "",
+
+        };
+        switch (response.data.gender) {
+            case 'male':
+                word = {
+                    cap_pronoun: "He",
+                    pronoun: "he",
+                    pronoun2: "his",
+                    pronoun3: "him",
+                };
+                break;
+            case 'female':
+                word = {
+                    cap_pronoun: "She",
+                    pronoun: "she",
+                    pronoun2: "her's",
+                    pronoun3: "her",
+                };
+                break;
+        }
+        return word;
+    };
+
+};
 
 // -------------------------------Incompleted Methods---------------------------------------
 //TODO: incomplete as of 6 June 17(tues)
@@ -1954,6 +2003,8 @@ bot.onText(/\/getverse/i, function (msg, match) {
     let fromId = msg.from.id;
     let userId = msg.from.id;
     let first_name = msg.from.first_name;
+
+
     let chatName = first_name;
     if (chat) {
         fromId = chat.id;
@@ -1964,6 +2015,7 @@ bot.onText(/\/getverse/i, function (msg, match) {
         chatName: chatName,
         first_name: first_name,
         userId: userId,
+        raw: msg.chat,
     };
 
     let opt = {
@@ -1975,10 +2027,26 @@ bot.onText(/\/getverse/i, function (msg, match) {
 
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
         .then(function () {
-            bot.once('message', function (msg) {
+            bot.once('message', async (msg) => {
                 let verse = "john3:30-31";
                 let fetchingVerse = msg.text;
-                if (fetchingVerse) marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal");
+                let gender = await getGender(first_name);
+
+                if (fetchingVerse) {
+                    const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(fetchingVerse.trim());
+                    if (matchVerse) {
+                        marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
+                    } else {
+                        bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book);
+                        if (userId !== myId)
+                            bot.sendMessage(myId, "I encountered verse retrieval error with " +
+                                capitalizeFirstLetter(first_name) + " from " + chatName + "! " +
+                                gender.cap_pronoun + " gave me *" + fetchingVerse + "*??",
+                                { parse_mode: "Markdown" }
+                            );
+
+                    }
+                }
             });
         });
 });
