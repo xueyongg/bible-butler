@@ -120,8 +120,22 @@ if (HOST !== "LOCALHOST") {
 }
 
 // Any kind of message
-let fallback = true;
-bot.on('message', function (msg) {
+let fallback = {
+    previous_context: "",
+    set_context: (context_name) => {
+        this.previous_context = context_name;
+    },
+    clear_context: () => {
+        this.previous_context = "";
+    },
+    check_context_cleared: () => {
+        return this.previous_context === "";
+    }
+};
+// Inform xy bot is online
+bot.sendMessage(myId, "Im back online! No actions required.");
+
+bot.on('message', async (msg) => {
     let chat = msg.chat;
     let chatId = msg.chat.id;
     let fromId = msg.from.id;
@@ -142,8 +156,8 @@ bot.on('message', function (msg) {
     if (msg.text) {
         const trimmed_message = msg.text.trim();
         const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
-        if (matchVerse && fallback) {
-            bot.sendMessage(myId, marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
+        if (matchVerse && fallback.check_context_cleared()) {
+            bot.sendMessage(myId, await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal"));
         }
         let num_entered = Number(trimmed_message);
         if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
@@ -813,6 +827,7 @@ function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, 
     let book = matches[1].trim();
     let chapterAndVerse = matches[2].trim();
     fetchingVerse = book + chapterAndVerse;
+
     console.log("From new get verse method: ", fetchingVerse);
 
     // let testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
@@ -1355,7 +1370,7 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
             bot.sendMessage(chatDetails.fromId, "Fetching verse now..");
             console.log(JSON.stringify(result.data, null, 2));
             bot.sendMessage(chatDetails.fromId, result.data);
-            fallback = false;
+            fallback.set_context("getvverse");
             return result.data;
         }
     });
@@ -2024,19 +2039,20 @@ bot.onText(/\/getverse/i, function (msg, match) {
             force_reply: true,
         }
     };
-
+    // Change the condition
+    fallback.set_context("getverse");
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', async (msg) => {
                 let verse = "john3:30-31";
                 let fetchingVerse = msg.text;
-                let gender = await getGender(first_name);
-
                 if (fetchingVerse) {
                     const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(fetchingVerse.trim());
                     if (matchVerse) {
+                        fallback.clear_context();
                         marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
                     } else {
+                        let gender = await getGender(first_name);
                         bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book);
                         if (userId !== myId)
                             bot.sendMessage(myId, "I encountered verse retrieval error with " +
