@@ -906,7 +906,9 @@ async function emojiFinder(key_word) {
     if (results) {
         let emojis: emoji[] = results.data.emojis;
         let chosen_emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return chosen_emoji.content;
+        if (chosen_emoji.content) return chosen_emoji.content;
+        else
+            return emoji.blush;
     }
 }
 function getReplyOpts(type: string) {
