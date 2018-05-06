@@ -291,6 +291,35 @@ bot.on('edited_message', async (edited_message) => {
         context_fallback(chatDetails, edited_message, "edit_update");
 
 })
+bot.on('location', async (msg) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+    let location = msg.location;
+    let currentContext = await fallback.get_context();
+    if (location && (fallback.check_context_cleared() || fallback.get_context() !== "foodpls")) {
+        let locationDetails = {
+            lat: msg.location.latitude,
+            lng: msg.location.longitude,
+            locationName: "Your position",
+        };
+        weatherReportMethod(locationDetails, chatDetails);
+    }
+});
 
 /*
  this method will try to call methods based on messages to BA, as if its a conversation
@@ -1695,35 +1724,6 @@ function bbAutoChecker(chatDetails: chatDetails) {
 }
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
-bot.on('location', async (msg) => {
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-    let messageId = msg.message_id
-    let chatDetails = {
-        fromId,
-        chatName,
-        first_name,
-        userId,
-        messageId,
-    };
-    let location = msg.location;
-    let currentContext = await fallback.get_context();
-    if (location && fallback.check_context_cleared()) {
-        let locationDetails = {
-            lat: msg.location.latitude,
-            lng: msg.location.longitude,
-            locationName: "Your position",
-        };
-        weatherReportMethod(locationDetails, chatDetails);
-    }
-});
 
 bot.onText(/\/menu/i, async (msg, match) => {
     let chat = msg.chat;
