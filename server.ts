@@ -134,13 +134,23 @@ let fallback = {
     check_context_cleared: () => {
         return this.previous_context === ("" || undefined);
     },
-    latest_message_id: "",
+    latest_message: {},
     latest_message_type: "",
-    get_latest_message_id: () => {
-        return this.latest_message_id;
+    get_latest_message: () => {
+        console.log("Retrieving Message!", this.latest_message);
+        return this.latest_message;
     },
-    set_latest_message_id: (id) => {
-        this.latest_message_id = id;
+    set_latest_message: (msg: any) => {
+        this.latest_message = msg;
+        console.log("Message set!", this.latest_message);
+    },
+    update_latest_message: (old_message: any, new_message: any) => {
+        if (old_message.message_id === this.latest_message.message_id) {
+            this.latest_message = new_message;
+            return new_message.message_id;
+        } else {
+            return false;
+        }
     },
     clear_latest_message_id: () => {
         this.latest_message_id = "";
@@ -162,8 +172,7 @@ async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal"
         if (matchVerse && fallback.check_context_cleared()) {
 
             if (type_of_fallback === "edit_update") {
-                let verse_info = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "return_only");
-                bot.editMessageText(verse_info, { message_id: fallback.get_latest_message_id() })
+                let new_message = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "edit_update");
             }
             if (type_of_fallback === "normal") {
                 // Find a more optimized method
@@ -1188,7 +1197,7 @@ function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, time
     bot.sendMessage(fromId, message);
 }
 // -------------------------------Other Methods---------------------------------------
-function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: string, version = "NIV") {
+async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: string, version = "NIV") {
     //chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
@@ -1213,20 +1222,31 @@ function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: 
             bot.sendMessage(fromId, "Invalid verse. Please enter a valid verse for me thank you!" + emoji.hushed);
             if (userId !== myId) bot.sendMessage(myId, capitalizeFirstLetter(first_name) + " from " + chatName + ". Encountered error retrieving verse from me!");
         } else {
-            let verseReference = info;
-            // console.log(verseReference);
-            if (type === "normal") {
-                let msgId = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                    "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
-                fallback.set_latest_message_id(msgId);
+            try {
+                let verseReference = info;
+                // console.log(verseReference);
+                if (type === "normal") {
+                    let msg_details = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
+                    fallback.set_latest_message(msg_details);
+                }
+                if (type === "edit_update") {
+                    let latest_message = await fallback.get_latest_message();
+                    bot.editMessageText(emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, { chat_id: latest_message.chat.id, message_id: latest_message.message_id })
+                    return info;
+                }
+                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
+                    ". Success retrieval of " + fetchingVerse +
+                    "!" + emoji.kissing_smiling_eyes);
+
+            } catch (err) {
+                console.log("err in marvinNewGetVerseMethod: ", err);
             }
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
-                ". Success retrieval of " + fetchingVerse +
-                "!" + emoji.kissing_smiling_eyes);
-            return info;
+
         }
     });
-    bot.sendMessage(fromId, "Fetching verse now..");
+    if (type === "normal") bot.sendMessage(fromId, "Fetching verse now..");
 }
 /**
  * Only if the currency is not acquired then enter this method
