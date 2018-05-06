@@ -7,3 +7,5 @@
 .env
 *.js
 *.js.map
+server copy.ts
+server copy 2.ts
