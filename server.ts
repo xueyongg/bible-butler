@@ -1763,7 +1763,7 @@ async function getxrate(chatDetails: chatDetails, msg) {
 async function getweather(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-    bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, opt)
+    bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', function (msg) {
                 getLatLongMethod(chatDetails, msg.text, "weather");
