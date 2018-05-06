@@ -217,23 +217,26 @@ function number_fallback(chatDetails: chatDetails, trimmed_message: string) {
     if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
 }
 
-function echoToOwner(chatDetails: chatDetails, msg, locationDetails = { locationName: "", lat: 0, lng: 0 }, ) {
+function echoToOwner(chatDetails: chatDetails, msg, personalized = false, locationDetails = { locationName: "", lat: 0, lng: 0 }) {
     //chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     //location details
     let { locationName, lat, lng } = locationDetails;
 
-    if (msg.location) {
+    if (msg.location && !personalized) {
         bot.sendMessage(myId, first_name + " from " + chatName + " sent this location: ");
         bot.sendLocation(myId, lat, lng);
     }
-    if (msg.text) {
+    if (msg.text && !personalized) {
         bot.sendMessage(myId, first_name + " from " + chatName + " sent this message: " + msg.text);
     }
-    if (msg.document) {
+    if (msg.document && !personalized) {
         bot.sendMessage(myId, first_name + " from " + chatName + " sent me a document. ");
         bot.sendDocument(myId, { file_id: (msg.document.thumb ? msg.document.thumb.file_id : msg.document.file_id) });
+    }
 
+    if (personalized) {
+        bot.sendMessage(myId, first_name + " from " + chatName + " " + msg);
     }
 };
 bot.on('message', async (msg) => {
@@ -1025,10 +1028,11 @@ function getReplyOpts(type: string) {
         opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "Back to main menu", callback_data: "menu", },
-                    { text: "Get exchange rate", callback_data: "exchangeRate", }],
-                    [{ text: "Get weather status", callback_data: "weather", },
-                    { text: "Get sunrise timing", callback_data: "sunrise", }],
+                    [{ text: "Get food ard me", callback_data: "foodpls" },
+                    { text: "Get exchange rate", callback_data: "getxrate", }],
+                    [{ text: "Get weather", callback_data: "getweather", },
+                    { text: "Get sunrise", callback_data: "getsunrise", }],
+                    [{ text: "Insult", callback_data: "insult", }]
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -1040,7 +1044,20 @@ function getReplyOpts(type: string) {
         opt = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "Back to main menu", callback_data: "/menu", }],
+                    [{ text: "Back to main menu", callback_data: "menu", }],
+                ],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+            },
+            parse_mode: "Markdown",
+        }
+    }
+    if (type === "more_insult") {
+        opt = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "More insults?", callback_data: "insult", },
+                    { text: "Back to main menu", callback_data: "menu", }],
                 ],
                 one_time_keyboard: true,
                 resize_keyboard: true,
@@ -1149,7 +1166,12 @@ function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
 
         let message = capitalizeFirstLetter(locationName) + "'s currently *" + weatherInfo.temp + "*°C but feels like *" + weatherInfo.apparentTemp + "*°C \n" +
             "Oh! and weather report says: " + weatherInfo.hourlySummary + chosen_emoji;
-        bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
+        bot.sendMessage(fromId, message, await getReplyOpts("back_to_main_menu"))
+            .then(() => {
+                bot.once("callback_query", (msg) => {
+                    runMenuOptions(chatDetails, msg);
+                })
+            });
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
@@ -1246,7 +1268,7 @@ function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
 
     // bot.sendMessage(fromId, "Currently searching for " + capitalizeFirstLetter(locationName) + "'s sunrise timing.. " + emoji.bow);
 }
-function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
+async function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, timeZoneDetails, locationInput) {
     //chat related
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
@@ -1282,7 +1304,12 @@ function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, time
         message = message + "\n" + emoji.city_sunset + " Today's sunset was " + sunsetDurationFromNow + " @ " + formattedSunset + " " + timeZoneName
     }
 
-    bot.sendMessage(fromId, message);
+    bot.sendMessage(fromId, message, await getReplyOpts("back_to_main_menu"))
+        .then(() => {
+            bot.once("callback_query", (msg) => {
+                runMenuOptions(chatDetails, msg);
+            })
+        });
 }
 // -------------------------------Other Methods---------------------------------------
 async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: string, version = "NIV") {
@@ -1315,7 +1342,12 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                 // console.log(verseReference);
                 if (type === "normal") {
                     let msg_details = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, await getReplyOpts("back_to_main_menu"))
+                        .then(() => {
+                            bot.once("callback_query", (msg) => {
+                                runMenuOptions(chatDetails, msg);
+                            })
+                        });
                     fallback.set_latest_message(msg_details);
                 }
                 if (type === "edit_update") {
@@ -1356,13 +1388,18 @@ function getExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     //TODO: Request the url done
     //TODO: #2 insert into the DB
     //TODO: #3 callback the insert query to send the message out
-    request(exchangeRateURL, function (err, res, body) {
+    request(exchangeRateURL, async function (err, res, body) {
         let info = JSON.parse(body);
 
         //error handling
         if (info.error || Object.keys(info.rates).length == 0) {
             //error occurred show that no results can be found
-            bot.sendMessage(fromId, "Encountered an error with retrieving exchange rate " + emoji.hushed);
+            bot.sendMessage(fromId, "Encountered an error with retrieving exchange rate " + emoji.hushed, await getReplyOpts("back_to_main_menu"))
+                .then(() => {
+                    bot.once("callback_query", (msg) => {
+                        runMenuOptions(chatDetails, msg);
+                    })
+                });;
             return;
         }
 
@@ -1435,9 +1472,14 @@ function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     }
     bot.sendMessage(fromId, message, opt)
         .then((ans) => {
-            bot.once('callback_query', (callback_message) => {
+            bot.once('callback_query', async (callback_message) => {
                 if (callback_message.data === "correct") {
-                    bot.sendMessage(fromId, "Great! Good to serve you " + first_name + "!" + emoji.hushed);
+                    bot.sendMessage(fromId, "Great! Good to serve you " + first_name + "!" + emoji.hushed, await getReplyOpts("back_to_main_menu"))
+                        .then(() => {
+                            bot.once("callback_query", (msg) => {
+                                runMenuOptions(chatDetails, msg);
+                            })
+                        });
                 }
                 if (callback_message.data === "flip") {
                     message = "Got it! The rate is *" + (1 / rate).toFixed(2) + "*" + fromCurrency + "/" + toCurrency + emoji.smile;
@@ -1522,7 +1564,6 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
     bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
         { parse_mode: "Markdown" });
 }
-
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
 function getVerseMethod(chatDetails: chatDetails, key_word) {
@@ -1549,6 +1590,197 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
         }
     });
 };
+async function runMenuOptions(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    if (msg.data) {
+        let chosen_function = msg.data;
+
+        fallback.set_context(chosen_function);
+        switch (chosen_function) {
+            case "foodpls":
+                foodpls(chatDetails, msg);
+                break;
+            case "getxrate":
+                getxrate(chatDetails, msg);
+                break;
+            case "getweather":
+                getweather(chatDetails, msg);
+                break;
+            case "getsunrise":
+                getsunrise(chatDetails, msg);
+                break;
+            case "insult":
+                insult(chatDetails, msg);
+                break;
+            case "menu":
+            default:
+                menu(chatDetails, msg);
+                break;
+        }
+    }
+}
+// -------------------------------SubFunction Methods---------------------------------------
+
+async function foodpls(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    fallback.set_context("foodpls");
+    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
+        .then(() => {
+            bot.once('message', (msg) => {
+                // console.log("hungrygowhere message is here!!", msg);
+                if (msg.text && msg.text !== "cancel") {
+                    getLatLongMethod(chatDetails, msg.text, "food");
+                }
+                if (msg.location) {
+
+                    let locationDetails = {
+                        lat: msg.location.latitude,
+                        lng: msg.location.longitude,
+                        locationName: "your position",
+                    };
+                    getNearestFood(chatDetails, locationDetails);
+                }
+            });
+        });
+}
+async function insult(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+
+    let insults = ["Dumbass", "Out of 100,000 sperm, you were the fastest?", "Look, you aint funny. Your life is just a joke."];
+    let chosenInsult = insults[Math.floor(Math.random() * insults.length)];
+    bot.sendMessage(fromId, chosenInsult, await getReplyOpts("more_insult"))
+        .then(() => {
+            bot.once("callback_query", (msg) => {
+                runMenuOptions(chatDetails, msg);
+            })
+        });
+    if (userId !== myId) echoToOwner(chatDetails, " managed to get the insult! Success!", true);
+}
+async function getverse(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    fallback.set_context("getverse");
+    bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
+        .then(function () {
+            bot.once('message', async (msg) => {
+                let verse = "john3:30-31";
+                let fetchingVerse = msg.text;
+                if (fetchingVerse) {
+                    const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(fetchingVerse.trim());
+                    if (matchVerse) {
+                        await fallback.clear_context();
+                        marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
+                    } else {
+                        let gender = await getGender(first_name);
+                        bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book, await getReplyOpts("back_to_main_menu"))
+                            .then(() => {
+                                bot.once("callback_query", (msg) => {
+                                    runMenuOptions(chatDetails, msg);
+                                })
+                            });
+                        if (userId !== myId)
+                            bot.sendMessage(myId, "I encountered verse retrieval error with " +
+                                capitalizeFirstLetter(first_name) + " from " + chatName + "! " +
+                                gender.cap_pronoun + " gave me *" + fetchingVerse + "*??",
+                                { parse_mode: "Markdown" }
+                            );
+
+                    }
+                }
+            });
+        });
+
+}
+async function menu(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    bot.sendMessage(fromId, "Hi " + first_name + ", hope to be of help today. " + emoji.blush, await getReplyOpts("main_menu"))
+        .then(() => {
+            bot.once("callback_query", (msg) => {
+                runMenuOptions(chatDetails, msg);
+            })
+        });
+    if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
+}
+async function getxrate(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
+        "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", await getReplyOpts("force_only"))
+        .then(function () {
+            bot.once('message', async (msg) => {
+
+                let text1 = msg.text.toUpperCase().trim();
+                //error checks
+                let error = false;
+                if (text1.length < 7) {
+                    error = true;
+                } else if (text1.length == 7 && text1.split("")[text1.split("").length - 4] !== "2") {
+                    error = true;
+                } else if (text1.length == 7 && !/^[a-z]/ig.exec(text1[0])) {
+                    error = true;
+                } else if (text1.length > 7 && !/([\d|.]+)([A-Z]{3})2([A-Z]{3})/ig.exec(text1)) {
+                    error = true;
+                }
+                if (error) {
+                    bot.sendMessage(fromId, "Incorrect format used! Try again!", await getReplyOpts("back_to_main_menu"))
+                        .then(() => {
+                            bot.once("callback_query", (msg) => {
+                                runMenuOptions(chatDetails, msg);
+                            })
+                        });
+                    return;
+                }
+
+                //format the message to include 1
+                if (text1.length == 7) {
+                    text1 = 1 + text1;
+                }
+
+                let xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
+                let amount = xrateToken[1];
+                let from = xrateToken[2];
+                let to = xrateToken[3];
+
+                //TODO: check if the to currency is legit *impt!
+                let currentDate = moment().format("DD-MM-YYYY");
+                let exchangeRateDetails = {
+                    from: from,
+                    to: to,
+                    date: currentDate,
+                    amount: amount.length > 0 ? Number(amount) : 1
+                };
+                let id = currentDate + "_" + from + "_" + to;
+                getExchangeRateMethod(chatDetails, exchangeRateDetails);
+                bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
+
+            });
+        });
+}
+async function getweather(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
+        .then(function () {
+            bot.once('message', function (msg) {
+                getLatLongMethod(chatDetails, msg.text, "weather");
+            });
+        });
+}
+async function getsunrise(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
+        .then(function () {
+            bot.once('message', function (msg) {
+                getLatLongMethod(chatDetails, msg.text, "sunrise");
+            });
+        });
+}
+
 
 // -------------------------------Incompleted Methods---------------------------------------
 //TODO: incomplete as of 6 June 17(tues)
@@ -1603,7 +1835,6 @@ function marvinCraftPrayer(chatDetails: chatDetails, fetchingVerse, type) {
     bot.sendMessage(fromId, "Let me take some time to think..");
 
 }
-
 // -------------------------------Deprecated Methods---------------------------------------
 function getVerseMethod1(chatDetails: chatDetails, fetchingVerse, type = "kjv") {
     //chat details
@@ -1743,9 +1974,7 @@ bot.onText(/\/menu/i, async (msg, match) => {
         userId,
         messageId,
     };
-    bot.sendMessage(fromId, "Hi " + first_name + ", how may I help?", await getReplyOpts("main_menu"));
-    bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
-
+    menu(chatDetails, msg);
 });
 bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
     let chat = msg.chat;
@@ -1765,26 +1994,100 @@ bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
         userId,
         messageId,
     };
-    fallback.set_context("foodpls");
-    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
-        .then(() => {
-            bot.once('message', (msg) => {
-                // console.log("hungrygowhere message is here!!", msg);
-                if (msg.text && msg.text !== "cancel") {
-                    getLatLongMethod(chatDetails, msg.text, "food");
-                }
-                if (msg.location) {
 
-                    let locationDetails = {
-                        lat: msg.location.latitude,
-                        lng: msg.location.longitude,
-                        locationName: "your position",
-                    };
-                    getNearestFood(chatDetails, locationDetails);
-                }
-            });
-        });
+    foodpls(chatDetails, msg);
 
+});
+bot.onText(/\/getverse/i, function (msg, match) {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+        raw: msg.chat,
+    };
+    getverse(chatDetails, msg);
+});
+bot.onText(/\/getweather/i, function (msg, match) {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+
+    let opt = {
+        reply_markup: {
+            force_reply: true,
+        }
+    };
+    getweather(chatDetails, msg);
+});
+bot.onText(/\/getsunrise/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+
+    getsunrise(chatDetails, msg);
+
+});
+bot.onText(/\/getxrate/i, function (msg, match) {
+    //chat details
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+    getxrate(chatDetails, msg);
 });
 bot.onText(/\/bbchecker/i, function (msg, match) {
     let chat = msg.chat;
@@ -1837,10 +2140,16 @@ bot.onText(/\/insult|^\/scold/i, function (msg, match) {
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    let insults = ["Dumbass", "Out of 100,000 sperm, you were the fastest?", "Look, you aint funny. Your life is just a joke."];
-    let chosenInsult = insults[Math.floor(Math.random() * insults.length)];
-    bot.sendMessage(fromId, chosenInsult);
-    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get the insult! Success!");
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+
+    insult(chatDetails, msg);
 });
 bot.onText(/\/help/i, function (msg, match) {
     let chat = msg.chat;
@@ -2186,39 +2495,11 @@ bot.onText(/\/givefeedback/i, function (msg, match) {
         });
 
 });
-bot.onText(/\/talktomarvin/i, function (msg, match) {
+bot.onText(/\/talktomarvin/i, async (msg, match) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
     let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-
-    let opt = {
-        reply_markup: {
-            force_reply: true,
-        }
-    };
-
-    bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", Yes? " + emoji.hushed, opt)
-        .then(function () {
-            bot.once('message', function (msg) {
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " talked to me and said: "
-                    + msg.text + ". " + emoji.kissing_smiling_eyes);
-            });
-        });
-
-});
-bot.onText(/\/getverse/i, function (msg, match) {
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-
-
     let chatName = first_name;
     if (chat) {
         fromId = chat.id;
@@ -2231,42 +2512,17 @@ bot.onText(/\/getverse/i, function (msg, match) {
         first_name,
         userId,
         messageId,
-        raw: msg.chat,
     };
 
-    let opt = {
-        reply_markup: {
-
-            force_reply: true,
-        }
-    };
-    // Change the condition
-    fallback.set_context("getverse");
-    bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
-        .then(function () {
-            bot.once('message', async (msg) => {
-                let verse = "john3:30-31";
-                let fetchingVerse = msg.text;
-                if (fetchingVerse) {
-                    const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(fetchingVerse.trim());
-                    if (matchVerse) {
-                        await fallback.clear_context();
-                        marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
-                    } else {
-                        let gender = await getGender(first_name);
-                        bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book);
-                        if (userId !== myId)
-                            bot.sendMessage(myId, "I encountered verse retrieval error with " +
-                                capitalizeFirstLetter(first_name) + " from " + chatName + "! " +
-                                gender.cap_pronoun + " gave me *" + fetchingVerse + "*??",
-                                { parse_mode: "Markdown" }
-                            );
-
-                    }
-                }
-            });
+    bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", Yes? " + emoji.hushed, await getReplyOpts("main_menu"))
+        .then(() => {
+            bot.once("callback_query", (msg) => {
+                runMenuOptions(chatDetails, msg);
+            })
         });
+
 });
+
 bot.onText(/\/getvverse/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
@@ -2389,86 +2645,7 @@ bot.onText(/\/feeling/, async (msg, match) => {
         });
 
 });
-bot.onText(/\/getweatherreport/i, function (msg, match) {
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-    let messageId = msg.message_id
-    let chatDetails = {
-        fromId,
-        chatName,
-        first_name,
-        userId,
-        messageId,
-    };
 
-    let opt = {
-        reply_markup: {
-            force_reply: true,
-        }
-    };
-
-    bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, opt)
-        .then(function () {
-            bot.once('message', function (msg) {
-                getLatLongMethod(chatDetails, msg.text, "weather");
-                // db.locations.count({ name: msg.text }, function (err, doc) {
-                //     if (doc === 1) {
-                //         db.locations.find({ name: msg.text }, function (err, doc) {
-                //             if (err) throw err;
-                //             if (doc) {
-                //                 //console.log(doc[0]);
-                //                 //bot.sendMessage(fromId, doc[0].name);
-                //                 let locationDetails = {
-                //                     name: doc[0].name,
-                //                     lat: doc[0].lat,
-                //                     long: doc[0].long,
-                //                 };
-                //                 //console.log("locationDetails: ");
-                //                 //console.log(locationDetails);
-                //                 weatherReportMethod(locationDetails, chatDetails);
-                //             }
-                //         });
-                //     } else { //the name of the location doesnt exist in the db yet
-                //         getLatLongMethod(msg.text, chatDetails, "weather");
-                //     }
-                // });
-
-            });
-        });
-});
-bot.onText(/\/getsunrise/i, async (msg, match) => {
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-    let messageId = msg.message_id
-    let chatDetails = {
-        fromId,
-        chatName,
-        first_name,
-        userId,
-        messageId,
-    };
-
-    bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
-        .then(function () {
-            bot.once('message', function (msg) {
-                getLatLongMethod(chatDetails, msg.text, "sunrise");
-            });
-        });
-});
 bot.onText(/\/getHoliday/i, async (msg, match) => {
     //chat details
     let chat = msg.chat;
@@ -2492,79 +2669,6 @@ bot.onText(/\/getHoliday/i, async (msg, match) => {
                 db.holidays.count({}, function (err, doc) {
 
                 });
-
-            });
-        });
-});
-bot.onText(/\/getxrate/i, function (msg, match) {
-    //chat details
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-    let messageId = msg.message_id
-    let chatDetails = {
-        fromId,
-        chatName,
-        first_name,
-        userId,
-        messageId,
-    };
-
-    //keyboard options
-    let opt = {
-        reply_markup: {
-            force_reply: true,
-        }
-    };
-    bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
-        "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", opt)
-        .then(function () {
-            bot.once('message', function (msg) {
-
-                let text1 = msg.text.toUpperCase().trim();
-                //error checks
-                let error = false;
-                if (text1.length < 7) {
-                    error = true;
-                } else if (text1.length == 7 && text1.split("")[text1.split("").length - 4] !== "2") {
-                    error = true;
-                } else if (text1.length == 7 && !/^[a-z]/ig.exec(text1[0])) {
-                    error = true;
-                } else if (text1.length > 7 && !/([\d|.]+)([A-Z]{3})2([A-Z]{3})/ig.exec(text1)) {
-                    error = true;
-                }
-                if (error) {
-                    bot.sendMessage(fromId, "Incorrect format used! Try again!");
-                    return;
-                }
-
-                //format the message to include 1
-                if (text1.length == 7) {
-                    text1 = 1 + text1;
-                }
-
-                let xrateToken = /([\d|.]+)([A-Za-z]{3})2([A-Za-z]{3})/ig.exec(text1);
-                let amount = xrateToken[1];
-                let from = xrateToken[2];
-                let to = xrateToken[3];
-
-                //TODO: check if the to currency is legit *impt!
-                let currentDate = moment().format("DD-MM-YYYY");
-                let exchangeRateDetails = {
-                    from: from,
-                    to: to,
-                    date: currentDate,
-                    amount: amount.length > 0 ? Number(amount) : 1
-                };
-                let id = currentDate + "_" + from + "_" + to;
-                getExchangeRateMethod(chatDetails, exchangeRateDetails);
-                bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
 
             });
         });
