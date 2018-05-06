@@ -160,21 +160,23 @@ async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal"
         // Check if its a verse
         const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
         if (matchVerse && fallback.check_context_cleared()) {
-            marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
+
             if (type_of_fallback === "edit_update") {
-                bot.editMessageText((type: string) => {
-                    switch (type) {
-                        case "verse":
-                            break;
-                    }
-                }, { message_id: fallback.get_latest_message_id() })
+                let verse_info = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "return_only");
+                bot.editMessageText(verse_info, { message_id: fallback.get_latest_message_id() })
+            }
+            if (type_of_fallback === "normal") {
+                // Find a more optimized method
+                let verse_info = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
             }
         }
+
         // Check for number
         let num_entered = Number(trimmed_message);
         if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
 
-        // Check if its an insult
+        // Check if its an insult below
+
     }
 }
 bot.on('message', async (msg) => {
@@ -963,7 +965,6 @@ function getReplyOpts(type: string) {
             }
         };
     }
-
     if (type === "feeling") {
         opt = {
             reply_markup: {
@@ -1187,7 +1188,7 @@ function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails, time
     bot.sendMessage(fromId, message);
 }
 // -------------------------------Other Methods---------------------------------------
-function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, version = "NIV") {
+function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: string, version = "NIV") {
     //chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
@@ -1201,7 +1202,7 @@ function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, 
     // let testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
     let url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
     //let url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
-    request(url, function (error, response, body) {
+    request(url, async (error, response, body) => {
 
         let info = "";
         try { info = JSON.parse(body); } catch{
@@ -1214,12 +1215,15 @@ function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type, 
         } else {
             let verseReference = info;
             // console.log(verseReference);
-            bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
-            fallback.set_latest_message_id(messageId);
+            if (type === "normal") {
+                let msgId = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                    "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
+                fallback.set_latest_message_id(msgId);
+            }
             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                 ". Success retrieval of " + fetchingVerse +
                 "!" + emoji.kissing_smiling_eyes);
+            return info;
         }
     });
     bot.sendMessage(fromId, "Fetching verse now..");
