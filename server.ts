@@ -137,12 +137,12 @@ let fallback = {
     latest_message: {},
     latest_message_type: "",
     get_latest_message: () => {
-        console.log("Retrieving Message!", this.latest_message);
+        // console.log("Retrieving Message!", this.latest_message);
         return this.latest_message;
     },
     set_latest_message: (msg: any) => {
         this.latest_message = msg;
-        console.log("Message set!", this.latest_message);
+        // console.log("Message set!", this.latest_message);
     },
     update_latest_message: (old_message: any, new_message: any) => {
         if (old_message.message_id === this.latest_message.message_id) {
@@ -164,30 +164,78 @@ let fallback = {
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
 async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
-    // Will only reply when its just a verse
+    // Will only reply when its a text message
     if (msg.text) {
         const trimmed_message = msg.text.trim();
-        // Check if its a verse
+        // Check if its a verse and it does not have any context
         const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
-        if (matchVerse && fallback.check_context_cleared()) {
+        if (matchVerse && await fallback.check_context_cleared()) {
 
             if (type_of_fallback === "edit_update") {
                 let new_message = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "edit_update");
-            }
+            };
             if (type_of_fallback === "normal") {
                 // Find a more optimized method
                 let verse_info = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
-            }
-        }
+            };
+        };
 
         // Check for number
-        let num_entered = Number(trimmed_message);
-        if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
+        number_fallback(chatDetails, trimmed_message);
 
         // Check if its an insult below
 
     }
+
+    if (msg.document) {
+        // Echo back
+        bot.sendDocument(chatDetails.fromId, { file_id: msg.document.thumb ? msg.document.thumb.file_id : msg.document.file_id });
+        echoToOwner(chatDetails, msg);
+    }
 }
+async function context_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
+    // Will only reply when its a text message
+    if (msg.text) {
+        const trimmed_message = msg.text.trim();
+        // Check if its a verse and it does not have any context
+        const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
+        if (matchVerse) {
+            if (type_of_fallback === "edit_update") {
+                let new_message = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "edit_update");
+            };
+        };
+
+        // Check for number
+        number_fallback(chatDetails, trimmed_message);
+        // Check if its an insult below
+
+    }
+}
+
+function number_fallback(chatDetails: chatDetails, trimmed_message: string) {
+    let num_entered = Number(trimmed_message);
+    if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
+}
+
+function echoToOwner(chatDetails: chatDetails, msg, locationDetails = { locationName: "", lat: 0, lng: 0 }, ) {
+    //chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    //location details
+    let { locationName, lat, lng } = locationDetails;
+
+    if (msg.location) {
+        bot.sendMessage(myId, first_name + " from " + chatName + " sent this location: ");
+        bot.sendLocation(myId, lat, lng);
+    }
+    if (msg.text) {
+        bot.sendMessage(myId, first_name + " from " + chatName + " sent this message: " + msg.text);
+    }
+    if (msg.document) {
+        bot.sendMessage(myId, first_name + " from " + chatName + " sent me a document. ");
+        bot.sendDocument(myId, { file_id: (msg.document.thumb ? msg.document.thumb.file_id : msg.document.file_id) });
+
+    }
+};
 bot.on('message', async (msg) => {
     let chat = msg.chat;
     let chatId = msg.chat.id;
@@ -230,7 +278,18 @@ bot.on('edited_message', async (edited_message) => {
         userId,
         messageId,
     };
-    basic_fallback(chatDetails, edited_message, "edit_update");
+    if (edited_message.text) {
+        if (edited_message.text.includes("/")) {
+            // Doesn't matter cos the /methods are not handled in fallback
+            await fallback.clear_context();
+        }
+    }
+    let check_context_cleared = await fallback.check_context_cleared();
+    if (check_context_cleared)
+        basic_fallback(chatDetails, edited_message, "edit_update");
+    else
+        context_fallback(chatDetails, edited_message, "edit_update");
+
 })
 
 /*
@@ -1636,7 +1695,7 @@ function bbAutoChecker(chatDetails: chatDetails) {
 }
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
-bot.on('location', (msg) => {
+bot.on('location', async (msg) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -1655,7 +1714,7 @@ bot.on('location', (msg) => {
         messageId,
     };
     let location = msg.location;
-    let currentContext = fallback.get_context();
+    let currentContext = await fallback.get_context();
     if (location && fallback.check_context_cleared()) {
         let locationDetails = {
             lat: msg.location.latitude,
@@ -2191,7 +2250,7 @@ bot.onText(/\/getverse/i, function (msg, match) {
                 if (fetchingVerse) {
                     const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(fetchingVerse.trim());
                     if (matchVerse) {
-                        fallback.clear_context();
+                        await fallback.clear_context();
                         marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
                     } else {
                         let gender = await getGender(first_name);
