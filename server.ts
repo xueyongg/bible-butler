@@ -1,5 +1,3 @@
-import { isNumber } from "util";
-
 require('dotenv').config();
 let TelegramBot = require('node-telegram-bot-api');
 let mongojs = require('mongojs');
@@ -1187,7 +1185,8 @@ function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
 
         let message = capitalizeFirstLetter(locationName) + "'s currently *" + weatherInfo.temp + "*°C but feels like *" + weatherInfo.apparentTemp + "*°C \n" +
             "Oh! and weather report says: " + weatherInfo.hourlySummary + chosen_emoji;
-        bot.sendMessage(fromId, message);
+        bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
+        await fallback.clear_context();
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
@@ -1249,12 +1248,13 @@ function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
     let timezoneSearch = "https://maps.googleapis.com/maps/api/timezone/json?location=" + lat + "," + lng + "&timestamp=" + moment().unix() + "&key=" + googleTimeZoneAPIKey;
     //console.log(timezoneSearch);
 
-    request(timezoneSearch, function (TZerr, TZres, TZbody) {
+    request(timezoneSearch, async function (TZerr, TZres, TZbody) {
         let info2 = JSON.parse(TZbody);
         // console.log(info2);
         if (info2.status !== "OK") {
             //error occurred show that no results can be found
             bot.sendMessage(fromId, "Encountered an error with the time zone " + emoji.hushed);
+            await fallback.clear_context();
             return;
         }
         let dateOffset = info2.rawOffset;
@@ -1310,17 +1310,18 @@ async function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails
     message = message + "\nThe current " + timeZoneName + " is " + moment().tz(timeZoneId).format("h:mm:ss a");
 
     if (moment().tz(timeZoneId).isBefore(sunrise) && moment().tz(timeZoneId).isSame(sunset, "Day")) {
-        message = message + "\n" + emoji.sunrise + " Today's sunrise is " + sunriseDurationFromNow + " @ " + formattedSunrise + " " + timeZoneName
+        message = message + "\n" + emoji.sunrise + " Today's sunrise is " + sunriseDurationFromNow + " @ *" + formattedSunrise + "* " + timeZoneName
     } else {
-        message = message + "\n" + emoji.sunrise + " Today's sunrise was @ " + formattedSunrise + " " + timeZoneName
+        message = message + "\n" + emoji.sunrise + " Today's sunrise was @ *" + formattedSunrise + "* " + timeZoneName
     }
     if (moment().tz(timeZoneId).isBefore(sunset) && moment().tz(timeZoneId).isSame(sunset, "Day")) {
-        message = message + "\n" + emoji.city_sunset + " Today's sunset is " + sunsetDurationFromNow + " @ " + formattedSunset + " " + timeZoneName
+        message = message + "\n" + emoji.city_sunset + " Today's sunset is " + sunsetDurationFromNow + " @ *" + formattedSunset + "* " + timeZoneName
     } else {
-        message = message + "\n" + emoji.city_sunset + " Today's sunset was " + sunsetDurationFromNow + " @ " + formattedSunset + " " + timeZoneName
+        message = message + "\n" + emoji.city_sunset + " Today's sunset was " + sunsetDurationFromNow + " @ *" + formattedSunset + "* " + timeZoneName
     }
 
-    bot.sendMessage(fromId, message);
+    bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
+    await fallback.clear_context();
 }
 // -------------------------------Other Methods---------------------------------------
 async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: string, version = "NIV") {
@@ -1488,6 +1489,7 @@ function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
                     message = "Got it! The rate is *" + (1 / rate).toFixed(2) + "*" + fromCurrency + "/" + toCurrency + emoji.smile;
                     bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
                 }
+                await fallback.clear_context();
             })
         });
 
@@ -1705,6 +1707,7 @@ async function menu(chatDetails: chatDetails, msg) {
 async function getxrate(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    fallback.set_context("getxrate");
     bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
         "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", await getReplyOpts("force_only"))
         .then(function () {
@@ -1724,6 +1727,7 @@ async function getxrate(chatDetails: chatDetails, msg) {
                 }
                 if (error) {
                     bot.sendMessage(fromId, "Incorrect format used! Try again!");
+                    await fallback.clear_context();
                     return;
                 }
 
@@ -1755,6 +1759,7 @@ async function getxrate(chatDetails: chatDetails, msg) {
 async function getweather(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    fallback.set_context("getweather");
     bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', function (message) {
@@ -1774,6 +1779,7 @@ async function getweather(chatDetails: chatDetails, msg) {
 async function getsunrise(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    fallback.set_context("getsunrise");
     bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', function (msg) {
@@ -1974,9 +1980,7 @@ bot.onText(/\/menu/i, async (msg, match) => {
         userId,
         messageId,
     };
-    bot.sendMessage(fromId, "Hi " + first_name + ", how may I help?");
-    bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
-    // menu(chatDetails, msg);
+    menu(chatDetails, msg);
 
 });
 bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
@@ -2848,4 +2852,4 @@ let bbStickerArchive = [
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
 
-let commandArchive = "getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
+let commandArchive = "menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
