@@ -1,3 +1,5 @@
+import { isNumber } from "util";
+
 require('dotenv').config();
 let TelegramBot = require('node-telegram-bot-api');
 let mongojs = require('mongojs');
@@ -132,7 +134,7 @@ let fallback = {
         this.previous_context = "";
     },
     check_context_cleared: () => {
-        return this.previous_context === ("" || undefined);
+        return this.previous_context ? false : true;
     },
     latest_message: {},
     latest_message_type: "",
@@ -164,26 +166,46 @@ let fallback = {
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
 async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
+    //type: weather or sunrise
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+
+
     // Will only reply when its a text message
     if (msg.text) {
         const trimmed_message = msg.text.trim();
         // Check if its a verse and it does not have any context
         const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
-        if (matchVerse && await fallback.check_context_cleared()) {
-
-            if (type_of_fallback === "edit_update") {
-                let new_message = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "edit_update");
-            };
-            if (type_of_fallback === "normal") {
-                // Find a more optimized method
-                let verse_info = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
-            };
-        };
-
-        // Check for number
-        number_fallback(chatDetails, trimmed_message);
-
-        // Check if its an insult below
+        const is_command = /^\/[\w]+/gm.exec(trimmed_message);
+        let num_entered = Number(trimmed_message);
+        const is_number = !isNaN(num_entered);
+        // let context = await fallback.get_context();
+        let context_cleared = await fallback.check_context_cleared();
+        if (context_cleared) {
+            if (matchVerse) {
+                if (type_of_fallback === "edit_update") {
+                    let new_message = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "edit_update");
+                };
+                if (type_of_fallback === "normal") {
+                    // Find a more optimized method
+                    let verse_info = await marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
+                };
+                return;
+            } else if (is_number) {
+                // Check for number
+                number_fallback(chatDetails, trimmed_message);
+            } else if (is_command) {
+                // Check if is a random word, send a menu
+                // Check if its any of the existing commands
+                if (commandArchive.includes(trimmed_message.replace("/", ""))) {
+                    console.log("/command exist");
+                } else {
+                    bot.sendMessage(fromId, "Unrecognized command. Say what?");
+                }
+            } else {
+                // Invoke the menu
+                menu(chatDetails, msg);
+            }
+        }
 
     }
 
@@ -212,9 +234,8 @@ async function context_fallback(chatDetails, msg: any, type_of_fallback = "norma
     }
 }
 
-function number_fallback(chatDetails: chatDetails, trimmed_message: string) {
-    let num_entered = Number(trimmed_message);
-    if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
+function number_fallback(chatDetails: chatDetails, num_entered: number) {
+    teachMeMath(chatDetails, num_entered);
 }
 
 function echoToOwner(chatDetails: chatDetails, msg, personalized = false, locationDetails = { locationName: "", lat: 0, lng: 0 }) {
@@ -1653,6 +1674,7 @@ async function getverse(chatDetails: chatDetails, msg) {
                     } else {
                         let gender = await getGender(first_name);
                         bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book);
+                        await fallback.clear_context();
                         if (userId !== myId)
                             bot.sendMessage(myId, "I encountered verse retrieval error with " +
                                 capitalizeFirstLetter(first_name) + " from " + chatName + "! " +
@@ -1669,7 +1691,15 @@ async function getverse(chatDetails: chatDetails, msg) {
 async function menu(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-    bot.sendMessage(fromId, "Hi " + first_name + ", hope to be of help today. " + emoji.blush);
+    let message = "Hi " + first_name + ", I am your personal assistance and I hope to be of help today. " + emoji.blush + "\n\n";
+    message += "Here are functions I can help you with:\n"
+    message += "/getverse - Get verses for you!\n"
+    message += "/feeling- Get verses for you *based on your feelings*!\n"
+    message += "/foodpls - Get the nicest food around you through Yelp\n"
+    message += "/getweather - Get the weather based on your location\n"
+    message += "/getxrate - Get the latest exchange rate\n"
+    message += "/getsunrise - Get the timing of sunrise around you!\n"
+    bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
     if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 }
 async function getxrate(chatDetails: chatDetails, msg) {
@@ -2506,7 +2536,6 @@ bot.onText(/\/talktomarvin/i, async (msg, match) => {
     bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", Yes? " + emoji.hushed);
 
 });
-
 bot.onText(/\/getvverse/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
@@ -2818,3 +2847,5 @@ let bbStickerArchive = [
     "CAADBQADjwADgIb7Ae-7bZnnY0_qAg",
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
+
+let commandArchive = "getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
