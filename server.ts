@@ -173,7 +173,7 @@ async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal"
         const trimmed_message = msg.text.trim();
         // Check if its a verse and it does not have any context
         const matchVerse = /^(?:\d|I{1,3})?\s?\w{2,}\.?\s*\d{1,}\:\d{1,}-?,?\d{0,2}(?:,\d{0,2}){0,2}/gm.exec(trimmed_message);
-        const is_command = /^\/[\w]+/gm.exec(trimmed_message);
+        const is_command = /^\/[\w]+[@bible_butler_bot]*/gm.exec(trimmed_message);
         let num_entered = Number(trimmed_message);
         const is_number = !isNaN(num_entered);
         // let context = await fallback.get_context();
@@ -194,7 +194,10 @@ async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal"
             } else if (is_command) {
                 // Check if is a random word, send a menu
                 // Check if its any of the existing commands
-                if (commandArchive.includes(trimmed_message.replace("/", ""))) {
+                let cleaned_trimmed_message = trimmed_message.replace("/", "");
+                if (cleaned_trimmed_message.includes("@bible_butler_bot"))
+                    cleaned_trimmed_message = cleaned_trimmed_message.replace("@bible_butler_bot", "");
+                if (commandArchive.includes(cleaned_trimmed_message)) {
                     console.log("/command exist");
                 } else {
                     bot.sendMessage(fromId, "Unrecognized command. Say what?");
@@ -231,7 +234,6 @@ async function context_fallback(chatDetails, msg: any, type_of_fallback = "norma
 
     }
 }
-
 function number_fallback(chatDetails: chatDetails, num_entered: number) {
     teachMeMath(chatDetails, num_entered);
 }
@@ -2006,7 +2008,7 @@ bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
         .then(() => {
             bot.once('message', (msg) => {
                 console.log("hungrygowhere message is here!!", msg);
-                if (msg.text && msg.text.toLowerCase() !== "cancel") {
+                if (msg.text && msg.text.toLowerCase() !== "cancel" && !msg.text.includes("/")) {
                     getLatLongMethod(chatDetails, msg.text, "food");
                 }
                 if (msg.location) {
@@ -2852,4 +2854,4 @@ let bbStickerArchive = [
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
 
-let commandArchive = "talktomarvin,menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
+let commandArchive = "menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
