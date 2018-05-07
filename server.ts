@@ -217,23 +217,26 @@ function number_fallback(chatDetails: chatDetails, trimmed_message: string) {
     if (!isNaN(num_entered)) teachMeMath(chatDetails, num_entered);
 }
 
-function echoToOwner(chatDetails: chatDetails, msg, locationDetails = { locationName: "", lat: 0, lng: 0 }, ) {
+function echoToOwner(chatDetails: chatDetails, msg, personalized = false, locationDetails = { locationName: "", lat: 0, lng: 0 }) {
     //chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     //location details
     let { locationName, lat, lng } = locationDetails;
 
-    if (msg.location) {
+    if (msg.location && !personalized) {
         bot.sendMessage(myId, first_name + " from " + chatName + " sent this location: ");
         bot.sendLocation(myId, lat, lng);
     }
-    if (msg.text) {
+    if (msg.text && !personalized) {
         bot.sendMessage(myId, first_name + " from " + chatName + " sent this message: " + msg.text);
     }
-    if (msg.document) {
+    if (msg.document && !personalized) {
         bot.sendMessage(myId, first_name + " from " + chatName + " sent me a document. ");
         bot.sendDocument(myId, { file_id: (msg.document.thumb ? msg.document.thumb.file_id : msg.document.file_id) });
+    }
 
+    if (personalized) {
+        bot.sendMessage(myId, first_name + " from " + chatName + " " + msg);
     }
 };
 bot.on('message', async (msg) => {
@@ -1324,6 +1327,12 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                         "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, { chat_id: latest_message.chat.id, message_id: latest_message.message_id })
                     return info;
                 }
+                if (type === "feeling") {
+                    let latest_message = await fallback.get_latest_message();
+                    bot.editMessageText(emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, { chat_id: latest_message.chat.id, message_id: latest_message.message_id })
+                    return info;
+                }
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                     ". Success retrieval of " + fetchingVerse +
                     "!" + emoji.kissing_smiling_eyes);
@@ -1335,6 +1344,7 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
         }
     });
     if (type === "normal") bot.sendMessage(fromId, "Fetching verse now..");
+    if (type === "feeling") bot.sendMessage(fromId, "Hope this encourages you " + first_name + ". Fetching verse now..");
 }
 /**
  * Only if the currency is not acquired then enter this method
@@ -1743,7 +1753,7 @@ bot.onText(/\/menu/i, async (msg, match) => {
         userId,
         messageId,
     };
-    bot.sendMessage(fromId, "Hi " + first_name + ", how may I help?", await getReplyOpts("main_menu"));
+    bot.sendMessage(fromId, "Hi " + first_name + ", how may I help?");
     bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 
 });
@@ -1769,8 +1779,8 @@ bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
     bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(() => {
             bot.once('message', (msg) => {
-                // console.log("hungrygowhere message is here!!", msg);
-                if (msg.text && msg.text !== "cancel") {
+                console.log("hungrygowhere message is here!!", msg);
+                if (msg.text && msg.text.toLowerCase() !== "cancel") {
                     getLatLongMethod(chatDetails, msg.text, "food");
                 }
                 if (msg.location) {
@@ -2383,8 +2393,11 @@ bot.onText(/\/feeling/, async (msg, match) => {
                     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Encountered error! " + emoji.sob);
                 }
                 let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
-                bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
-                if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "sad");
+                if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "feeling");
+                else {
+                    // inform me
+                    echoToOwner(chatDetails, "Failed to get verse for feeling: " + chosenFeeling + " trying to get verse: " + chosenVerse, true);
+                }
             });
         });
 
