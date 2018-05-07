@@ -1166,12 +1166,7 @@ function weatherReportMethod(locationDetails, chatDetails: chatDetails) {
 
         let message = capitalizeFirstLetter(locationName) + "'s currently *" + weatherInfo.temp + "*°C but feels like *" + weatherInfo.apparentTemp + "*°C \n" +
             "Oh! and weather report says: " + weatherInfo.hourlySummary + chosen_emoji;
-        bot.sendMessage(fromId, message, await getReplyOpts("back_to_main_menu"))
-            .then(() => {
-                bot.once("callback_query", (msg) => {
-                    runMenuOptions(chatDetails, msg);
-                })
-            });
+        bot.sendMessage(fromId, message);
     });
     bot.sendMessage(fromId, "Currently searching for your weather report.. " + emoji.bow);
 }
@@ -1304,12 +1299,7 @@ async function formattingSunriseMessage(chatDetails: chatDetails, sunriseDetails
         message = message + "\n" + emoji.city_sunset + " Today's sunset was " + sunsetDurationFromNow + " @ " + formattedSunset + " " + timeZoneName
     }
 
-    bot.sendMessage(fromId, message, await getReplyOpts("back_to_main_menu"))
-        .then(() => {
-            bot.once("callback_query", (msg) => {
-                runMenuOptions(chatDetails, msg);
-            })
-        });
+    bot.sendMessage(fromId, message);
 }
 // -------------------------------Other Methods---------------------------------------
 async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, type: string, version = "NIV") {
@@ -1325,6 +1315,7 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
 
     // let testingUrl = "https://bible-api.com/" + fetchingVerse + "?translation=kjv";
     let url = "http://labs.bible.org/api/?passage=" + book + "+" + chapterAndVerse;
+    console.log("URL: ", url);
     //let url = "https://ibibles.net/quote.php?" + version + "-" + book + "/" + chapter + ":" + verse;
     request(url, async (error, response, body) => {
 
@@ -1342,12 +1333,7 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                 // console.log(verseReference);
                 if (type === "normal") {
                     let msg_details = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, await getReplyOpts("back_to_main_menu"))
-                        .then(() => {
-                            bot.once("callback_query", (msg) => {
-                                runMenuOptions(chatDetails, msg);
-                            })
-                        });
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
                     fallback.set_latest_message(msg_details);
                 }
                 if (type === "edit_update") {
@@ -1357,10 +1343,9 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                     return info;
                 }
                 if (type === "feeling") {
-                    let latest_message = await fallback.get_latest_message();
-                    bot.editMessageText(emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, { chat_id: latest_message.chat.id, message_id: latest_message.message_id })
-                    return info;
+                    let msg_details = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
+                    fallback.set_latest_message(msg_details);
                 }
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                     ". Success retrieval of " + fetchingVerse +
@@ -1401,12 +1386,7 @@ function getExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
         //error handling
         if (info.error || Object.keys(info.rates).length == 0) {
             //error occurred show that no results can be found
-            bot.sendMessage(fromId, "Encountered an error with retrieving exchange rate " + emoji.hushed, await getReplyOpts("back_to_main_menu"))
-                .then(() => {
-                    bot.once("callback_query", (msg) => {
-                        runMenuOptions(chatDetails, msg);
-                    })
-                });;
+            bot.sendMessage(fromId, "Encountered an error with retrieving exchange rate " + emoji.hushed);
             return;
         }
 
@@ -1481,12 +1461,7 @@ function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
         .then((ans) => {
             bot.once('callback_query', async (callback_message) => {
                 if (callback_message.data === "correct") {
-                    bot.sendMessage(fromId, "Great! Good to serve you " + first_name + "!" + emoji.hushed, await getReplyOpts("back_to_main_menu"))
-                        .then(() => {
-                            bot.once("callback_query", (msg) => {
-                                runMenuOptions(chatDetails, msg);
-                            })
-                        });
+                    bot.sendMessage(fromId, "Great! Good to serve you " + first_name + "!" + emoji.hushed);
                 }
                 if (callback_message.data === "flip") {
                     message = "Got it! The rate is *" + (1 / rate).toFixed(2) + "*" + fromCurrency + "/" + toCurrency + emoji.smile;
@@ -1597,7 +1572,7 @@ function getVerseMethod(chatDetails: chatDetails, key_word) {
         }
     });
 };
-async function runMenuOptions(chatDetails: chatDetails, msg) {
+async function runMenuOptions2(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     if (msg.data) {
@@ -1658,12 +1633,7 @@ async function insult(chatDetails: chatDetails, msg) {
 
     let insults = ["Dumbass", "Out of 100,000 sperm, you were the fastest?", "Look, you aint funny. Your life is just a joke."];
     let chosenInsult = insults[Math.floor(Math.random() * insults.length)];
-    bot.sendMessage(fromId, chosenInsult, await getReplyOpts("more_insult"))
-        .then(() => {
-            bot.once("callback_query", (msg) => {
-                runMenuOptions(chatDetails, msg);
-            })
-        });
+    bot.sendMessage(fromId, chosenInsult);
     if (userId !== myId) echoToOwner(chatDetails, " managed to get the insult! Success!", true);
 }
 async function getverse(chatDetails: chatDetails, msg) {
@@ -1682,12 +1652,7 @@ async function getverse(chatDetails: chatDetails, msg) {
                         marvinNewGetVerseMethod(chatDetails, matchVerse[0], "normal");
                     } else {
                         let gender = await getGender(first_name);
-                        bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book, await getReplyOpts("back_to_main_menu"))
-                            .then(() => {
-                                bot.once("callback_query", (msg) => {
-                                    runMenuOptions(chatDetails, msg);
-                                })
-                            });
+                        bot.sendMessage(fromId, "What is that? Doesnt seem to be a verse to me.. " + emoji.open_book);
                         if (userId !== myId)
                             bot.sendMessage(myId, "I encountered verse retrieval error with " +
                                 capitalizeFirstLetter(first_name) + " from " + chatName + "! " +
@@ -1704,12 +1669,7 @@ async function getverse(chatDetails: chatDetails, msg) {
 async function menu(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-    bot.sendMessage(fromId, "Hi " + first_name + ", hope to be of help today. " + emoji.blush, await getReplyOpts("main_menu"))
-        .then(() => {
-            bot.once("callback_query", (msg) => {
-                runMenuOptions(chatDetails, msg);
-            })
-        });
+    bot.sendMessage(fromId, "Hi " + first_name + ", hope to be of help today. " + emoji.blush);
     if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 }
 async function getxrate(chatDetails: chatDetails, msg) {
@@ -1733,12 +1693,7 @@ async function getxrate(chatDetails: chatDetails, msg) {
                     error = true;
                 }
                 if (error) {
-                    bot.sendMessage(fromId, "Incorrect format used! Try again!", await getReplyOpts("back_to_main_menu"))
-                        .then(() => {
-                            bot.once("callback_query", (msg) => {
-                                runMenuOptions(chatDetails, msg);
-                            })
-                        });
+                    bot.sendMessage(fromId, "Incorrect format used! Try again!");
                     return;
                 }
 
@@ -1772,8 +1727,17 @@ async function getweather(chatDetails: chatDetails, msg) {
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
-            bot.once('message', function (msg) {
-                getLatLongMethod(chatDetails, msg.text, "weather");
+            bot.once('message', function (message) {
+                if (message.text) {
+                    getLatLongMethod(chatDetails, message.text, "weather");
+                } else if (message.location) {
+                    let locationDetails = {
+                        lat: message.location.latitude,
+                        lng: message.location.longitude,
+                        locationName: "Your position",
+                    };
+                    weatherReportMethod(locationDetails, chatDetails);
+                }
             });
         });
 }
@@ -2045,7 +2009,7 @@ bot.onText(/\/getverse/i, function (msg, match) {
     };
     getverse(chatDetails, msg);
 });
-bot.onText(/\/getweather/i, function (msg, match) {
+bot.onText(/\/getweather|^\/getweatherreport/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -2539,12 +2503,7 @@ bot.onText(/\/talktomarvin/i, async (msg, match) => {
         messageId,
     };
 
-    bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", Yes? " + emoji.hushed, await getReplyOpts("main_menu"))
-        .then(() => {
-            bot.once("callback_query", (msg) => {
-                runMenuOptions(chatDetails, msg);
-            })
-        });
+    bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", Yes? " + emoji.hushed);
 
 });
 
