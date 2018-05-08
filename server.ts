@@ -335,7 +335,7 @@ bot.on('location', async (msg) => {
     };
     let location = msg.location;
     let currentContext = await fallback.get_context();
-    if (location && (fallback.check_context_cleared() || fallback.get_context() !== "foodpls")) {
+    if (location && fallback.check_context_cleared()) {
         let locationDetails = {
             lat: msg.location.latitude,
             lng: msg.location.longitude,
@@ -1486,7 +1486,7 @@ function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
 
     } else {
         //amount is left blank or is 1
-        message = "The rate is *" + rate + "*" + toCurrency + "/" + fromCurrency + " " + emoji.hushed + "\n\nIs this what you are looking for or you wish to flip the currency?";
+        message = "The rate is *" + rate + "*" + toCurrency + "/" + fromCurrency + " " + emoji.hushed + "\n\nIs this what you are looking for or you wish to invert the currency?";
     }
     bot.sendMessage(fromId, message, opt)
         .then((ans) => {
@@ -1642,7 +1642,7 @@ async function menu(chatDetails: chatDetails, msg) {
     let message = "Hi " + first_name + ", I am your personal assistance and I hope to be of help today. " + emoji.blush + "\n\n";
     message += "Here are functions I can help you with:\n"
     message += "/getverse - Get verses for you!\n"
-    message += "/feeling- Get verses for you *based on your feelings*!\n"
+    message += "/feeling- Get verses *based on your feelings*!\n"
     message += "/foodpls - Get the nicest food around you through Yelp\n"
     message += "/getweather - Get the weather based on your location\n"
     message += "/getxrate - Get the latest exchange rate\n"
