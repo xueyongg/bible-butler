@@ -351,6 +351,7 @@ bot.on('location', async (msg) => {
     };
     let location = msg.location;
     let currentContext = await fallback.get_context();
+    console.log("currentContext: ", currentContext);
     if (location && fallback.check_context_cleared()) {
         let locationDetails = {
             lat: msg.location.latitude,
@@ -1817,8 +1818,18 @@ async function getsunrise(chatDetails: chatDetails, msg) {
     fallback.set_context("getsunrise");
     bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
-            bot.once('message', function (msg) {
-                getLatLongMethod(chatDetails, msg.text, "sunrise");
+            bot.once('message', function (message) {
+                if (message.text) {
+                    getLatLongMethod(chatDetails, message.text, "sunrise");
+                } else if (message.location) {
+                    let locationDetails = {
+                        lat: message.location.latitude,
+                        lng: message.location.longitude,
+                        locationName: "Your position",
+                    };
+                    getSunriseMethod(chatDetails, locationDetails);
+                }
+
             });
         });
 }
