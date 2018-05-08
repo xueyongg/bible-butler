@@ -1629,6 +1629,20 @@ async function runMenuOptions2(chatDetails: chatDetails, msg) {
 }
 // -------------------------------SubFunction Methods---------------------------------------
 
+async function menu(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    let message = "Hi " + first_name + ", I am your personal assistance and I hope to be of help today. " + emoji.blush + "\n\n";
+    message += "Here are functions I can help you with:\n"
+    message += "/getverse - Get verses for you!\n"
+    message += "/feeling- Get verses for you *based on your feelings*!\n"
+    message += "/foodpls - Get the nicest food around you through Yelp\n"
+    message += "/getweather - Get the weather based on your location\n"
+    message += "/getxrate - Get the latest exchange rate\n"
+    message += "/getsunrise - Get the timing of sunrise around you!\n"
+    bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
+    if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
+}
 async function foodpls(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
@@ -1691,20 +1705,6 @@ async function getverse(chatDetails: chatDetails, msg) {
             });
         });
 
-}
-async function menu(chatDetails: chatDetails, msg) {
-    // chat related details
-    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-    let message = "Hi " + first_name + ", I am your personal assistance and I hope to be of help today. " + emoji.blush + "\n\n";
-    message += "Here are functions I can help you with:\n"
-    message += "/getverse - Get verses for you!\n"
-    message += "/feeling- Get verses for you *based on your feelings*!\n"
-    message += "/foodpls - Get the nicest food around you through Yelp\n"
-    message += "/getweather - Get the weather based on your location\n"
-    message += "/getxrate - Get the latest exchange rate\n"
-    message += "/getsunrise - Get the timing of sunrise around you!\n"
-    bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
-    if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 }
 async function getxrate(chatDetails: chatDetails, msg) {
     // chat related details
@@ -2667,7 +2667,6 @@ bot.onText(/\/feeling/, async (msg, match) => {
         });
 
 });
-
 bot.onText(/\/getHoliday/i, async (msg, match) => {
     //chat details
     let chat = msg.chat;
