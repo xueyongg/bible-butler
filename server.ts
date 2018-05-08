@@ -8,6 +8,7 @@ const ngrok = require('ngrok');
 let request = require('request');
 let moment = require('moment');
 let moment_tz = require('moment-timezone');
+import { fallback } from './src/fallback';
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 const axios = require('axios');
@@ -25,10 +26,13 @@ const environment = process.env.NODE_ENV;
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const HOST = environment !== "development" ? process.env.HOST : "LOCALHOST";
+// const HOST = environment !== "development" ? "LOCALHOST" : "LOCALHOST";
 let DOMAIN = process.env.LOCAL_URL || "https://localhost";
 let DB_HOST = process.env.DB_HOST;
 
 let bot = new TelegramBot(token, { polling: true });
+// console.log(fallback);
+// console.log(fallback.check_context_cleared());
 // Method that creates the bot and starts listening for updates
 const takeOff = () => {
     //Setup WebHook way
@@ -75,6 +79,7 @@ const takeOff = () => {
 
 if (!DOMAIN) {
     // If no URL is provided for the WebHook from environment letiables, we open an ngrok tunnel
+    console.log("Opening tunnel..")
     bot.openTunnel(PORT)
         .then(host => {
             // Once we have the ngrok tunnel host, we set the coresponding letiable
@@ -86,6 +91,7 @@ if (!DOMAIN) {
         .catch(console.log);
 } else {
     // If environment letiables define a url, we start listening for the updates without opening a tunnel
+    console.log("Taking off..")
     takeOff();
 }
 
@@ -97,85 +103,30 @@ let connection_string = "mongodb://" + DB_HOST + ":27017" + "/biblebutler";
 console.log("This is my connection_string: ");
 console.log(connection_string);
 
-let db;
-if (HOST !== "LOCALHOST") {
-    MongoClient.connect(connection_string, function (err, db) {
-        if (err) {
-            bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
-            throw err;
-        } else {
-            console.log("successfully connected to the database");
-        }
-    })
+// let db;
+// if (HOST !== "LOCALHOST") {
+//     MongoClient.connect(connection_string, function (err, db) {
+//         if (err) {
+//             bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
+//             throw err;
+//         } else {
+//             console.log("successfully connected to the database");
+//         }
+//     })
 
-    db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"], (err, res) => {
-        if (err) {
-            bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
-            throw err
-        } else {
-            console.log("successfully connected to the database");
-        }
-        console.log("Trying to connect to db..");
-    });
-}
+//     db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"], (err, res) => {
+//         if (err) {
+//             bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
+//             throw err
+//         } else {
+//             console.log("successfully connected to the database");
+//         }
+//         console.log("Trying to connect to db..");
+//     });
+// }
 
 // Any kind of message
-let fallback = {
-    previous_context: "",
-    get_context: () => {
-        return this.previous_context;
-    },
-    set_context: (context_name) => {
-        this.previous_context = context_name;
-    },
-    clear_context: () => {
-        this.previous_context = "";
-    },
-    check_context_cleared: () => {
-        return this.previous_context ? false : true;
-    },
-    latest_message: {},
-    latest_inline_message: {},
-    // Normal message
-    get_latest_message: () => {
-        // console.log("Retrieving Message!", this.latest_message);
-        return this.latest_message;
-    },
-    set_latest_message: (msg: any) => {
-        this.latest_message = msg;
-        // console.log("Message set!", this.latest_message);
-    },
-    update_latest_message: (old_message: any, new_message: any) => {
-        if (old_message.message_id === this.latest_message.message_id) {
-            this.latest_message = new_message;
-            return new_message.message_id;
-        } else {
-            return false;
-        }
-    },
-    clear_latest_message_id: () => {
-        this.latest_message_id = "";
-    },
-    check_latest_message_id: () => {
-        return this.latest_message_id === ("" || undefined);
-    },
-    // Inline Message
-    get_latest_inline_message: () => {
-        // console.log("Retrieving Message!", this.latest_message);
-        return this.latest_inline_message;
-    },
-    set_latest_inline_message: (msg: any) => {
-        this.latest_inline_message = msg;
-        // console.log("Message set!", this.latest_message);
-    },
-    clear_latest_inline_message: () => {
-        this.latest_inline_message = {};
-    },
-    check_latest_inline_message: () => {
-        return this.latest_inline_message ? false : true;
-    },
 
-};
 // Inform xy bot is online
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
@@ -434,12 +385,12 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                         bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                     } else {
                         bot.sendMessage(fromId, "Oh okay~ Just talk to me if you need anything else! " + emoji.sob);
-                        bot.sendVideo(fromId, "./server/data/pikachu_holding_can.mp4");
+                        bot.sendVideo(fromId, "./src/data/pikachu_holding_can.mp4");
                     }
                     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is sad " + emoji.sob);
                 })
             })
-        bot.sendVideo(fromId, "./server/data/sad_bat.mp4");
+        bot.sendVideo(fromId, "./src/data/sad_bat.mp4");
 
     } else if (/^marvin (.+angry)/ig.exec(msg.text.trim())) {
         let opt = {
@@ -493,7 +444,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                     switch (response) {
                         case 'music':
                             bot.sendMessage(fromId, "Fetching the youtube link now..");
-                            //bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
+                            //bot.sendDocument(fromId, "./src/data/Brokenness Aside.mp3");
                             bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                             bot.sendMessage(fromId, "https://www.youtube.com/watch?v=ZOBIPb-6PTc " + emoji.sob);
                             bot.sendMessage(fromId, "Do you want the song? Although I have to first verify that you're not a bot & not a stranger " + emoji.hushed, secondOpt)
@@ -517,14 +468,14 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 };
 
                                                                 bot.sendMessage(fromId, "YOU GOT IT RIGHT! " + emoji.heart_eyes + " Fetching song now..");
-                                                                bot.sendAudio(fromId, "./server/data/Do It Again.mp3", songOption);
+                                                                bot.sendAudio(fromId, "./src/data/Do It Again.mp3", songOption);
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's name, sent the song 'Do It Again' over! " + emoji.sob);
                                                             } else {
                                                                 let theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
                                                                 console.log("theRandomizedPhotoNumber: " + theRandomizedPhotoNumber);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
-                                                                bot.sendPhoto(fromId, "./server/data/bebe" + theRandomizedPhotoNumber + ".jpg");
+                                                                bot.sendPhoto(fromId, "./src/data/bebe" + theRandomizedPhotoNumber + ".jpg");
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to didnt bebe's name, sent her photo over! Hehe " + emoji.sob);
                                                             }
                                                         })
@@ -552,7 +503,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
 
                         default:
                             bot.sendMessage(fromId, "Oh okay~ Just talk to me if you need anything else!");
-                            bot.sendVideo(fromId, "./server/data/pikachu_holding_can.mp4");
+                            bot.sendVideo(fromId, "./src/data/pikachu_holding_can.mp4");
                             break;
                     }
                     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " just told me he/she is angry " + emoji.sob);
@@ -611,7 +562,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                     switch (response) {
                         case 'music':
                             bot.sendMessage(fromId, "Fetching the youtube link now..");
-                            //bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
+                            //bot.sendDocument(fromId, "./src/data/Brokenness Aside.mp3");
                             bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                             bot.sendMessage(fromId, "https://www.youtube.com/watch?v=rJMWrBsSwMk " + emoji.sob);
                             bot.sendMessage(fromId, "Do you want the song? Although I have to first verify that you're not a bot & not a stranger " + emoji.hushed, secondOpt)
@@ -635,13 +586,13 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 };
 
                                                                 bot.sendMessage(fromId, "YOU GOT IT RIGHT! " + emoji.heart_eyes + " Fetching song now..");
-                                                                bot.sendAudio(fromId, "./server/data/Brokenness Aside.mp3", songOption);
+                                                                bot.sendAudio(fromId, "./src/data/Brokenness Aside.mp3", songOption);
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's age when she first joined, sent the song 'Brokenness Aside' over! " + emoji.sob);
                                                             } else {
                                                                 let theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
-                                                                bot.sendPhoto(fromId, "./server/data/bebe" + theRandomizedPhotoNumber + ".jpg");
+                                                                bot.sendPhoto(fromId, "./src/data/bebe" + theRandomizedPhotoNumber + ".jpg");
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to didnt bebe's age when she first joined, sent her photo over! Hehe " + emoji.sob);
                                                             }
                                                         })
@@ -729,7 +680,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                     switch (response) {
                         case 'music':
                             bot.sendMessage(fromId, "Fetching the youtube link now..");
-                            //bot.sendDocument(fromId, "./server/data/Brokenness Aside.mp3");
+                            //bot.sendDocument(fromId, "./src/data/Brokenness Aside.mp3");
                             bot.sendMessage(fromId, "Hope this encourages you~ " + emoji.sob);
                             bot.sendMessage(fromId, "https://www.youtube.com/watch?v=dNwt7LQiYck" + emoji.sob);
                             bot.sendMessage(fromId, "Do you want the song? Although I have to first verify that you're not a bot & not a stranger " + emoji.hushed, secondOpt)
@@ -740,7 +691,7 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                         switch (secondResponse) {
                                             case 'yes':
                                                 bot.sendMessage(fromId, "Here's the question!");
-                                                bot.sendPhoto(fromId, "./server/data/bebe4.jpg");
+                                                bot.sendPhoto(fromId, "./src/data/bebe4.jpg");
                                                 bot.sendMessage(fromId, "What's the name of the smaller dog? " + emoji.thinking_face + " (Only one try, make it count!)", thirdOpt)
                                                     .then(function () {
                                                         bot.once('callback_query', function (thirdMsg) {
@@ -754,13 +705,13 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
                                                                 };
 
                                                                 bot.sendMessage(fromId, "YOU GOT IT RIGHT! " + emoji.heart_eyes + " Fetching song now..");
-                                                                bot.sendAudio(fromId, "./server/data/Give Me Faith.mp3", songOption);
+                                                                bot.sendAudio(fromId, "./src/data/Give Me Faith.mp3", songOption);
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to get bebe's age when she first joined, sent the song 'Brokenness Aside' over! " + emoji.sob);
                                                             } else {
                                                                 let theRandomizedPhotoNumber = Math.ceil(Math.random() * numOfBebePhotos);
                                                                 bot.sendMessage(fromId, "Sadly that is incorrect");
                                                                 bot.sendMessage(fromId, "Here's a photo of her for you anyways! " + emoji.heart_eyes);
-                                                                bot.sendPhoto(fromId, "./server/data/bebe" + theRandomizedPhotoNumber + ".jpg");
+                                                                bot.sendPhoto(fromId, "./src/data/bebe" + theRandomizedPhotoNumber + ".jpg");
                                                                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " managed to didnt bebe's age when she first joined, sent her photo over! Hehe " + emoji.sob);
                                                             }
                                                         })
@@ -825,48 +776,48 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
             }
         };
 
-        db.users.count({ _id: userId }, function (err, doc) {
-            if (doc === 1) {
-                //exist and is already my bb
-                bot.sendMessage(fromId, "Aww you do? But you are already my bb! " + emoji.heart_eyes);
-                bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is reminded of his/her bb status! Check from db is a success!");
-            } else {
-                //to add her/him as bb
-                bot.sendMessage(fromId, "Aww you do? If so, here's a question you have to pass to be my bb! " + emoji.kissing_smiling_eyes);
-                bot.sendMessage(fromId, "What does my owner's sisters call him?", opt)
-                    .then(function (ans) {
-                        bot.once("callback_query", function (msg) {
-                            let response = msg.data.toLowerCase();
-                            switch (response) {
-                                case 'xue':
-                                    //correct answer
-                                    console.log("you got the answer correct!");
+        // db.users.count({ _id: userId }, function (err, doc) {
+        //     if (doc === 1) {
+        //         //exist and is already my bb
+        //         bot.sendMessage(fromId, "Aww you do? But you are already my bb! " + emoji.heart_eyes);
+        //         bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
+        //         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is reminded of his/her bb status! Check from db is a success!");
+        //     } else {
+        //         //to add her/him as bb
+        //         bot.sendMessage(fromId, "Aww you do? If so, here's a question you have to pass to be my bb! " + emoji.kissing_smiling_eyes);
+        //         bot.sendMessage(fromId, "What does my owner's sisters call him?", opt)
+        //             .then(function (ans) {
+        //                 bot.once("callback_query", function (msg) {
+        //                     let response = msg.data.toLowerCase();
+        //                     switch (response) {
+        //                         case 'xue':
+        //                             //correct answer
+        //                             console.log("you got the answer correct!");
 
-                                    db.users.insert({
-                                        _id: userId,
-                                        firstName: first_name,
-                                        bb: true
-                                    }, function (err, doc) {
-                                        if (doc) bot.sendMessage(fromId, "Correct! You are my bb now! Welcome to my exclusive circle! " + emoji.blush);
-                                    });
-                                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is added into database as my bb" + emoji.smiley);
-                                    //bot.sendMessage(fromId, "You are my bb now! Welcome to my inner circle!" + emoji.blush);
-                                    break;
-                                case 'no':
-                                    //wrong answer
-                                    console.log("you got the answer wrong!");
-                                    bot.sendMessage(fromId, "You got the answer wrong!");
-                                    bot.sendMessage(fromId, "Come back to me after you know my owner! I wouldn't be here without him you know! " + emoji.triumph);
-                                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is got the answer wrong and is NOT added into database as my bb" + emoji.white_frowning_face);
-                                    break;
-                            }
-                        })
-                    })
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
+        //                             db.users.insert({
+        //                                 _id: userId,
+        //                                 firstName: first_name,
+        //                                 bb: true
+        //                             }, function (err, doc) {
+        //                                 if (doc) bot.sendMessage(fromId, "Correct! You are my bb now! Welcome to my exclusive circle! " + emoji.blush);
+        //                             });
+        //                             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is added into database as my bb" + emoji.smiley);
+        //                             //bot.sendMessage(fromId, "You are my bb now! Welcome to my inner circle!" + emoji.blush);
+        //                             break;
+        //                         case 'no':
+        //                             //wrong answer
+        //                             console.log("you got the answer wrong!");
+        //                             bot.sendMessage(fromId, "You got the answer wrong!");
+        //                             bot.sendMessage(fromId, "Come back to me after you know my owner! I wouldn't be here without him you know! " + emoji.triumph);
+        //                             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is got the answer wrong and is NOT added into database as my bb" + emoji.white_frowning_face);
+        //                             break;
+        //                     }
+        //                 })
+        //             })
+        //         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
 
-            }
-        });
+        //     }
+        // });
     }
     //----------------------------------------------- Weather related use---------------------------------------------------------
     else if (/^marvin (.+)weather.*/ig.exec(msg.text.trim())) {
@@ -902,38 +853,38 @@ bot.onText(/^marvin (.+)/i, function (msg, match) {
     //-----------------------------------------------Only for admin to use---------------------------------------------------------
     else if (/^marvin (.+connect test.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
-        let verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        db.verses.find({}).limit(1).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, "I'm connected!");
-                bot.sendMessage(fromId, doc.text);
-            }
-        });
+        // let verses = db.collection('verses');
+        // // log each of the first ten docs in the collection
+        // db.verses.find({}).limit(1).forEach(function (err, doc) {
+        //     if (err) throw err;
+        //     if (doc) {
+        //         bot.sendMessage(fromId, "I'm connected!");
+        //         bot.sendMessage(fromId, doc.text);
+        //     }
+        // });
     } else if (/^marvin (.+bb list elephant.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
-        let verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        bot.sendMessage(fromId, "I'm connected! And here are your first ten bbs");
-        db.users.find({ "bb": true }).limit(10).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, doc.firstName);
-            }
-        });
+        // let verses = db.collection('verses');
+        // // log each of the first ten docs in the collection
+        // bot.sendMessage(fromId, "I'm connected! And here are your first ten bbs");
+        // db.users.find({ "bb": true }).limit(10).forEach(function (err, doc) {
+        //     if (err) throw err;
+        //     if (doc) {
+        //         bot.sendMessage(fromId, doc.firstName);
+        //     }
+        // });
 
     } else if (/^marvin (.+verse list elephant.*)/ig.exec(msg.text.trim())) {
         //console.log(db);
-        let verses = db.collection('verses');
-        // log each of the first ten docs in the collection
-        bot.sendMessage(fromId, "I'm connected! And here are your first ten verses");
-        db.verses.find().limit(10).forEach(function (err, doc) {
-            if (err) throw err;
-            if (doc) {
-                bot.sendMessage(fromId, doc.verse + ": " + doc.counter);
-            }
-        });
+        // let verses = db.collection('verses');
+        // // log each of the first ten docs in the collection
+        // bot.sendMessage(fromId, "I'm connected! And here are your first ten verses");
+        // db.verses.find().limit(10).forEach(function (err, doc) {
+        //     if (err) throw err;
+        //     if (doc) {
+        //         bot.sendMessage(fromId, doc.verse + ": " + doc.counter);
+        //     }
+        // });
 
     } else if (/^marvin (.+holiday list setup elephant)(.*)/ig.exec(msg.text.trim())) {
 
@@ -1399,7 +1350,6 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                     let latest_message = await fallback.get_latest_message()
                     bot.editMessageText(emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
                         "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, { chat_id: latest_message.chat.id, message_id: latest_message.message_id });
-
                 }
                 if (type === "return_only") {
                     return verseReference;
@@ -1412,7 +1362,6 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                 await fallback.clear_context();
                 console.log("err in marvinNewGetVerseMethod: ", err);
             }
-
         }
     });
     if (type === "normal") bot.sendMessage(fromId, "Fetching verse now..");
@@ -1895,7 +1844,6 @@ async function feeling(chatDetails: chatDetails, msg) {
             });
         });
 }
-
 function choose_feeling_verse(chosen_feeling: string) {
     let arrayOfFeelings = verseArchive[chosen_feeling];
     let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
@@ -2021,16 +1969,16 @@ function holidayRetrieveAndSaveOnly(chatDetails: chatDetails, holidayDetails) {
                 details: info.holidays
             };
             console.log(newHolidayObject);
-            db.holidays.find({ _id: holidayId }, function (err, doc) {
-                if (doc !== 1) { //dont exist in the system
-                    //availableCountries: doc[0].availableCountries + holidayCountry,
-                    db.holidays.insert({ _id: holidayId }, newHolidayObject);
-                    bot.sendMessage(fromId, "I'm connected! And populated the db with holiday " + holidayCountry + " " + holidayMonth + " month" + holidayYear);
-                } else {
+            // db.holidays.find({ _id: holidayId }, function (err, doc) {
+            //     if (doc !== 1) { //dont exist in the system
+            //         //availableCountries: doc[0].availableCountries + holidayCountry,
+            //         db.holidays.insert({ _id: holidayId }, newHolidayObject);
+            //         bot.sendMessage(fromId, "I'm connected! And populated the db with holiday " + holidayCountry + " " + holidayMonth + " month" + holidayYear);
+            //     } else {
 
-                }
+            //     }
 
-            });
+            // });
 
         });
     }
@@ -2053,25 +2001,25 @@ function getHolidayMethod(chatDetails: chatDetails, holidayDetails) {
 function bbAutoChecker(chatDetails: chatDetails) {
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
-    db.users.count({ _id: userId }, function (err, doc) {
-        if (doc === 1) {
-            //exist and is already my bb
-            if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " already added " + first_name + "'s id hehe! Check from db is a success!");
-        } else {
-            db.users.update({
-                _id: userId
-            }, {
-                    $set: {
-                        profile: {
-                            chatId: userId,
-                        }
-                    }
-                }, function (err, doc) {
-                    if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + "'s ChatId is added into database" + emoji.smiley);
-                });
+    // db.users.count({ _id: userId }, function (err, doc) {
+    //     if (doc === 1) {
+    //         //exist and is already my bb
+    //         if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " already added " + first_name + "'s id hehe! Check from db is a success!");
+    //     } else {
+    //         db.users.update({
+    //             _id: userId
+    //         }, {
+    //                 $set: {
+    //                     profile: {
+    //                         chatId: userId,
+    //                     }
+    //                 }
+    //             }, function (err, doc) {
+    //                 if (doc && userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + "'s ChatId is added into database" + emoji.smiley);
+    //             });
 
-        }
-    });
+    //     }
+    // });
 }
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
@@ -2237,33 +2185,33 @@ bot.onText(/\/bbchecker/i, function (msg, match) {
         chatName = chat.title ? chat.title : "individual chat";
     }
 
-    if (db) {
-        db.users.count({ _id: userId }, function (err, doc) {
-            if (doc === 1) {
-                bot.sendMessage(fromId, "Yes " + first_name + "! You are my bb! " + emoji.heart_eyes);
-                bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is my bb! Check from db is a success!");
-            } else {
-                let bbRejectionArchive = [
-                    "You are not my bb! Who are you?" + emoji.scream_cat,
-                    first_name + "? Who is that?",
-                    "It is an exclusive club, sadly you're not in it"
-                ];
-                bot.sendMessage(fromId, bbRejectionArchive[Math.floor(Math.random() * bbRejectionArchive.length)]);
-                if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
+    // if (db) {
+    //     db.users.count({ _id: userId }, function (err, doc) {
+    //         if (doc === 1) {
+    //             bot.sendMessage(fromId, "Yes " + first_name + "! You are my bb! " + emoji.heart_eyes);
+    //             bot.sendSticker(fromId, bbStickerArchive[Math.floor(Math.random() * bbStickerArchive.length)]);
+    //             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is my bb! Check from db is a success!");
+    //         } else {
+    //             let bbRejectionArchive = [
+    //                 "You are not my bb! Who are you?" + emoji.scream_cat,
+    //                 first_name + "? Who is that?",
+    //                 "It is an exclusive club, sadly you're not in it"
+    //             ];
+    //             bot.sendMessage(fromId, bbRejectionArchive[Math.floor(Math.random() * bbRejectionArchive.length)]);
+    //             if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
 
-            }
-        });
-    } else {
-        let fallbackArchive = [
-            "Bb is currently under maintenance right now. " + emoji.scream_cat,
-            first_name + ", that is a nice name! But bb is currently under maintenance",
-            "And she will be loved~ oh, sorry I was distracted. I'm currently under maintenance right"
-        ];
-        bot.sendMessage(fromId, fallbackArchive[Math.floor(Math.random() * fallbackArchive.length)]);
-        if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
+    //         }
+    //     });
+    // } else {
+    //     let fallbackArchive = [
+    //         "Bb is currently under maintenance right now. " + emoji.scream_cat,
+    //         first_name + ", that is a nice name! But bb is currently under maintenance",
+    //         "And she will be loved~ oh, sorry I was distracted. I'm currently under maintenance right"
+    //     ];
+    //     bot.sendMessage(fromId, fallbackArchive[Math.floor(Math.random() * fallbackArchive.length)]);
+    //     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " is sadly not bb! Check from db did not find anything!");
 
-    }
+    // }
 
 });
 bot.onText(/\/insult|^\/scold/i, function (msg, match) {
@@ -2725,16 +2673,15 @@ bot.onText(/\/getnewverse/i, function (msg, match) {
 
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, opt)
         .then(function () {
-            bot.once('message', function (msg) {
+            bot.onReplyToMessage(fromId, messageId, (msg) => {
                 let verse = "john3:30-31";
                 let version = "niv";
                 let fetchingVerse = msg.text;
                 if (fetchingVerse) {
-                    //marvinGetVerseMethod(chatDetails, fetchingVerse, "normal");
-                    marvinNewGetVerseMethod(chatDetails, fetchingVerse, "normal", version);
-                }
+                    getverse(chatDetails, msg);
 
-            });
+                }
+            })
         });
 });
 bot.onText(/\/feeling/, async (msg, match) => {
@@ -2778,9 +2725,9 @@ bot.onText(/\/getHoliday/i, async (msg, match) => {
     bot.sendMessage(fromId, first_name + ", what location's holiday you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', (msg) => {
-                db.holidays.count({}, function (err, doc) {
+                // db.holidays.count({}, function (err, doc) {
 
-                });
+                // });
 
             });
         });
