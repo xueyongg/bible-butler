@@ -1356,8 +1356,15 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                 let verseReference = info;
                 // console.log(verseReference);
                 if (type === "normal") {
-                    let msg_details = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
-                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
+                    let random_number = Math.floor(Math.random() * 10);
+                    let message = emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info;
+
+                    if (random_number === 9) {
+                        message += "\n\n" + emoji.bulb + " *Pro tip*\n"
+                        message += "You can edit the initial verse msg to fetch new verses."
+                    }
+                    let msg_details = await bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
                     fallback.set_latest_message(msg_details);
                 }
                 if (type === "edit_update") {
