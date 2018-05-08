@@ -1109,8 +1109,8 @@ function getReplyOpts(type: string) {
                     [{ text: "Insecure", callback_data: "insecure", },
                     { text: "Confused", callback_data: "confused", },
                     { text: "Faithless", callback_data: "needFaith", }],
-                    [{ text: "upset", callback_data: "needEncouragement", },
-                    { text: "unforgiving", callback_data: "needForgiveness", },
+                    [{ text: "Upset", callback_data: "needEncouragement", },
+                    { text: "Unforgiving", callback_data: "needForgiveness", },
                     { text: "Tired", callback_data: "needStrength", },
                     ]
                 ],
