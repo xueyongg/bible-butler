@@ -135,7 +135,8 @@ let fallback = {
         return this.previous_context ? false : true;
     },
     latest_message: {},
-    latest_message_type: "",
+    latest_inline_message: {},
+    // Normal message
     get_latest_message: () => {
         // console.log("Retrieving Message!", this.latest_message);
         return this.latest_message;
@@ -157,6 +158,21 @@ let fallback = {
     },
     check_latest_message_id: () => {
         return this.latest_message_id === ("" || undefined);
+    },
+    // Inline Message
+    get_latest_inline_message: () => {
+        // console.log("Retrieving Message!", this.latest_message);
+        return this.latest_inline_message;
+    },
+    set_latest_inline_message: (msg: any) => {
+        this.latest_inline_message = msg;
+        // console.log("Message set!", this.latest_message);
+    },
+    clear_latest_inline_message: () => {
+        this.latest_inline_message = {};
+    },
+    check_latest_inline_message: () => {
+        return this.latest_inline_message ? false : true;
     },
 
 };
@@ -1105,13 +1121,13 @@ function getReplyOpts(type: string) {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "Angry", callback_data: "angry", },
-                    { text: "Broken Hearted", callback_data: "brokenHearted", }],
+                    { text: "Broken Hearted", callback_data: "brokenhearted", }],
                     [{ text: "Insecure", callback_data: "insecure", },
                     { text: "Confused", callback_data: "confused", },
-                    { text: "Faithless", callback_data: "needFaith", }],
-                    [{ text: "Upset", callback_data: "needEncouragement", },
-                    { text: "Unforgiving", callback_data: "needForgiveness", },
-                    { text: "Tired", callback_data: "needStrength", },
+                    { text: "Faithless", callback_data: "needfaith", }],
+                    [{ text: "Upset", callback_data: "needencouragement", },
+                    { text: "Unforgiving", callback_data: "needforgiveness", },
+                    { text: "Tired", callback_data: "needstrength", },
                     ]
                 ],
                 one_time_keyboard: true,
@@ -1120,7 +1136,6 @@ function getReplyOpts(type: string) {
             }
         };
     }
-
     return opt;
 };
 // -------------------------------Location Methods---------------------------------------
@@ -1377,12 +1392,23 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                     let msg_details = await bot.sendMessage(fromId, emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
                         "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info);
                     fallback.set_latest_message(msg_details);
+                    await fallback.clear_context();
+                }
+                if (type === "feeling_inline_update") {
+                    let latest_message = await fallback.get_latest_message()
+                    bot.editMessageText(emoji.book + " Here you go " + capitalizeFirstLetter(first_name) +
+                        "! From " + capitalizeFirstLetter(fetchingVerse) + "\n" + info, { chat_id: latest_message.chat.id, message_id: latest_message.message_id });
+
+                }
+                if (type === "return_only") {
+                    return verseReference;
                 }
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                     ". Success retrieval of " + fetchingVerse +
                     "!" + emoji.kissing_smiling_eyes);
 
             } catch (err) {
+                await fallback.clear_context();
                 console.log("err in marvinNewGetVerseMethod: ", err);
             }
 
@@ -1795,6 +1821,74 @@ async function getsunrise(chatDetails: chatDetails, msg) {
                 getLatLongMethod(chatDetails, msg.text, "sunrise");
             });
         });
+}
+async function feeling(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    fallback.set_context("feeling");
+    bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, await getReplyOpts("feeling"))
+        .then(function (ans) {
+            bot.once('callback_query', async (msg) => {
+                //bot.onText(/.+/g, function (msg, match) {
+                let feeling = "happy";
+                let chosenFeeling = msg.data;
+                let display_feeling = "";
+                switch (chosenFeeling) {
+                    case "angry":
+                        display_feeling = "angry";
+                        break;
+                    case "BrokenHearted":
+                        display_feeling = "Broken Hearted";
+                        break;
+                    case "insecure":
+                        display_feeling = "insecure";
+                        break;
+                    case "needFaith":
+                        display_feeling = "faithless";
+                        break;
+                    case "needEncouragement":
+                        display_feeling = "upset";
+                        break;
+                    case "needForgiveness":
+                        display_feeling = "unforgiving";
+                        break;
+                    case "needStrength":
+                        display_feeling = "tired";
+                        break;
+                    case "confused":
+                        display_feeling = "confused";
+                        break;
+                    default: display_feeling = "Happy";
+                        break;
+                }
+
+                if (msg.id) {
+                    // bot.answerCallbackQuery(msg.id, "Fetching Verse for you now " + first_name + "...");
+                    fallback.set_latest_inline_message(msg);
+                }
+
+                let arrayOfFeelings = verseArchive[chosenFeeling];
+                if (!arrayOfFeelings) {
+                    // Should not enter this
+                    bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
+                    await fallback.clear_context();
+                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Encountered error! " + emoji.sob);
+                }
+                let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+                if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "feeling");
+                else {
+                    // inform me
+                    await fallback.clear_context();
+                    echoToOwner(chatDetails, "Failed to get verse for feeling: " + chosenFeeling + " trying to get verse: " + chosenVerse, true);
+                }
+            });
+        });
+}
+
+function choose_feeling_verse(chosen_feeling: string) {
+    let arrayOfFeelings = verseArchive[chosen_feeling];
+    let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
+    return chosenVerse;
 }
 
 // -------------------------------Incompleted Methods---------------------------------------
@@ -2651,59 +2745,7 @@ bot.onText(/\/feeling/, async (msg, match) => {
         userId,
         messageId,
     };
-
-    bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, await getReplyOpts("feeling"))
-        .then(function (ans) {
-            bot.once('callback_query', (msg) => {
-                //bot.onText(/.+/g, function (msg, match) {
-                let feeling = "happy";
-
-                let chosenFeeling = msg.data;
-                let display_feeling = "";
-                switch (chosenFeeling) {
-                    case "angry":
-                        display_feeling = "angry";
-                        break;
-                    case "BrokenHearted":
-                        display_feeling = "Broken Hearted";
-                        break;
-                    case "insecure":
-                        display_feeling = "insecure";
-                        break;
-                    case "needFaith":
-                        display_feeling = "faithless";
-                        break;
-                    case "needEncouragement":
-                        display_feeling = "upset";
-                        break;
-                    case "needForgiveness":
-                        display_feeling = "unforgiving";
-                        break;
-                    case "needStrength":
-                        display_feeling = "tired";
-                        break;
-                    default: display_feeling = "Happy";
-                        break;
-                }
-
-                // if (msg.id) {
-                //     bot.answerCallbackQuery(msg.id, "Fetching Verse for you now " + first_name + "...");
-                // }
-
-                let arrayOfFeelings = verseArchive[chosenFeeling];
-                if (!arrayOfFeelings) {
-                    bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
-                    if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Encountered error! " + emoji.sob);
-                }
-                let chosenVerse = arrayOfFeelings[Math.floor(Math.random() * arrayOfFeelings.length)];
-                if (chosenVerse) marvinNewGetVerseMethod(chatDetails, chosenVerse, "feeling");
-                else {
-                    // inform me
-                    echoToOwner(chatDetails, "Failed to get verse for feeling: " + chosenFeeling + " trying to get verse: " + chosenVerse, true);
-                }
-            });
-        });
-
+    feeling(chatDetails, msg);
 });
 bot.onText(/\/getHoliday/i, async (msg, match) => {
     //chat details
@@ -2767,7 +2809,7 @@ bot.onText(/\/set/, function (msg, match) {
 });
 
 let verseArchive = {
-    brokenHearted: [
+    brokenhearted: [
         "Psalm 34:17-18",
         "Psalm 147:3",
         "Psalm 73:26"
@@ -2802,7 +2844,7 @@ let verseArchive = {
         "1 Cor 14:33",
         "Isaiah 40:31"
     ],
-    needFaith: [
+    needfaith: [
         "1 John 5:5",
         "1 Tim 4:12",
         "Galatians 2:20",
@@ -2810,7 +2852,7 @@ let verseArchive = {
         "John 3:36",
         "John 4:35"
     ],
-    needEncouragement: [
+    needencouragement: [
         "Proverbs 18:10",
         "Proverbs 3:5-6",
         "Isaiah 41:10",
@@ -2819,7 +2861,7 @@ let verseArchive = {
         "1 Peter 5:7",
         "Isaiah 26:3"
     ],
-    needForgiveness: [
+    needforgiveness: [
         "Matt 6:14-15",
         "1 John 1:9",
         "Acts 3:19",
@@ -2834,8 +2876,8 @@ let verseArchive = {
         "Proverbs 15:18",
         "Colossians 3:8"
     ],
-    needStrength: [
-        "PPhilippians 4:13",
+    needstrength: [
+        "Philippians 4:13",
         "Isaiah 40:29",
         "Psalm 119:28",
         "Ephesians 6:10",
@@ -2892,3 +2934,5 @@ let bbStickerArchive = [
 ];
 
 let commandArchive = "menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
+
+const chosenFeeling_archive = "angry,brokenhearted,insecure,needfaith,needencouragement,needforgiveness,needstrength,confused"
