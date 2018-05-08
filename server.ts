@@ -2659,6 +2659,37 @@ bot.onText(/\/feeling/, async (msg, match) => {
                 let feeling = "happy";
 
                 let chosenFeeling = msg.data;
+                let display_feeling = "";
+                switch (chosenFeeling) {
+                    case "angry":
+                        display_feeling = "angry";
+                        break;
+                    case "BrokenHearted":
+                        display_feeling = "Broken Hearted";
+                        break;
+                    case "insecure":
+                        display_feeling = "insecure";
+                        break;
+                    case "needFaith":
+                        display_feeling = "faithless";
+                        break;
+                    case "needEncouragement":
+                        display_feeling = "upset";
+                        break;
+                    case "needForgiveness":
+                        display_feeling = "unforgiving";
+                        break;
+                    case "needStrength":
+                        display_feeling = "tired";
+                        break;
+                    default: display_feeling = "Happy";
+                        break;
+                }
+
+                // if (msg.id) {
+                //     bot.answerCallbackQuery(msg.id, "Fetching Verse for you now " + first_name + "...");
+                // }
+
                 let arrayOfFeelings = verseArchive[chosenFeeling];
                 if (!arrayOfFeelings) {
                     bot.sendMessage(fromId, "Encountered error!" + emoji.sob);
