@@ -18,3 +18,8 @@ interface chatDetails {
     userId: number,
     messageId: number,
 }
+
+interface reply {
+    msg: String | Boolean;
+    maxPage: number;
+}

@@ -10,6 +10,7 @@ let moment = require('moment');
 let moment_tz = require('moment-timezone');
 import { fallback } from './src/fallback';
 import { foodMessageOrganiser } from './src/foodSearch';
+import { getPagination } from './src/util';
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 const axios = require('axios');
@@ -140,6 +141,8 @@ async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal"
                 let cleaned_trimmed_message = trimmed_message.replace("/", "");
                 if (cleaned_trimmed_message.includes("@bible_butler_bot"))
                     cleaned_trimmed_message = cleaned_trimmed_message.replace("@bible_butler_bot", "");
+                if (cleaned_trimmed_message.includes("beta"))
+                    cleaned_trimmed_message = cleaned_trimmed_message.replace("beta", "");
                 if (commandArchive.includes(cleaned_trimmed_message)) {
                     console.log("/command exist");
                 } else {
@@ -1185,7 +1188,6 @@ function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
     })
     bot.sendMessage(fromId, "Currently searching for food around " + capitalizeFirstLetter(locationName) + ".. " + emoji.bow);
 };
-
 function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
     //chat details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
@@ -1612,22 +1614,32 @@ function getNearestFood2(chatDetails: chatDetails, locationDetails: any) {
             Authorization: "Bearer " + process.env.yelpAPIKey
         },
     }).then((response) => {
-        let msg = "";
+        let msg: String | Boolean;
         let url = "";
-        let chosen_stall = response.data.businesses[Math.floor(Math.random() * response.data.businesses.length)];
-        fallback.clear_context();
-        if (chosen_stall) {
-            let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = chosen_stall;
-            msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
-            msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
-            msg += "The actual address is __" + location.address1 + "__\n";
-            msg += "Price: *" + price + "*,\nRating: *" + rating + "*\n";
+        let error = false;
+        let businesses = response.data.businesses;
+        if (businesses.length !== 0) {
+            let message_prep = foodMessageOrganiser(chatDetails, locationDetails, response.data.businesses)
+            if (message_prep) {
+                let msg_promise = Promise.resolve(message_prep);
+                msg_promise.then(((value) => {
+                    msg = value;
+                    bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
+                })).catch((err) => {
+                    console.log("Error occured: ", err);
+                })
+            } else {
+                msg = "Sorry I did not managed to find anything from [Yelp](https://www.yelp.com/)! " + emoji.white_frowning_face;
+                error = true;
+            }
         } else {
             msg = "Sorry I did not managed to find anything from [Yelp](https://www.yelp.com/)! " + emoji.white_frowning_face;
+            error = true;
         }
-        bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
-        if (chosen_stall && chosen_stall.url)
-            bot.sendMessage(fromId, "Oh oh! I've managed to grab the url too!\n" + chosen_stall.url);
+        fallback.clear_context();
+        if (error) {
+            bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
+        }
     }).catch((err) => {
         if (err) {
             console.log("this is err: ", err);
