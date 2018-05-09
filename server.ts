@@ -10,7 +10,7 @@ let moment = require('moment');
 let moment_tz = require('moment-timezone');
 import { fallback } from './src/fallback';
 import { foodMessageOrganiser } from './src/foodSearch';
-import { getPagination } from './src/util';
+import { getPagination, writeIntoFile } from './src/util';
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 const axios = require('axios');
@@ -28,13 +28,12 @@ const environment = process.env.NODE_ENV;
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const HOST = environment !== "development" ? process.env.HOST : "LOCALHOST";
-// const HOST = environment !== "development" ? "LOCALHOST" : "LOCALHOST"; // for webpack testing
+
 let DOMAIN = process.env.LOCAL_URL || "https://localhost";
 let DB_HOST = process.env.DB_HOST;
 
 let bot = new TelegramBot(token, { polling: true });
-// console.log(fallback);
-// console.log(fallback.check_context_cleared());
+
 // Method that creates the bot and starts listening for updates
 const takeOff = () => {
     //Setup WebHook way
@@ -103,14 +102,12 @@ let numOfBebePhotos = 3;
 let connection_string = "mongodb://" + DB_HOST + ":27017" + "/biblebutler";
 //Connecting to the db at the start of the code
 
-
 // Inform xy bot is online
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
 async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
     //type: weather or sunrise
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-
 
     // Will only reply when its a text message
     if (msg.text) {
@@ -1335,6 +1332,7 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                 if (type === "return_only") {
                     return verseReference;
                 }
+                writeIntoFile(chatDetails, verseReference);
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                     ". Success retrieval of " + fetchingVerse +
                     "!" + emoji.kissing_smiling_eyes);
@@ -1535,21 +1533,7 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
     bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
         { parse_mode: "Markdown" });
 }
-function writeIntoFile(chatDetails: chatDetails, msg) {
-    // chat related details
-    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
 
-    /**
-     * 1. User and id e.g. Xueyong > 56328814
-     * 2. List of functions and # of times e.g. getweather > 5
-     * 3. Verses collated and # of times e.g. john3:30 > 5
-     * 4. Write in new files with file name & time stamp e.g. database.2015-05-08
-     * 5. create new directory if new month
-     *  
-    */
-
-
-}
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
 function getVerseMethod(chatDetails: chatDetails, key_word) {
@@ -1797,7 +1781,6 @@ async function getxrate(chatDetails: chatDetails, msg) {
                 let id = currentDate + "_" + from + "_" + to;
                 getExchangeRateMethod(chatDetails, exchangeRateDetails);
                 bot.sendMessage(fromId, "Currently searching for exchange rate.. " + emoji.bow);
-
             });
         });
 }
