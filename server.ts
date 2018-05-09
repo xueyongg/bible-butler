@@ -2103,7 +2103,6 @@ bot.onText(/\/menu|^\/start$/i, async (msg, match) => {
         messageId,
     };
     menu(chatDetails, msg);
-
 });
 bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
     let chat = msg.chat;
@@ -2990,6 +2989,6 @@ let bbStickerArchive = [
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
 
-let commandArchive = "start,menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
+let commandArchive = "echo,start,menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
 
 const chosenFeeling_archive = "angry,brokenhearted,insecure,needfaith,needencouragement,needforgiveness,needstrength,confused"
