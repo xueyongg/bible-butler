@@ -9,6 +9,7 @@ let request = require('request');
 let moment = require('moment');
 let moment_tz = require('moment-timezone');
 import { fallback } from './src/fallback';
+import { foodMessageOrganiser } from './src/foodSearch';
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 const axios = require('axios');
@@ -26,7 +27,7 @@ const environment = process.env.NODE_ENV;
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const HOST = environment !== "development" ? process.env.HOST : "LOCALHOST";
-// const HOST = environment !== "development" ? "LOCALHOST" : "LOCALHOST";
+// const HOST = environment !== "development" ? "LOCALHOST" : "LOCALHOST"; // for webpack testing
 let DOMAIN = process.env.LOCAL_URL || "https://localhost";
 let DB_HOST = process.env.DB_HOST;
 
@@ -100,32 +101,7 @@ let numOfBebePhotos = 3;
 
 let connection_string = "mongodb://" + DB_HOST + ":27017" + "/biblebutler";
 //Connecting to the db at the start of the code
-console.log("This is my connection_string: ");
-console.log(connection_string);
 
-// let db;
-// if (HOST !== "LOCALHOST") {
-//     MongoClient.connect(connection_string, function (err, db) {
-//         if (err) {
-//             bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
-//             throw err;
-//         } else {
-//             console.log("successfully connected to the database");
-//         }
-//     })
-
-//     db = mongojs(connection_string, ['verses', 'users', 'locations', 'verses', 'holidays', "xrates"], (err, res) => {
-//         if (err) {
-//             bot.sendMessage(myId, "Error connecting to db, rescue me soon! ssh root@76.8.60.212");
-//             throw err
-//         } else {
-//             console.log("successfully connected to the database");
-//         }
-//         console.log("Trying to connect to db..");
-//     });
-// }
-
-// Any kind of message
 
 // Inform xy bot is online
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
@@ -978,7 +954,7 @@ bot.onText(/^what.*your.*name/i, function (msg, match) {
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
-async function emojiFinder(key_word) {
+export async function emojiFinder(key_word) {
     const url = "https://emojifinder.com/" + key_word;
     const results = await scrapeIt(url, {
         emojis: {
@@ -1123,6 +1099,8 @@ function getLatLongMethod(chatDetails: chatDetails, locationInput, type = "weath
         }
         else if (type === "food") {
             getNearestFood(chatDetails, { locationName: locationInput, lat, lng });
+        } else if (type === "food_beta") {
+            getNearestFood2(chatDetails, { locationName: locationInput, lat, lng });
         }
     });
 }
@@ -1207,6 +1185,7 @@ function getNearestFood(chatDetails: chatDetails, locationDetails: any) {
     })
     bot.sendMessage(fromId, "Currently searching for food around " + capitalizeFirstLetter(locationName) + ".. " + emoji.bow);
 };
+
 function getSunriseMethod(chatDetails: chatDetails, locationDetails) {
     //chat details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
@@ -1610,6 +1589,54 @@ async function runMenuOptions2(chatDetails: chatDetails, msg) {
         }
     }
 }
+function getNearestFood2(chatDetails: chatDetails, locationDetails: any) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    //location details
+    let { locationName, lat, lng } = locationDetails;
+
+    axios({
+        method: 'GET',
+        url: 'https://api.yelp.com/v3/businesses/search',
+        params: {
+            term: "food",
+            latitude: locationDetails.lat,
+            longitude: locationDetails.lng,
+            radius: 200, // in meters
+            limit: 15, // max 50
+            sort_by: "distance", // default: best_match
+            price: "1,2,3,4",
+            open_now: false, // default: false
+        },
+        headers: {
+            Authorization: "Bearer " + process.env.yelpAPIKey
+        },
+    }).then((response) => {
+        let msg = "";
+        let url = "";
+        let chosen_stall = response.data.businesses[Math.floor(Math.random() * response.data.businesses.length)];
+        fallback.clear_context();
+        if (chosen_stall) {
+            let { coordinates, display_phone, distance, id, image_url, is_closed, location, display_address, price, rating, url, alias } = chosen_stall;
+            msg = first_name + ", I found a shop called *" + alias + "*, currently " + (is_closed ? "closed" : "open") + "!\n";
+            msg += "It's about " + distance.toFixed(2) + "m away. Not too bad?" + emoji.hushed + "\n";
+            msg += "The actual address is __" + location.address1 + "__\n";
+            msg += "Price: *" + price + "*,\nRating: *" + rating + "*\n";
+        } else {
+            msg = "Sorry I did not managed to find anything from [Yelp](https://www.yelp.com/)! " + emoji.white_frowning_face;
+        }
+        bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
+        if (chosen_stall && chosen_stall.url)
+            bot.sendMessage(fromId, "Oh oh! I've managed to grab the url too!\n" + chosen_stall.url);
+    }).catch((err) => {
+        if (err) {
+            console.log("this is err: ", err);
+            // bot.sendMessage(myId, err.request._header + "\n" + err.request._headers.host + err.request.path + "\n\n" + err.message);
+            return;
+        }
+    })
+    bot.sendMessage(fromId, "Currently searching for food around " + capitalizeFirstLetter(locationName) + ".. " + emoji.bow);
+};
 // -------------------------------SubFunction Methods---------------------------------------
 
 async function menu(chatDetails: chatDetails, msg) {
@@ -2078,6 +2105,44 @@ bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
                         locationName: "your position",
                     };
                     getNearestFood(chatDetails, locationDetails);
+                }
+                // foodpls(chatDetails, msg);
+            });
+        });
+});
+bot.onText(/\/betafoodpls|^\/betawheretoeat/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+    fallback.set_context("foodpls");
+    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
+        .then(() => {
+            bot.once('message', (msg) => {
+                console.log("hungrygowhere message is here!!", msg);
+                if (msg.text && msg.text.toLowerCase() !== "cancel" && !msg.text.includes("/")) {
+                    getLatLongMethod(chatDetails, msg.text, "food_beta");
+                }
+                if (msg.location) {
+                    let locationDetails = {
+                        lat: msg.location.latitude,
+                        lng: msg.location.longitude,
+                        locationName: "your position",
+                    };
+                    getNearestFood2(chatDetails, locationDetails);
                 }
                 // foodpls(chatDetails, msg);
             });
