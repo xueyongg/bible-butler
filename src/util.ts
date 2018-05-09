@@ -33,9 +33,9 @@ export async function writeIntoFile(chatDetails: chatDetails, msg) {
 
   let latest_file_name = readFile();
   let data_unix_seconds = moment().unix();
-  writeFile('./db/' + data_unix_seconds + ".txt", 'This is content...', function (err) {
-    if (err) console.log(err);
-  });
+  // writeFile('./db/' + data_unix_seconds + ".txt", 'This is content...', function (err) {
+  //   if (err) console.log(err);
+  // });
 
   // let savPath, srcPath;
   // fs.readFile(srcPath, 'utf8', function (err, data) {
