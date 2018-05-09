@@ -32,7 +32,8 @@
     "node-telegram-bot-api": "^0.30.0",
     "request": "^2.85.0",
     "scrape-it": "^5.0.4",
-    "util": "^0.10.3"
+    "util": "^0.10.3",
+    "write": "^1.0.3"
   },
   "devDependencies": {
     "@types/node": "^10.0.4",
