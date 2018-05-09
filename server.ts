@@ -2832,7 +2832,25 @@ bot.onText(/\/getHoliday/i, async (msg, match) => {
 });
 // Matches /echo [whatever]
 bot.onText(/\/echo (.+)/, function (msg, match) {
+
+    let chat = msg.chat;
     let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
     let resp = match[1];
     bot.sendMessage(fromId, resp);
 });
