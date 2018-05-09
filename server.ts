@@ -1622,9 +1622,14 @@ function getNearestFood2(chatDetails: chatDetails, locationDetails: any) {
             let message_prep = foodMessageOrganiser(chatDetails, locationDetails, response.data.businesses)
             if (message_prep) {
                 let msg_promise = Promise.resolve(message_prep);
-                msg_promise.then(((value) => {
+                msg_promise.then((async (value) => {
                     msg = value;
-                    bot.sendMessage(fromId, msg, { parse_mode: "Markdown" });
+                    let msg_array = msg.split(':');
+                    let maxPage = Number(msg_array[0]);
+                    let reply = msg_array[1];
+                    let replyOpt = await getPagination(1, maxPage);
+                    replyOpt.parse_mode = "Markdown";
+                    bot.sendMessage(fromId, reply, replyOpt);
                 })).catch((err) => {
                     console.log("Error occured: ", err);
                 })
