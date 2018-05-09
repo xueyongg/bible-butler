@@ -1535,6 +1535,21 @@ function teachMeMath(chatDetails: chatDetails, number: number) {
     bot.sendMessage(fromId, "Oh *" + number + "*? Let me see if I know anything about this number.. " + emoji.stuck_out_tongue,
         { parse_mode: "Markdown" });
 }
+function writeIntoFile(chatDetails: chatDetails, msg) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+
+    /**
+     * 1. User and id e.g. Xueyong > 56328814
+     * 2. List of functions and # of times e.g. getweather > 5
+     * 3. Verses collated and # of times e.g. john3:30 > 5
+     * 4. Write in new files with file name & time stamp e.g. database.2015-05-08
+     * 5. create new directory if new month
+     *  
+    */
+
+
+}
 // -------------------------------Beta Methods---------------------------------------
 // Still in beta mode:
 function getVerseMethod(chatDetails: chatDetails, key_word) {
@@ -1659,7 +1674,7 @@ function getNearestFood2(chatDetails: chatDetails, locationDetails: any) {
 async function menu(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-    let message = "Hi " + first_name + ", I am your personal assistance and I hope to be of help today. " + emoji.blush + "\n\n";
+    let message = "Hi " + first_name + ", I am your personal assistant and I hope to be of help today. " + emoji.blush + "\n\n";
     message += "Here are functions I can help you with:\n"
     message += "/getverse - Get verses for you!\n"
     message += "/feeling- Get verses *based on your feelings*!\n"
@@ -1667,6 +1682,7 @@ async function menu(chatDetails: chatDetails, msg) {
     message += "/getweather - Get the weather based on your location\n"
     message += "/getxrate - Get the latest exchange rate\n"
     message += "/getsunrise - Get the timing of sunrise around you!\n"
+    message += "/givefeedback - Give me some feedback so I can improve " + emoji.blush + "\n"
     bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
     if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 }
@@ -1789,7 +1805,7 @@ async function getweather(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getweather");
-    bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
+    bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(function () {
             bot.once('message', function (message) {
                 if (message.text) {
@@ -2068,7 +2084,7 @@ function bbAutoChecker(chatDetails: chatDetails) {
 
 // -------------------------------From here onwards, its all the commands ---------------------------------------
 
-bot.onText(/\/menu/i, async (msg, match) => {
+bot.onText(/\/menu|^\/start$/i, async (msg, match) => {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -2165,7 +2181,7 @@ bot.onText(/\/betafoodpls|^\/betawheretoeat/i, async (msg, match) => {
             });
         });
 });
-bot.onText(/\/getverse/i, function (msg, match) {
+bot.onText(/\/getverse$/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -2557,7 +2573,7 @@ bot.onText(/\/yay/i, function (msg, match) {
     bot.sendSticker(fromId, "CAADBQAD8QADCmwYBFPlx-n0MfKuAg");
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + ". Success!");
 });
-bot.onText(/\/cry/i, function (msg, match) {
+bot.onText(/\/cry$/i, function (msg, match) {
     let chat = msg.chat;
     let fromId = msg.from.id;
     let userId = msg.from.id;
@@ -2651,13 +2667,14 @@ bot.onText(/\/givefeedback/i, function (msg, match) {
             force_reply: true,
         }
     };
-
+    fallback.set_context("givefeedback");
     bot.sendMessage(fromId, capitalizeFirstLetter(first_name) + ", how can I improve? " + emoji.hushed, opt)
         .then(function () {
             bot.once('message', function (msg) {
                 bot.sendMessage(fromId, "Okie! I will take note! Thank you " + emoji.blush);
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " mentioned: "
                     + msg.text + ". " + emoji.kissing_smiling_eyes);
+                fallback.clear_context();
             });
         });
 
@@ -2973,6 +2990,6 @@ let bbStickerArchive = [
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
 
-let commandArchive = "menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
+let commandArchive = "start,menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
 
 const chosenFeeling_archive = "angry,brokenhearted,insecure,needfaith,needencouragement,needforgiveness,needstrength,confused"
