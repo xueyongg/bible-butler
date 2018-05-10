@@ -1,20 +1,20 @@
 interface weatherDetails {
     temp: number,
     apparentTemp: number,
-    hourlySummary: string,
-    hourlyIcon: string,
-    dailySummary: string,
-    dailyIcon: string,
+    hourlySummary: String,
+    hourlyIcon: String,
+    dailySummary: String,
+    dailyIcon: String,
 }
 
 interface emoji {
-    content: string,
+    content: String,
 }
 
 interface chatDetails {
     fromId: number,
-    chatName: string,
-    first_name: string,
+    chatName: String,
+    first_name: String,
     userId: number,
     messageId: number,
 }
@@ -22,4 +22,18 @@ interface chatDetails {
 interface reply {
     msg: String | Boolean;
     maxPage: number;
+}
+
+interface db {
+    id: {
+        first_name: String,
+        getweather: number,
+        foodpls: number,
+        insult: number,
+        getverse: number,
+        getxrate: number,
+        getsunrise: number,
+        feeling: number,
+        verses: String[],
+    }
 }
