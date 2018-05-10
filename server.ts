@@ -1664,6 +1664,7 @@ async function menu(chatDetails: chatDetails, msg) {
     message += "/feeling- Get verses *based on your feelings*!\n"
     message += "/foodpls - Get the nicest food around you through Yelp\n"
     message += "/getweather - Get the weather based on your location\n"
+    message += chatName === "individual chat" ? (emoji.bulb + " You can send your location to get the weather too!\n") : ""
     message += "/getxrate - Get the latest exchange rate\n"
     message += "/getsunrise - Get the timing of sunrise around you!\n"
     message += "/givefeedback - Give me some feedback so I can improve " + emoji.blush + "\n"
