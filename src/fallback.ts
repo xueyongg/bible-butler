@@ -1,3 +1,5 @@
+import { writeIntoFile } from "./util";
+
 export let fallback = {
     previous_context: "",
     get_context: () => {
@@ -53,3 +55,30 @@ export let fallback = {
         return this.latest_inline_message ? false : true;
     },
 };
+
+export let local_db = {
+    db: {},
+    db_append: (chatDetails, context) => {
+        let keys = Object.keys(this.db);
+        let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+        if (keys.indexOf(fromId) !== -1) {
+            // Exist
+            let values = this.db[fromId];
+            let current_value = values[context];
+            if (current_value) {
+                values[context] += 1
+            } else {
+                values[context] = 1;
+            }
+            this.db[fromId] = values;
+        } else {
+            let values = this.db[fromId] = {};
+            values[context] = 1;
+            this.db[fromId] = values;
+        }
+    },
+    db_save: () => {
+
+    },
+
+}

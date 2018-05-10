@@ -30,12 +30,12 @@ export async function writeIntoFile(chatDetails: chatDetails, msg) {
    *  
   */
 
+  let date = moment().format("DD-MM-YYYY HH:mm");
+  let message = "This is content...\n";
+  writeFile("./db/db.txt", message, function (err) {
+    if (err) console.log(err);
+  });
 
-  let latest_file_name = readFile();
-  let data_unix_seconds = moment().unix();
-  // writeFile('./db/' + data_unix_seconds + ".txt", 'This is content...', function (err) {
-  //   if (err) console.log(err);
-  // });
 
   // let savPath, srcPath;
   // fs.readFile(srcPath, 'utf8', function (err, data) {
@@ -49,18 +49,17 @@ export async function writeIntoFile(chatDetails: chatDetails, msg) {
 
 }
 
-function readFile() {
+export function readFile() {
   const testFolder = './db/';
   let latest_file_name = "";
+  let db_object = {};
 
-  fs.readdir(testFolder, async (err, files) => {
-    console.log(files);
-    let arr = [];
-    const max = await files.reduce(function (prev, current) {
-      return (prev.y > current.y) ? prev : current
-    }) //returns object;
-    Promise.resolve(max).then((value) => {
-      return value;
+  fs.readdir(testFolder, (err, files) => {
+    let db_file = files[0];
+    let srcPath = testFolder + db_file
+    fs.readFile(srcPath, 'utf8', function (err, data) {
+      if (err) throw err;
+      console.log(data);
     });
   })
 }
