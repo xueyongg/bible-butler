@@ -10,7 +10,7 @@ let moment = require('moment');
 let moment_tz = require('moment-timezone');
 import { fallback } from './src/fallback';
 import { foodMessageOrganiser } from './src/foodSearch';
-import { getPagination, writeIntoFile } from './src/util';
+import { getPagination, writeIntoFile, readFile } from './src/util';
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 const axios = require('axios');
@@ -2163,6 +2163,26 @@ bot.onText(/\/betafoodpls|^\/betawheretoeat/i, async (msg, match) => {
                 // foodpls(chatDetails, msg);
             });
         });
+});
+bot.onText(/\/betareadfile/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+    readFile();
 });
 bot.onText(/\/getverse$/i, function (msg, match) {
     let chat = msg.chat;
