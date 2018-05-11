@@ -58,10 +58,14 @@ export let fallback = {
 
 export let local_db = {
     db: {},
-    db_append: (chatDetails, context) => {
-        let keys = Object.keys(this.db);
+    append: (chatDetails, context) => {
+        let keys = [];
+        if (this.db) keys = Object.keys(this.db);
+        else this.db = {
+            loaded: true
+        }
         let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-        if (keys.indexOf(fromId) !== -1) {
+        if (keys.indexOf(fromId.toString()) !== -1) {
             // Exist
             let values = this.db[fromId];
             let current_value = values[context];
@@ -73,9 +77,13 @@ export let local_db = {
             this.db[fromId] = values;
         } else {
             let values = this.db[fromId] = {};
+            values["First name"] = first_name;
             values[context] = 1;
             this.db[fromId] = values;
         }
+    },
+    get: (simple_password) => {
+        return this.db;
     },
     db_save: () => {
 

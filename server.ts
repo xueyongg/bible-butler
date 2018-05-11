@@ -8,7 +8,7 @@ const ngrok = require('ngrok');
 let request = require('request');
 let moment = require('moment');
 let moment_tz = require('moment-timezone');
-import { fallback } from './src/fallback';
+import { fallback, local_db } from './src/fallback';
 import { foodMessageOrganiser } from './src/foodSearch';
 import { getPagination, writeIntoFile, readFile } from './src/util';
 let emoji = require('node-emoji').emoji;
@@ -1332,7 +1332,6 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
                 if (type === "return_only") {
                     return verseReference;
                 }
-                writeIntoFile(chatDetails, verseReference);
                 if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName +
                     ". Success retrieval of " + fetchingVerse +
                     "!" + emoji.kissing_smiling_eyes);
@@ -1675,6 +1674,7 @@ async function foodpls(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("foodpls");
+    local_db.append(chatDetails, "foodpls");
     bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(() => {
             bot.once('message', (msg) => {
@@ -1707,6 +1707,7 @@ async function getverse(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getverse");
+    local_db.append(chatDetails, "getverse");
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', async (msg) => {
@@ -1738,6 +1739,8 @@ async function getxrate(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getxrate");
+    local_db.append(chatDetails, "getxrate");
+
     bot.sendMessage(fromId, first_name + ", what currency do you wish to change from & to? " + emoji.thinking_face +
         "\n(e.g. sgd2cad, usd2myr, 100sgd2cad, 92.4sgd2myr) ", await getReplyOpts("force_only"))
         .then(function () {
@@ -1789,6 +1792,7 @@ async function getweather(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getweather");
+    local_db.append(chatDetails, "getweather");
     bot.sendMessage(fromId, first_name + ", what location's weather report do you like to get? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
         .then(function () {
             bot.once('message', function (message) {
@@ -1809,6 +1813,7 @@ async function getsunrise(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getsunrise");
+    local_db.append(chatDetails, "getsunrise");
     bot.sendMessage(fromId, first_name + ", what location's sun rise and sun set you wish to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', function (message) {
@@ -1830,6 +1835,7 @@ async function feeling(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("feeling");
+    local_db.append(chatDetails, "feeling");
     bot.sendMessage(fromId, first_name + ", How are you feeling? " + emoji.hushed, await getReplyOpts("feeling"))
         .then(function (ans) {
             bot.once('callback_query', async (msg) => {
@@ -2183,6 +2189,26 @@ bot.onText(/\/betareadfile/i, async (msg, match) => {
         messageId,
     };
     readFile();
+});
+bot.onText(/\/betawritefile/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+    writeIntoFile(local_db.get("abc"));
 });
 bot.onText(/\/getverse$/i, function (msg, match) {
     let chat = msg.chat;
