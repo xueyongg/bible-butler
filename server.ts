@@ -2115,24 +2115,7 @@ bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
         messageId,
     };
     fallback.set_context("foodpls");
-    bot.sendMessage(fromId, first_name + ", where are you currently at? " + emoji.hushed, await getReplyOpts(chatName !== "individual chat" ? "force_only" : "location_based"))
-        .then(() => {
-            bot.once('message', (msg) => {
-                console.log("hungrygowhere message is here!!", msg);
-                if (msg.text && msg.text.toLowerCase() !== "cancel" && !msg.text.includes("/")) {
-                    getLatLongMethod(chatDetails, msg.text, "food");
-                }
-                if (msg.location) {
-                    let locationDetails = {
-                        lat: msg.location.latitude,
-                        lng: msg.location.longitude,
-                        locationName: "your position",
-                    };
-                    getNearestFood(chatDetails, locationDetails);
-                }
-                // foodpls(chatDetails, msg);
-            });
-        });
+    foodpls(chatDetails, msg);
 });
 bot.onText(/\/betafoodpls|^\/betawheretoeat/i, async (msg, match) => {
     let chat = msg.chat;

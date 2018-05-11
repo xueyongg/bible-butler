@@ -24,18 +24,18 @@ export async function writeIntoFile(db_content: db | {}) {
   console.log("< db_content:", db_content);
 
   let date = moment().format("DD-MM-YYYY HH:mm");
-  let msg = "This is on " + date + "..\n";
+  let msg = "This is on " + date + "..\n---";
 
   var promises = await users.map((key, index) => {
     if (key === "loaded") return;
     let user = db_content[Number(key)];
-    msg += "User #" + index + 1 + "\n";
+    msg += "\nUser #" + index + 1 + "\n";
     msg += "..." + user["first_name"] + " > " + key + "\n";
     let sub_keys = Object.keys(user);
     sub_keys.forEach(element => {
       msg += `...` + element + " > " + user[element] + "\n";
     });
-    msg += "\n---\n"
+    msg += "\n---"
   })
   /**
    * 1. User and id e.g. Xueyong > 56328814
