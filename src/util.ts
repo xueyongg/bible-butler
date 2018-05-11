@@ -62,7 +62,7 @@ export function readFile() {
       fs.readFile(srcPath, "UTF-8", function (err, data) {
         if (err) throw err;
 
-        let arr = data.split("---");
+        let arr = data.replace("\n", "").split("---");
         let date_time = /\s*(3[01]|[12][0-9]|0?[1-9])-(1[012]|0?[1-9])-((?:19|20)\d{2})\s([0-4][0-9]):([0-6][0-9])\s*/gm.exec(arr[0]);
         let temp_db = {
           loaded: date_time ? date_time[0].trim() : moment().format("DD-MM-YYYY HH:mm"),
@@ -72,8 +72,8 @@ export function readFile() {
           if (!user) return;
           let ind_user_arr = user.split("...");
 
-          let id = Number(ind_user_arr[1].replace("\n", "").split(">")[1].trim());
-          let first_name = ind_user_arr[2].replace("\n", "").split(">")[1].trim();
+          let id = Number(ind_user_arr[1].split(">")[1].trim());
+          let first_name = ind_user_arr[2].split(">")[1].trim();
 
           temp_db[id] = {
             first_name,

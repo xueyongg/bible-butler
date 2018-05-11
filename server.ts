@@ -2195,8 +2195,21 @@ bot.onText(/\/betareadfile/i, async (msg, match) => {
 bot.onText(/\/betawritefile/i, async (msg, match) => {
     writeIntoFile(local_db.get("abc"));
 });
-bot.onText(/\/betagetdb/i, async (msg, match) => {
-    local_db.get("abc");
+bot.onText(/\/betacheckdb/i, async (msg, match) => {
+    let db = local_db.get("abc");
+    if (db) {
+        let keys = Object.keys(db);
+        let no_of_keys = keys.length - 1;
+        let msg = "Here's list of " + no_of_keys + (no_of_keys ? " user." : " users.") + "\n";
+        let promise = await keys.map((key, index) => {
+            if (key !== "loaded") {
+                msg += "#" + (index + 1) + ". " + db[key].first_name + "\n";
+            }
+        })
+        Promise.resolve(promise).then((value) => {
+            bot.sendMessage(myId, msg);
+        })
+    }
 });
 bot.onText(/\/getverse$/i, function (msg, match) {
     let chat = msg.chat;
@@ -3025,6 +3038,6 @@ let bbStickerArchive = [
     "CAADBQADxwADCmwYBETPPM5CdJhGAg"
 ];
 
-let commandArchive = "echo,start,menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
+let commandArchive = "checkdb,echo,start,menu,getxrate,getweather,help,insult,foodpls,getverse,talktomarvin,givefeedback,feeling,getsunrise,stun,smirk,sad,hug,cryandhug,seeyou,hmph,hungry,shower,what,hooray,excuseme,yay,timeout,goodjob,cry,buthor,hehe,aniyo,xysmirk"
 
 const chosenFeeling_archive = "angry,brokenhearted,insecure,needfaith,needencouragement,needforgiveness,needstrength,confused"
