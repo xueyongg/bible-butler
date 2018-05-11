@@ -8,4 +8,4 @@ node_modules
 *.js
 *.js.map
 dev.js
-db/db.text
+db
