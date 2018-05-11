@@ -56,36 +56,44 @@ export function readFile() {
   let latest_file_name = "";
 
   fs.readdir(testFolder, (err, files) => {
-    let db_file = files[0];
-    let srcPath = testFolder + db_file
-    fs.readFile(srcPath, "UTF-8", function (err, data) {
-      if (err) throw err;
-      console.log("< data: ", data);
-      let arr = data.split("---");
-      console.log(arr[0]);
-      let date_time = /\s*(3[01]|[12][0-9]|0?[1-9])-(1[012]|0?[1-9])-((?:19|20)\d{2})\s([0-4][0-9]):([0-6][0-9])\s*/gm.exec(arr[0]);
-      let temp_db = {
-        loaded: date_time ? date_time[0].trim() : moment().format("DD-MM-YYYY HH:mm"),
-      };
-      let users = arr.slice(1, arr.length);
-      users.forEach((user, index) => {
-        if (!user) return;
-        let ind_user_arr = user.split("...");
-        console.log(ind_user_arr);
+    if (files[0]) {
+      let db_file = files[0];
+      let srcPath = testFolder + db_file
+      fs.readFile(srcPath, "UTF-8", function (err, data) {
+        if (err) throw err;
 
-        let id = Number(ind_user_arr[1].replace("\n", "").split(">")[1].trim());
-        let first_name = ind_user_arr[2].replace("\n", "").split(">")[1].trim();
+        let arr = data.split("---");
+        let date_time = /\s*(3[01]|[12][0-9]|0?[1-9])-(1[012]|0?[1-9])-((?:19|20)\d{2})\s([0-4][0-9]):([0-6][0-9])\s*/gm.exec(arr[0]);
+        let temp_db = {
+          loaded: date_time ? date_time[0].trim() : moment().format("DD-MM-YYYY HH:mm"),
+        };
+        let users = arr.slice(1, arr.length);
+        users.forEach((user, index) => {
+          if (!user) return;
+          let ind_user_arr = user.split("...");
 
-        temp_db[id] = {
-          first_name,
-        }
-        ind_user_arr.slice(3, ind_user_arr.length).forEach((element, index) => {
-          let context_name = element.replace("\n", "").split(">")[0].trim();
-          let context_counter = element.replace("\n", "").split(">")[1].trim();
-          try { temp_db[id][context_name] = Number(context_counter) } catch (err) { throw err }
+          let id = Number(ind_user_arr[1].replace("\n", "").split(">")[1].trim());
+          let first_name = ind_user_arr[2].replace("\n", "").split(">")[1].trim();
+
+          temp_db[id] = {
+            first_name,
+          }
+          ind_user_arr.slice(3, ind_user_arr.length).forEach((element, index) => {
+            let context_name = element.replace("\n", "").split(">")[0].trim();
+            let context_counter = element.replace("\n", "").split(">")[1].trim();
+            try { temp_db[id][context_name] = Number(context_counter) } catch (err) { throw err }
+          });
         });
+        local_db.reload(temp_db);
       });
-      local_db.reload(temp_db);
-    });
+    } else {
+      local_db.reload({ loaded: moment().format("DD-MM-YYYY HH:mm") });
+    }
   })
+}
+
+export async function setupReadAutoWriteIntoFile() {
+  let duration = 3600000; //In millisecond e.g. 3600000 ms = 1 hour
+  setTimeout(() => { writeIntoFile(local_db.get("abc")) }, duration);
+  readFile();
 }

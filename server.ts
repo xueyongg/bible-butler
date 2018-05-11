@@ -10,7 +10,7 @@ let moment = require('moment');
 let moment_tz = require('moment-timezone');
 import { fallback, local_db } from './src/fallback';
 import { foodMessageOrganiser } from './src/foodSearch';
-import { getPagination, writeIntoFile, readFile } from './src/util';
+import { getPagination, writeIntoFile, readFile, setupReadAutoWriteIntoFile } from './src/util';
 let emoji = require('node-emoji').emoji;
 const scrapeIt = require("scrape-it")
 const axios = require('axios');
@@ -103,6 +103,7 @@ let connection_string = "mongodb://" + DB_HOST + ":27017" + "/biblebutler";
 //Connecting to the db at the start of the code
 
 // Inform xy bot is online
+setupReadAutoWriteIntoFile();
 bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
 
 async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
@@ -1460,7 +1461,7 @@ function sendExchangeRateMethod(chatDetails: chatDetails, exchangeRateDetails) {
     if (userId !== myId) bot.sendMessage(myId, first_name + " from " + chatName + " retrieved exchange rate " +
         fromCurrency + " to " + toCurrency + " at the rate of " + rate + "! Success!");
 }
-async function getGender(first_name: string) {
+async function getGender(first_name: String) {
 
     let url = "https://gender-api.com/get?name=" + first_name + "&key=" + process.env.privateGenderAPIKey;
     const response = await axios({
