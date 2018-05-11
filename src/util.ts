@@ -52,6 +52,7 @@ export async function writeIntoFile(db_content: db | {}) {
 }
 
 export function readFile() {
+  // Read and load into temp db
   const testFolder = './db/';
   let latest_file_name = "";
 
@@ -92,8 +93,13 @@ export function readFile() {
   })
 }
 
-export async function setupReadAutoWriteIntoFile() {
+export async function setupReadAutoWriteIntoFile(type = "setup") {
   let duration = 3600000; //In millisecond e.g. 3600000 ms = 1 hour
-  setTimeout(() => { writeIntoFile(local_db.get("abc")) }, duration);
-  readFile();
+  setTimeout(() => {
+    writeIntoFile(local_db.get("abc"));
+    setupReadAutoWriteIntoFile("recursive");
+  }, duration);
+  if (type === "setup") {
+    readFile();
+  }
 }
