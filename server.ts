@@ -1299,6 +1299,7 @@ async function marvinNewGetVerseMethod(chatDetails: chatDetails, fetchingVerse, 
         } else {
             try {
                 let verseReference = info;
+                local_db.append(chatDetails, "getverse");
                 // console.log(verseReference);
                 if (type === "normal") {
                     let random_number = Math.floor(Math.random() * 10);
@@ -1707,7 +1708,7 @@ async function getverse(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getverse");
-    local_db.append(chatDetails, "getverse");
+
     bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', async (msg) => {
@@ -2191,24 +2192,10 @@ bot.onText(/\/betareadfile/i, async (msg, match) => {
     readFile();
 });
 bot.onText(/\/betawritefile/i, async (msg, match) => {
-    let chat = msg.chat;
-    let fromId = msg.from.id;
-    let userId = msg.from.id;
-    let first_name = msg.from.first_name;
-    let chatName = first_name;
-    if (chat) {
-        fromId = chat.id;
-        chatName = chat.title ? chat.title : "individual chat";
-    }
-    let messageId = msg.message_id
-    let chatDetails = {
-        fromId,
-        chatName,
-        first_name,
-        userId,
-        messageId,
-    };
     writeIntoFile(local_db.get("abc"));
+});
+bot.onText(/\/betagetdb/i, async (msg, match) => {
+    local_db.get("abc");
 });
 bot.onText(/\/getverse$/i, function (msg, match) {
     let chat = msg.chat;

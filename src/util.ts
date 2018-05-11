@@ -1,6 +1,7 @@
 const writeFile = require('write');
 const fs = require('fs');
 let moment = require('moment');
+import { local_db } from './fallback';
 
 export function getPagination(current, maxpage) {
   var keys = [];
@@ -23,7 +24,7 @@ export async function writeIntoFile(db_content: db | {}) {
   console.log("< db_content:", db_content);
 
   let date = moment().format("DD-MM-YYYY HH:mm");
-  let msg = "This is on " + date + "... \n";
+  let msg = "This is on " + date + "..\n";
 
   var promises = await users.map((key, index) => {
     if (key === "loaded") return;
@@ -40,7 +41,6 @@ export async function writeIntoFile(db_content: db | {}) {
    * 1. User and id e.g. Xueyong > 56328814
    * 2. List of functions and # of times e.g. getweather > 5
    * 3. Verses collated and # of times e.g. john3:30 > 5
-   *  
   */
   Promise.all(promises).then(function (results) {
     console.log("< message: ", msg);
@@ -54,7 +54,6 @@ export async function writeIntoFile(db_content: db | {}) {
 export function readFile() {
   const testFolder = './db/';
   let latest_file_name = "";
-  let db_object = {};
 
   fs.readdir(testFolder, (err, files) => {
     let db_file = files[0];
@@ -62,8 +61,31 @@ export function readFile() {
     fs.readFile(srcPath, "UTF-8", function (err, data) {
       if (err) throw err;
       console.log("< data: ", data);
-      let arr = data.split("\n");
-      console.log(arr);
+      let arr = data.split("---");
+      console.log(arr[0]);
+      let date_time = /\s*(3[01]|[12][0-9]|0?[1-9])-(1[012]|0?[1-9])-((?:19|20)\d{2})\s([0-4][0-9]):([0-6][0-9])\s*/gm.exec(arr[0]);
+      let temp_db = {
+        loaded: date_time ? date_time[0].trim() : moment().format("DD-MM-YYYY HH:mm"),
+      };
+      let users = arr.slice(1, arr.length);
+      users.forEach((user, index) => {
+        if (!user) return;
+        let ind_user_arr = user.split("...");
+        console.log(ind_user_arr);
+
+        let id = Number(ind_user_arr[1].replace("\n", "").split(">")[1].trim());
+        let first_name = ind_user_arr[2].replace("\n", "").split(">")[1].trim();
+
+        temp_db[id] = {
+          first_name,
+        }
+        ind_user_arr.slice(3, ind_user_arr.length).forEach((element, index) => {
+          let context_name = element.replace("\n", "").split(">")[0].trim();
+          let context_counter = element.replace("\n", "").split(">")[1].trim();
+          try { temp_db[id][context_name] = Number(context_counter) } catch (err) { throw err }
+        });
+      });
+      local_db.reload(temp_db);
     });
   })
 }

@@ -1,4 +1,5 @@
 import { writeIntoFile } from "./util";
+let moment = require('moment');
 
 export let fallback = {
     previous_context: "",
@@ -62,7 +63,7 @@ export let local_db = {
         let keys = [];
         if (this.db) keys = Object.keys(this.db);
         else this.db = {
-            loaded: true
+            loaded: moment().format("DD-MM-YYYY HH:mm")
         }
         let { fromId, chatName, first_name, userId, messageId } = chatDetails;
         if (keys.indexOf(fromId.toString()) !== -1) {
@@ -77,7 +78,7 @@ export let local_db = {
             this.db[fromId] = values;
         } else {
             let values = this.db[fromId] = {};
-            values["First name"] = first_name;
+            values["first_name"] = first_name;
             values[context] = 1;
             this.db[fromId] = values;
         }
@@ -85,8 +86,8 @@ export let local_db = {
     get: (simple_password) => {
         return this.db;
     },
-    db_save: () => {
-
+    reload: (saved_db) => {
+        this.db = saved_db;
     },
 
 }
