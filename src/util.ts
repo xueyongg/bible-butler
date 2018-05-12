@@ -19,7 +19,7 @@ export function getPagination(current, maxpage) {
 }
 
 export async function writeIntoFile(db_content: db | {}) {
-
+  delete db_content['loaded'];
   let users = db_content ? Object.keys(db_content) : [];
   console.log("< db_content:", db_content);
 
