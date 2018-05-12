@@ -29,8 +29,9 @@ export async function writeIntoFile(db_content: db | {}) {
   var promises = await users.map((key, index) => {
     if (key === "loaded") return;
     try {
+      let current_index = (Number(index) + 1);
       let user = db_content[Number(key)];
-      msg += "\nUser #" + Number(index) + 1 + "\n";
+      msg += "\nUser #" + current_index + "\n";
       msg += "..." + user["first_name"] + " > " + key + "\n";
       let sub_keys = Object.keys(user);
       sub_keys.forEach(element => {
