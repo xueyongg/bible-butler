@@ -28,14 +28,16 @@ export async function writeIntoFile(db_content: db | {}) {
 
   var promises = await users.map((key, index) => {
     if (key === "loaded") return;
-    let user = db_content[Number(key)];
-    msg += "\nUser #" + index + 1 + "\n";
-    msg += "..." + user["first_name"] + " > " + key + "\n";
-    let sub_keys = Object.keys(user);
-    sub_keys.forEach(element => {
-      msg += `...` + element + " > " + user[element] + "\n";
-    });
-    msg += "\n---"
+    try {
+      let user = db_content[Number(key)];
+      msg += "\nUser #" + Number(index) + 1 + "\n";
+      msg += "..." + user["first_name"] + " > " + key + "\n";
+      let sub_keys = Object.keys(user);
+      sub_keys.forEach(element => {
+        msg += `...` + element + " > " + user[element] + "\n";
+      });
+      msg += "\n---"
+    } catch (e) { throw e }
   })
   /**
    * 1. User and id e.g. Xueyong > 56328814
