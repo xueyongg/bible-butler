@@ -66,21 +66,21 @@ export let local_db = {
             loaded: moment().format("DD-MM-YYYY HH:mm")
         }
         let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-        if (keys.indexOf(fromId.toString()) !== -1) {
+        if (keys.indexOf(userId.toString()) !== -1) {
             // Exist
-            let values = this.db[fromId];
+            let values = this.db[userId];
             let current_value = values[context];
             if (current_value) {
                 values[context] += 1
             } else {
                 values[context] = 1;
             }
-            this.db[fromId] = values;
+            this.db[userId] = values;
         } else {
-            let values = this.db[fromId] = {};
+            let values = this.db[userId] = {};
             values["first_name"] = first_name;
             values[context] = 1;
-            this.db[fromId] = values;
+            this.db[userId] = values;
         }
     },
     get: (simple_password) => {
