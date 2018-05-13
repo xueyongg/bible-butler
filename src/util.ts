@@ -12,9 +12,9 @@ export function getPagination(current, maxpage) {
   if (current < maxpage) keys.push({ text: `${maxpage}»`, callback_data: maxpage.toString() });
 
   return {
-    reply_markup: JSON.stringify({
-      inline_keyboard: [keys]
-    })
+    reply_markup: {
+      inline_keyboard: [keys],
+    }
   };
 }
 

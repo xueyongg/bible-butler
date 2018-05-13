@@ -26,3 +26,12 @@ export async function foodMessageOrganiser(chatDetails: chatDetails, locationDet
         return "0:nothing";
     }
 }
+
+export async function zomato(chatDetails: chatDetails, locationDetails) {
+    // chat related details
+    let { fromId, chatName, first_name, userId, messageId } = chatDetails;
+    //location details
+    let { locationName, lat, lng } = locationDetails;
+
+    
+}
