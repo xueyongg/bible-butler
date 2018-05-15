@@ -9,6 +9,11 @@
         "sourceMap": true,
         "removeComments": true,
     },
+    "include": [
+        "src/**/*.ts",
+        "node_modules/@types",
+        "./*.ts"
+    ],
     "settings": {
         "typescript.reportStyleChecksAsWarnings": false
     }

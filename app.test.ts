@@ -6,6 +6,7 @@ test('adds 1 + 2 to equal 3', () => {
 })
 
 test('capitalize first letter of word', (done) => {
+    expect.assertions(1);
     expect(capitalizeFirstLetter('fish')).toBe("Fish");
     done();
 })
