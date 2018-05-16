@@ -12,7 +12,7 @@
     "include": [
         "src/**/*.ts",
         "node_modules/@types",
-        "./*.ts"
+        "./*.ts",
     ],
     "settings": {
         "typescript.reportStyleChecksAsWarnings": false

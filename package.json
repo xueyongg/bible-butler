@@ -18,6 +18,22 @@
   "bugs": {
     "url": "https://github.com/xueyongg/bible-butler/issues"
   },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "collectCoverage": true,
+    "verbose": true
+  },
   "homepage": "https://github.com/xueyongg/bible-butler#readme",
   "dependencies": {
     "axios": "^0.18.0",
