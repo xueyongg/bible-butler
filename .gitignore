@@ -6,6 +6,6 @@ node_modules
 *.xml
 .env
 *.js
-*.js.map
+*.map
 dev.js
 db

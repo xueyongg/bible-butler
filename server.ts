@@ -104,7 +104,7 @@ let connection_string = "mongodb://" + DB_HOST + ":27017" + "/biblebutler";
 
 // Inform xy bot is online
 setupReadAutoWriteIntoFile();
-bot.sendMessage(myId, "Im back online @" + HOST + "! No actions required.");
+bot.sendMessage(myId, `Im back online @${HOST + ":" + PORT}! No actions required.`);
 
 async function basic_fallback(chatDetails, msg: any, type_of_fallback = "normal") {
     //type: weather or sunrise
@@ -1659,17 +1659,21 @@ function getNearestFood2(chatDetails: chatDetails, locationDetails: any) {
 async function menu(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
-    let message = "Hi " + first_name + ", I am your personal assistant and I hope to be of help today. " + emoji.blush + "\n\n";
-    message += "Here are functions I can help you with:\n"
-    message += "/getverse - Get verses for you!\n"
-    message += "/feeling- Get verses *based on your feelings*!\n"
-    message += "/foodpls - Get the nicest food around you through Yelp\n"
-    message += "/getweather - Get the weather based on your location\n"
-    message += chatName === "individual chat" ? (emoji.bulb + " You can send your location to get the weather too!\n") : ""
-    message += "/getxrate - Get the latest exchange rate\n"
-    message += "/getsunrise - Get the timing of sunrise around you!\n"
-    message += "/givefeedback - Give me some feedback so I can improve " + emoji.blush + "\n"
-    bot.sendMessage(fromId, message, { parse_mode: "Markdown" });
+    let reply = `Hi ${first_name}, I'm ${bot_name}, your personal assistant and I hope to be of help today. ${emoji.blush}\n\n`;
+    reply += "*Verses*\n"
+    reply += "/getverse - Get verses for you!\n";
+    reply += "/feeling- Get verses *based on your feelings*!\n";
+    reply += "\n";
+    reply += "*Location features*\n";
+    reply += "/foodpls - Get the nicest food around you through Yelp\n";
+    reply += "/getweather - Get the weather based on your location\n";
+    reply += chatName === "individual chat" ? (emoji.bulb + " You can send your location to get the weather too!\n") : ""
+    reply += "/getsunrise - Get the timing of sunrise around you!\n";
+    reply += "\n";
+    reply += "*Others*\n";
+    reply += `/getxrate - Get the latest exchange rate\n`;
+    reply += "/givefeedback - Give me some feedback so I can improve " + emoji.blush + "\n"
+    bot.sendMessage(fromId, reply, { parse_mode: "Markdown" });
     if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 }
 async function foodpls(chatDetails: chatDetails, msg) {
@@ -2095,6 +2099,28 @@ bot.onText(/\/menu|^\/start$/i, async (msg, match) => {
         messageId,
     };
     menu(chatDetails, msg);
+});
+
+bot.onText(/\/start$/i, async (msg, match) => {
+    let chat = msg.chat;
+    let fromId = msg.from.id;
+    let userId = msg.from.id;
+    let first_name = msg.from.first_name;
+    let chatName = first_name;
+    if (chat) {
+        fromId = chat.id;
+        chatName = chat.title ? chat.title : "individual chat";
+    }
+    let messageId = msg.message_id
+    let chatDetails = {
+        fromId,
+        chatName,
+        first_name,
+        userId,
+        messageId,
+    };
+    menu(chatDetails, msg);
+    if (fromId !== myId) bot.sendMessage(myId, `${first_name} from ${chatName} just initiated me!`);
 });
 bot.onText(/\/foodpls|^\/wheretoeat/i, async (msg, match) => {
     let chat = msg.chat;
