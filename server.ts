@@ -1662,17 +1662,17 @@ async function menu(chatDetails: chatDetails, msg) {
     let reply = `Hi ${first_name}, I'm ${bot_name}, your personal assistant and I hope to be of help today. ${emoji.blush}\n\n`;
     reply += "*Verses*\n"
     reply += "/getverse - Get verses for you!\n";
-    reply += "/feeling- Get verses *based on your feelings*!\n";
+    reply += "/feeling- Get verses based on your feelings!\n";
     reply += "\n";
     reply += "*Location features*\n";
-    reply += "/foodpls - Get the nicest food around you through Yelp\n";
-    reply += "/getweather - Get the weather based on your location\n";
+    reply += "/foodpls - Discover the nicest food around you through Yelp!\n";
+    reply += "/getweather - Find out about the weather based on your location!\n";
     reply += chatName === "individual chat" ? (emoji.bulb + " You can send your location to get the weather too!\n") : ""
     reply += "/getsunrise - Get the timing of sunrise around you!\n";
     reply += "\n";
     reply += "*Others*\n";
-    reply += `/getxrate - Get the latest exchange rate\n`;
-    reply += "/givefeedback - Give me some feedback so I can improve " + emoji.blush + "\n"
+    reply += `/getxrate - Get the latest exchange rate!\n`;
+    reply += "/givefeedback - Provide me with some feedback to improve! " + emoji.blush + "\n"
     bot.sendMessage(fromId, reply, { parse_mode: "Markdown" });
     if (userId !== myId) bot.sendMessage(myId, "Main menu was called by " + first_name + " from " + chatName);
 }
