@@ -7,6 +7,10 @@ node_modules
 .env
 *.js
 *.map
-dev.js
+
 db
 coverage
+
+# For development purpose
+dev.js
+**/sample/
