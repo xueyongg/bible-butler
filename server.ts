@@ -1713,8 +1713,9 @@ async function getverse(chatDetails: chatDetails, msg) {
     // chat related details
     let { fromId, chatName, first_name, userId, messageId } = chatDetails;
     fallback.set_context("getverse");
-
-    bot.sendMessage(fromId, first_name + ", what verse do you like to get? " + emoji.hushed, await getReplyOpts("force_only"))
+    let reply = first_name + ", what verse do you like to get? " + emoji.hushed;
+    reply += "\nE.g. John3:16, Matthew6:33"
+    bot.sendMessage(fromId,  reply, await getReplyOpts("force_only"))
         .then(function () {
             bot.once('message', async (msg) => {
                 let verse = "john3:30-31";
